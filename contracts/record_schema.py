@@ -7,14 +7,6 @@ and ingested by Flume, HDFS, and Spark Structured Streaming.
 
 from typing import Any
 
-from pyspark.sql.types import (
-    DoubleType,
-    IntegerType,
-    StringType,
-    StructField,
-    StructType,
-)
-
 RECORD_SCHEMA_VERSION = "1.0.0"
 
 # Exact 11-field contract definition
@@ -90,11 +82,26 @@ FIELDS: list[dict[str, Any]] = [
 FIELD_NAMES: list[str] = [f["name"] for f in FIELDS]
 
 
-def to_spark_schema(nullable_all: bool = True) -> StructType:
+def to_spark_schema(nullable_all: bool = True) -> Any:
     """
     Returns the PySpark StructType schema corresponding to the contract.
     By default nullable_all is True for permissive CSV streaming ingestion.
+    Imports PySpark lazily so the module can be loaded in non-Spark environments.
     """
+    try:
+        from pyspark.sql.types import (
+            DoubleType,
+            IntegerType,
+            StringType,
+            StructField,
+            StructType,
+        )
+    except ImportError as e:
+        raise ImportError(
+            "pyspark is required to build the Spark schema. "
+            "Install it via 'pip install pyspark'."
+        ) from e
+
     return StructType(
         [
             StructField("timestamp", StringType(), nullable_all or False),
