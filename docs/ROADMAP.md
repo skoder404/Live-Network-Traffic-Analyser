@@ -36,9 +36,28 @@ Team: Naveena MS (capture) · Rithika GV (ingestion/storage) · M A Sushil Kumar
 - **Tasks/Features:** remote-access VPN + SSH for the distributed team (T1-007, Yashwant Vadhan M), repo + ownership map (Yashwant Vadhan M), config/logging, record contract (Naveena MS), serving DDL + mock DB (Yashwant Vadhan M), generator + samples (Naveena MS), Hadoop + Flume install and compatibility check (Rithika GV), Spark env + schema/cleaning (M A Sushil Kumar), graph/PageRank/Markov pure logic + dashboard skeleton (Priyan S).
 - **Dependencies:** None.
 - **Estimated Complexity:** Medium.
+
+#### Milestone 0 Progress Tracker (as of Sep 21)
+| Task ID | Component / Description | Owner | Status | Details / Commit |
+|---|---|---|---|---|
+| **T1-001** | Repo scaffold, `.gitignore`, `docs/OWNERS.md` | Yashwant Vadhan M | ✅ **Completed** | Clean modular scaffold across all layers |
+| **T1-002** | Config loader (`common/config.py`), logging setup, sample YAML | Yashwant Vadhan M | ✅ **Completed** | Tested defaults, env overrides, UTC logging |
+| **T1-004** | Serving DDL (`contracts/serving_schema.sql`), SQLite helper (`common/serving_db.py`) | Yashwant Vadhan M | ✅ **Completed** | All 16 tables, WAL mode, partial upserts, cleanup |
+| **T1-007** | Remote-access VPN overlay + SSH hardening (`docs/REMOTE_ACCESS.md`, script) | Yashwant Vadhan M | ✅ **Completed** | Host hardening script, client guide, tunnel guide |
+| **T4-001** | Spark env, session factory (`streaming/common/session.py`) | M A Sushil Kumar | ✅ **Completed** | Committed in `0345f97` |
+| **T4-002** | Stream schema, parsing and cleaning (`streaming/common/{schema,cleaning}.py`) | M A Sushil Kumar | ✅ **Completed** | Committed in `0345f97` |
+| **T1-003** | Traffic record contract module (`contracts/record_schema.py`) | Naveena MS | 🔄 In Progress | Schema defined & lazy spark import added |
+| **T2-006** | Synthetic traffic generator with scenarios & truth.json | Naveena MS | ⏳ Scheduled | Due Sep 21 |
+| **T2-008** | Anonymiser and sample datasets (`data/sample/`) | Naveena MS | ⏳ Scheduled | Due Sep 21 |
+| **T3-001** | HDFS pseudo-distributed setup & zone layout | Rithika GV | ⏳ Scheduled | Due Sep 21 |
+| **T3-002** | Flume install & Hadoop compatibility check | Rithika GV | ⏳ Scheduled | Due Sep 21 |
+| **T6-001** | Graph builder from `ip_edges` | Priyan S | ⏳ Scheduled | Due Sep 21 |
+| **T6-002** | Degree and centrality metrics | Priyan S | ⏳ Scheduled | Due Sep 21 |
+| **T6-003** | PageRank (NetworkX & from-scratch power iteration) | Priyan S | ⏳ Scheduled | Due Sep 21 |
+
 - **Acceptance Criteria:**
   - [ ] Contract validator, generator and `data/sample/*.csv` pushed by **Sep 21 evening**
-  - [ ] Serving DDL + `seed_mock_db.py` pushed by **Sep 22 midday**
+  - [x] Serving DDL (`contracts/serving_schema.sql`) and database helper pushed
   - [ ] `hdfs dfs -ls /` and `flume-ng version` work; Flume→HDFS test passes (G1)
   - [ ] CI runs on push to `main`
 

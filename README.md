@@ -126,7 +126,7 @@ Live-Network-Traffic-Analyser/
 
 | Milestone | Date | Status |
 |---|---|---|
-| M0 Foundation & contract | 21–22 Sep | ⬜ |
+| M0 Foundation & contract | 21–22 Sep | 🔄 In Progress (M0 Core Foundation & Spark baseline completed) |
 | M1 Vertical slice (Capture → Flume → HDFS → Spark → SQLite) | by 24 Sep (noon) | ⬜ |
 | M2 All streaming algorithms + link analysis | by 27 Sep | ⬜ |
 | M3 Dashboard integrated, history + alerts | by 28 Sep | ⬜ |
