@@ -19,11 +19,59 @@ def spark():
 
 def test_build_window_metrics_calculation(spark):
     data = [
-        ("2026-09-22 12:00:01.000", "192.168.1.1", "8.8.8.8", 1234, 443, "TCP", 100, None, None, None, 1.0),
-        ("2026-09-22 12:00:03.000", "192.168.1.1", "8.8.8.8", 1234, 443, "TCP", 200, None, None, None, 1.0),
-        ("2026-09-22 12:00:05.000", "192.168.1.1", "8.8.8.8", 1234, 443, "TCP", 300, None, None, None, 1.0),
+        (
+            "2026-09-22 12:00:01.000",
+            "192.168.1.1",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-22 12:00:03.000",
+            "192.168.1.1",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            200,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-22 12:00:05.000",
+            "192.168.1.1",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            300,
+            None,
+            None,
+            None,
+            1.0,
+        ),
         # Window 2: 12:00:10 to 12:00:20
-        ("2026-09-22 12:00:12.000", "192.168.1.1", "8.8.8.8", 1234, 443, "TCP", 400, None, None, None, 1.0),
+        (
+            "2026-09-22 12:00:12.000",
+            "192.168.1.1",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            400,
+            None,
+            None,
+            None,
+            1.0,
+        ),
     ]
     raw_df = spark.createDataFrame(data, schema=to_spark_schema())
     cleaned_df = clean(raw_df)
@@ -56,35 +104,54 @@ def test_window_metrics_vs_pandas_ground_truth(spark):
     records = []
     # Generate 50 packets spanning two 10s windows
     for sec in range(20):
-        records.append((
-            f"2026-09-22 12:00:{sec:02d}.000",
-            "192.168.1.5",
-            "8.8.8.8",
-            50000,
-            443,
-            "TCP",
-            100 + sec * 10,
-            None,
-            None,
-            None,
-            1.0,
-        ))
+        records.append(
+            (
+                f"2026-09-22 12:00:{sec:02d}.000",
+                "192.168.1.5",
+                "8.8.8.8",
+                50000,
+                443,
+                "TCP",
+                100 + sec * 10,
+                None,
+                None,
+                None,
+                1.0,
+            )
+        )
 
     raw_df = spark.createDataFrame(records, schema=to_spark_schema())
     cleaned_df = clean(raw_df)
-    spark_res = build_window_metrics(cleaned_df, window_len_s=10, watermark_s=30).orderBy("window_start").collect()
+    spark_res = (
+        build_window_metrics(cleaned_df, window_len_s=10, watermark_s=30)
+        .orderBy("window_start")
+        .collect()
+    )
 
     # Pandas ground truth
-    pdf = pd.DataFrame(records, columns=[
-        "timestamp", "src_ip", "dst_ip", "src_port", "dst_port",
-        "protocol", "packet_length", "src_mac", "dst_mac", "tcp_flags", "iat_ms"
-    ])
+    pdf = pd.DataFrame(
+        records,
+        columns=[
+            "timestamp",
+            "src_ip",
+            "dst_ip",
+            "src_port",
+            "dst_port",
+            "protocol",
+            "packet_length",
+            "src_mac",
+            "dst_mac",
+            "tcp_flags",
+            "iat_ms",
+        ],
+    )
     pdf["event_time"] = pd.to_datetime(pdf["timestamp"], utc=True)
     pdf["window_bucket"] = pdf["event_time"].dt.floor("10s")
-    grouped = pdf.groupby("window_bucket").agg(
-        packets=("packet_length", "count"),
-        total_bytes=("packet_length", "sum")
-    ).reset_index()
+    grouped = (
+        pdf.groupby("window_bucket")
+        .agg(packets=("packet_length", "count"), total_bytes=("packet_length", "sum"))
+        .reset_index()
+    )
 
     assert len(spark_res) == len(grouped)
     for i in range(len(spark_res)):

@@ -56,7 +56,13 @@ class TestConfig(unittest.TestCase):
             # Write a partial config missing spark.trigger_s
             yaml.dump(
                 {
-                    "capture": {"iface": "w0", "rotate_seconds": 60, "rotate_mb": 10, "out_dir": "data", "sink": "file"},
+                    "capture": {
+                        "iface": "w0",
+                        "rotate_seconds": 60,
+                        "rotate_mb": 10,
+                        "out_dir": "data",
+                        "sink": "file",
+                    },
                     "flume": {"tcp_host": "localhost", "tcp_port": 44444},
                     "hdfs": {"namenode_uri": "hdfs://localhost", "root": "/traffic"},
                     "spark": {
@@ -71,11 +77,24 @@ class TestConfig(unittest.TestCase):
                         "top_n_ports": 10,
                         "max_edges_per_window": 100,
                     },
-                    "serving": {"db_path": "test.db", "cleanup_every_s": 60, "retention_hours": 24},
+                    "serving": {
+                        "db_path": "test.db",
+                        "cleanup_every_s": 60,
+                        "retention_hours": 24,
+                    },
                     "graph": {"lookback_s": 60, "top_n_nodes": 50},
                     "alerts": {"rules_path": "alert.yaml"},
-                    "dashboard": {"refresh_s": 2, "timezone": "UTC", "stale_after_s": 15},
-                    "itemsets": {"window_s": 60, "every_s": 10, "min_support": 0.1, "num_buckets": 100},
+                    "dashboard": {
+                        "refresh_s": 2,
+                        "timezone": "UTC",
+                        "stale_after_s": 15,
+                    },
+                    "itemsets": {
+                        "window_s": 60,
+                        "every_s": 10,
+                        "min_support": 0.1,
+                        "num_buckets": 100,
+                    },
                     "decay": {"half_lives_s": [10]},
                 },
                 f,

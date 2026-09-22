@@ -19,7 +19,9 @@ from streaming.stream_app import StreamingApplication
 class FailingAnalytic(Analytic):
     name = "failing_test_plugin"
 
-    def process_batch(self, batch_df: DataFrame, batch_id: int, ctx: BatchContext) -> None:
+    def process_batch(
+        self, batch_df: DataFrame, batch_id: int, ctx: BatchContext
+    ) -> None:
         raise ValueError("Simulated plugin failure")
 
 
@@ -68,8 +70,32 @@ def test_dispatcher_plugin_isolation_and_health_record(spark, tmp_path: Path):
     dispatcher = app.create_dispatcher()
 
     sample_data = [
-        ("2026-09-22 12:00:00.100", "192.168.1.10", "8.8.8.8", 54321, 443, "TCP", 1000, None, None, None, 1.0),
-        ("2026-09-22 12:00:00.200", "192.168.1.10", "8.8.8.8", 54321, 443, "TCP", 2000, None, None, None, 1.0),
+        (
+            "2026-09-22 12:00:00.100",
+            "192.168.1.10",
+            "8.8.8.8",
+            54321,
+            443,
+            "TCP",
+            1000,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-22 12:00:00.200",
+            "192.168.1.10",
+            "8.8.8.8",
+            54321,
+            443,
+            "TCP",
+            2000,
+            None,
+            None,
+            None,
+            1.0,
+        ),
     ]
     raw_df = spark.createDataFrame(sample_data, schema=to_spark_schema())
     cleaned_df = clean(raw_df)

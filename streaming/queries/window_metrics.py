@@ -20,7 +20,9 @@ from common.serving_db import connect, upsert
 logger = logging.getLogger("WindowMetricsQuery")
 
 
-def build_window_metrics(df: DataFrame, window_len_s: int = 10, watermark_s: int = 30) -> DataFrame:
+def build_window_metrics(
+    df: DataFrame, window_len_s: int = 10, watermark_s: int = 30
+) -> DataFrame:
     """
     Constructs the windowed metrics aggregation DataFrame from cleaned packet stream.
 
@@ -40,7 +42,9 @@ def build_window_metrics(df: DataFrame, window_len_s: int = 10, watermark_s: int
             F.coalesce(F.sum("packet_length"), F.lit(0)).alias("bytes"),
         )
         .select(
-            F.date_format(F.col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.000'Z'").alias("window_start"),
+            F.date_format(F.col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.000'Z'").alias(
+                "window_start"
+            ),
             F.lit(window_len_s).alias("window_len_s"),
             F.col("packets").cast("int").alias("packets"),
             F.col("bytes").cast("int").alias("bytes"),
@@ -75,7 +79,9 @@ def start(
     checkpoint_root = spark_cfg.get("checkpoint_root", "data/checkpoints")
     checkpoint_dir = f"{checkpoint_root}/q_window_metrics_{window_len_s}"
 
-    metrics_df = build_window_metrics(stream_df, window_len_s=window_len_s, watermark_s=watermark_s)
+    metrics_df = build_window_metrics(
+        stream_df, window_len_s=window_len_s, watermark_s=watermark_s
+    )
 
     def write_to_sqlite(batch_df: DataFrame, batch_id: int) -> None:
         rows = [row.asDict() for row in batch_df.collect()]
@@ -101,5 +107,9 @@ def start(
         .start()
     )
 
-    logger.info("Started window_metrics streaming query (window=%ds, query_id=%s)", window_len_s, query.id)
+    logger.info(
+        "Started window_metrics streaming query (window=%ds, query_id=%s)",
+        window_len_s,
+        query.id,
+    )
     return query
