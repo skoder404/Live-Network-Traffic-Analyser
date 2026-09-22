@@ -2,7 +2,6 @@
 tests/unit/test_serving_db.py — Unit tests for SQLite serving database operations.
 """
 
-import os
 import sqlite3
 import tempfile
 import unittest
