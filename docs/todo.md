@@ -103,10 +103,10 @@
 
 | ✔ | Task | Title | Due | Priority | Effort |
 |---|---|---|---|---|---|
-| ☑ | T4-001 | Spark environment, session factory and submit wrapper | Sep 21 | MUST | 45 min |
-| ☑ | T4-002 | Stream schema, parsing and cleaning | Sep 21 | MUST | 60 min |
-| ☑ | T4-003 | Streaming application runner (registry, dispatcher, health) | Sep 22 | MUST | 90 min |
-| ☑ | T4-004 | Window metrics — packets/sec and bytes/sec (Lane A) | Sep 22 | MUST | 60 min |
+| ☐ | T4-001 | Spark environment, session factory and submit wrapper | Sep 21 | MUST | 45 min |
+| ☐ | T4-002 | Stream schema, parsing and cleaning | Sep 21 | MUST | 60 min |
+| ☐ | T4-003 | Streaming application runner (registry, dispatcher, health) | Sep 22 | MUST | 90 min |
+| ☐ | T4-004 | Window metrics — packets/sec and bytes/sec (Lane A) | Sep 22 | MUST | 60 min |
 | ☐ | T4-005 | Protocol counts and port counts (Lane A) | Sep 23 | MUST | 60 min |
 | ☐ | T4-006 | Stream filtering (named filters + filtered sub-stream) | Sep 24 | MUST | 60 min |
 | ☐ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
@@ -118,10 +118,10 @@
 
 | ✔ | Task | Title | Due | Priority | Effort |
 |---|---|---|---|---|---|
-| ☑ | T1-001 | Repository scaffold, ignores, ownership map | Sep 21 | MUST | 30 min |
-| ☑ | T1-002 | Config loader and logging setup | Sep 21 | MUST | 45 min |
-| ☑ | T1-004 | Serving-store DDL and DB helper | Sep 21 | MUST | 60 min |
-| ☑ | T1-007 | Remote-access network for a distributed team (VPN overlay + SSH) | Sep 21 | MUST | 60 min |
+| ☐ | T1-001 | Repository scaffold, ignores, ownership map | Sep 21 | MUST | 30 min |
+| ☐ | T1-002 | Config loader and logging setup | Sep 21 | MUST | 45 min |
+| ☐ | T1-004 | Serving-store DDL and DB helper | Sep 21 | MUST | 60 min |
+| ☐ | T1-007 | Remote-access network for a distributed team (VPN overlay + SSH) | Sep 21 | MUST | 60 min |
 | ☐ | T1-005 | Mock data seeder for dashboard/analytics development | Sep 22 | MUST | 60 min |
 | ☐ | T1-006 | Dev tooling, CI and ENVIRONMENT.md | Sep 22 | SHOULD | 60 min |
 | ☐ | T5-003 | Exponentially decaying window (recent-traffic score) | Sep 22 | MUST | 90 min |
@@ -648,9 +648,9 @@ Implement streaming/common/schema.py (read_stream(spark, cfg) -> streaming DataF
 **Description:** `streaming/stream_app.py` is the single entry point. It builds the clean stream, starts **Lane A queries** (each with its own checkpoint), and one **Lane B dispatcher** (`foreachBatch`) that calls every enabled `Analytic.process_batch` inside its own try/except. It writes `pipeline_health` (batch duration, input rows, invalid rows, late rows estimate, lag = now − max(event_time), plugin errors) and shuts down gracefully on SIGINT.
 **Dependencies:** T4-002, T1-004
 **Acceptance Criteria:**
-- [x] A plugin that raises an exception does not stop the query; error recorded as `plugin_error`
-- [x] `pipeline_health` rows appear each batch; processing time > trigger for 3 batches raises a WARN log
-- [x] Ctrl-C stops all queries cleanly; restart resumes from checkpoint
+- [ ] A plugin that raises an exception does not stop the query; error recorded as `plugin_error`
+- [ ] `pipeline_health` rows appear each batch; processing time > trigger for 3 batches raises a WARN log
+- [ ] Ctrl-C stops all queries cleanly; restart resumes from checkpoint
 **Estimated Effort:** 90 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 22 (Tue) · **Priority:** 🔴 MUST
@@ -663,9 +663,9 @@ Implement streaming/stream_app.py and streaming/registry.py. Define in streaming
 **Description:** `streaming/queries/window_metrics.py`: watermark (`spark.watermark_s`) + tumbling `window(event_time, "<len> seconds")`; compute `packets`, `bytes`, `pps = packets/len`, `bps = bytes/len`; `outputMode(update)` with `foreachBatch` upsert into `window_metrics` keyed by `(window_start, window_len_s)`.
 **Dependencies:** T4-003
 **Acceptance Criteria:**
-- [x] Replay of `normal.csv` yields per-window packet/byte totals equal to pandas ground truth (`truth.json`)
-- [x] Partial windows update as more data arrives (upsert, no duplicate rows)
-- [x] Checkpoint dir is `<root>/q_window_metrics_<len>`
+- [ ] Replay of `normal.csv` yields per-window packet/byte totals equal to pandas ground truth (`truth.json`)
+- [ ] Partial windows update as more data arrives (upsert, no duplicate rows)
+- [ ] Checkpoint dir is `<root>/q_window_metrics_<len>`
 **Estimated Effort:** 60 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 22 (Tue) · **Priority:** 🔴 MUST
