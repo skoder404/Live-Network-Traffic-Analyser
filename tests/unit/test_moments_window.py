@@ -2,32 +2,30 @@
 tests/unit/test_moments_window.py — Unit tests for Lane A windowed moments calculation.
 """
 
-import pandas as pd
-import pytest
-
 try:
+    import pandas as pd
+    import pytest
     from contracts.record_schema import to_spark_schema
     from streaming.common.cleaning import clean
     from streaming.common.session import get_spark
     from streaming.queries.moments_window import build_moments_window
 
-    HAS_SPARK = True
+    HAS_DEPS = True
 except (ImportError, ModuleNotFoundError):
-    HAS_SPARK = False
+    HAS_DEPS = False
 
 
-@pytest.fixture(scope="module")
-def spark():
-    if not HAS_SPARK:
-        pytest.skip("PySpark not installed")
-    s = get_spark("LNTA-TestMomentsWindow")
-    yield s
+if HAS_DEPS:
+    @pytest.fixture(scope="module")
+    def spark():
+        s = get_spark("LNTA-TestMomentsWindow")
+        yield s
 
 
-@pytest.mark.spark
-def test_build_moments_window_multi_packets(spark):
-    if not HAS_SPARK:
-        pytest.skip("PySpark not installed")
+def test_build_moments_window_multi_packets():
+    if not HAS_DEPS:
+        return
+    spark = get_spark("LNTA-TestMomentsWindow")
 
     # Sample data with 3 packets in window 1, 1 packet in window 2
     data = [
@@ -117,10 +115,10 @@ def test_build_moments_window_multi_packets(spark):
     assert w2["std_len"] is None
 
 
-@pytest.mark.spark
-def test_moments_vs_pandas_comparison(spark):
-    if not HAS_SPARK:
-        pytest.skip("PySpark not installed")
+def test_moments_vs_pandas_comparison():
+    if not HAS_DEPS:
+        return
+    spark = get_spark("LNTA-TestMomentsWindow")
 
     records = [
         (

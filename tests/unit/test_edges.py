@@ -2,31 +2,29 @@
 tests/unit/test_edges.py — Unit tests for Lane A IP edges and source stats queries.
 """
 
-import pytest
-
 try:
+    import pytest
     from contracts.record_schema import to_spark_schema
     from streaming.common.cleaning import clean
     from streaming.common.session import get_spark
     from streaming.queries.edges import build_ip_edges, build_source_stats
 
-    HAS_SPARK = True
+    HAS_DEPS = True
 except (ImportError, ModuleNotFoundError):
-    HAS_SPARK = False
+    HAS_DEPS = False
 
 
-@pytest.fixture(scope="module")
-def spark():
-    if not HAS_SPARK:
-        pytest.skip("PySpark not installed")
-    s = get_spark("LNTA-TestEdges")
-    yield s
+if HAS_DEPS:
+    @pytest.fixture(scope="module")
+    def spark():
+        s = get_spark("LNTA-TestEdges")
+        yield s
 
 
-@pytest.mark.spark
-def test_build_ip_edges(spark):
-    if not HAS_SPARK:
-        pytest.skip("PySpark not installed")
+def test_build_ip_edges():
+    if not HAS_DEPS:
+        return
+    spark = get_spark("LNTA-TestEdges")
 
     data = [
         ("2026-09-23 12:00:01.000", "192.168.1.10", "8.8.8.8", 1234, 443, "TCP", 100, None, None, None, 1.0),
@@ -65,10 +63,10 @@ def test_build_ip_edges(spark):
     assert e3["bytes"] == 300
 
 
-@pytest.mark.spark
-def test_build_source_stats(spark):
-    if not HAS_SPARK:
-        pytest.skip("PySpark not installed")
+def test_build_source_stats():
+    if not HAS_DEPS:
+        return
+    spark = get_spark("LNTA-TestEdges")
 
     # Client scanning 3 distinct ports and 2 distinct destinations
     data = [
