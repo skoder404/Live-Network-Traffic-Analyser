@@ -78,3 +78,34 @@ def test_render_live_overview_tab_renders_charts():
         
         # Should render at least 3 charts: traffic, protocol, ports, decay
         assert mock_plotly.call_count >= 3
+
+
+def test_render_history_tab_shows_query_selector_and_results():
+    """History tab shows query selector, results table, and chart."""
+    from dashboard.theme import register_lnta_theme
+    register_lnta_theme()
+    
+    from dashboard.components.history import render_history_tab
+    
+    mock_db = Mock()
+    mock_db.get_hist_results.return_value = pd.DataFrame({
+        "query_name": ["protocol_totals", "top_src_ips"],
+        "run_at": ["2026-09-24T10:00:00Z", "2026-09-24T10:00:00Z"],
+        "columns_json": ['["protocol", "total_packets"]', '["src_ip", "packets"]'],
+        "rows_json": ['[["TCP", 1000], ["UDP", 200]]', '[["192.168.1.1", 500]]'],
+    })
+    
+    controls = {"window_len_s": 10}
+    
+    with patch("streamlit.selectbox") as mock_select, \
+         patch("streamlit.dataframe") as mock_df, \
+         patch("streamlit.plotly_chart"):
+        
+        mock_select.return_value = "protocol_totals"
+        
+        render_history_tab(mock_db, controls)
+        
+        # Should show query selector
+        mock_select.assert_called()
+        # Should show results table
+        mock_df.assert_called()
