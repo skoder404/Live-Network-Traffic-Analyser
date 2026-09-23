@@ -1,10 +1,39 @@
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
+ignore = [
+    "E501",  # line-too-long (handled by formatter / line-length)
+    "B008",  # do not perform function calls in argument defaults
+]
+
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q"
+addopts = "-ra -q --strict-markers"
 testpaths = [
     "tests",
 ]
 pythonpath = [
     "."
 ]
+markers = [
+    "spark: tests requiring active PySpark / Java cluster runtime",
+    "slow: tests taking > 5s to run",
+    "e2e: end-to-end multi-stage pipeline scenario tests",
+]
 
+[tool.coverage.run]
+source = ["common", "contracts", "streaming", "linkanalysis", "capture", "ingestion"]
+omit = ["tests/*", "scripts/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 70
