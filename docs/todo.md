@@ -68,16 +68,16 @@
 
 | ✔ | Task | Title | Due | Priority | Effort |
 |---|---|---|---|---|---|
-| ☐ | T1-003 | Traffic record contract module (CSV schema v1) | Sep 21 | MUST | 60 min |
-| ☐ | T2-006 | Synthetic traffic generator with scenarios and ground truth | Sep 21 | MUST | 90 min |
-| ☐ | T2-008 | Anonymiser and committed sample datasets | Sep 21 | MUST | 45 min |
+| ☑ | T1-003 | Traffic record contract module (CSV schema v1) | Sep 21 | MUST | 60 min |
+| ☑ | T2-006 | Synthetic traffic generator with scenarios and ground truth | Sep 21 | MUST | 90 min |
+| ☑ | T2-008 | Anonymiser and committed sample datasets | Sep 21 | MUST | 45 min |
 | ☑ | T2-001 | TShark setup, permissions and Wi-Fi interface detection | Sep 22 | MUST | 45 min |
 | ☑ | T2-002 | TShark command builder | Sep 22 | MUST | 30 min |
-| ☐ | T2-003 | Line parser / normaliser (raw TShark line → contract record) | Sep 22 | MUST | 90 min |
-| ☐ | T2-005 | Output writers (rotating CSV, JSON-lines, TCP, stdout) | Sep 22 | MUST | 60 min |
-| ☐ | T2-004 | Capture runner (subprocess, queue, restart, stats) | Sep 23 | MUST | 90 min |
-| ☐ | T2-007 | Replay tool (paced, re-stamped) | Sep 23 | MUST | 45 min |
-| ☐ | T2-009 | Capture integration test and Wireshark validation | Sep 24 | SHOULD | 60 min |
+| ☑ | T2-003 | Line parser / normaliser (raw TShark line → contract record) | Sep 22 | MUST | 90 min |
+| ☑ | T2-005 | Output writers (rotating CSV, JSON-lines, TCP, stdout) | Sep 22 | MUST | 60 min |
+| ☑ | T2-004 | Capture runner (subprocess, queue, restart, stats) | Sep 23 | MUST | 90 min |
+| ☑ | T2-007 | Replay tool (paced, re-stamped) | Sep 23 | MUST | 45 min |
+| ☑ | T2-009 | Capture integration test and Wireshark validation | Sep 24 | SHOULD | 60 min |
 | ☐ | T8-003 | Wireshark/ingestion validation report | Sep 28 | SHOULD | 45 min |
 | ☐ | T9-002 | Final README, architecture visuals and screenshots | Sep 29 | MUST | 60 min |
 
