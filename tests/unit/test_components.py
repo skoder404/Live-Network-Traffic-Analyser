@@ -109,3 +109,38 @@ def test_render_history_tab_shows_query_selector_and_results():
         mock_select.assert_called()
         # Should show results table
         mock_df.assert_called()
+
+
+def test_render_pipeline_tab_shows_stage_tiles_and_metrics():
+    """Pipeline tab shows stage tiles, batch duration chart, and health counters."""
+    from dashboard.theme import register_lnta_theme
+    register_lnta_theme()
+    
+    from dashboard.components.pipeline import render_pipeline_tab
+    
+    mock_db = Mock()
+    mock_db.get_pipeline_health.return_value = pd.DataFrame({
+        "ts": pd.date_range("2026-09-24", periods=10, freq="10s"),
+        "component": ["capture"]*5 + ["flume"]*5,
+        "metric": ["batch_duration_ms"]*10,
+        "value": [50, 55, 48, 52, 51, 100, 95, 105, 98, 102],
+    })
+    
+    controls = {"window_len_s": 10}
+    
+    mock_col = MagicMock()
+    mock_col.__enter__ = Mock(return_value=mock_col)
+    mock_col.__exit__ = Mock(return_value=False)
+    
+    with patch("streamlit.columns") as mock_cols, \
+         patch("streamlit.plotly_chart") as mock_plotly, \
+         patch("streamlit.metric"):
+        
+        mock_cols.return_value = [mock_col for _ in range(5)]
+        
+        render_pipeline_tab(mock_db, controls)
+        
+        # Should show 5 stage tiles
+        assert mock_cols.called
+        # Should show batch duration chart
+        mock_plotly.assert_called()

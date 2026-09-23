@@ -20,6 +20,7 @@ if REPO_ROOT not in sys.path:
 from dashboard.components.header import render_header
 from dashboard.components.history import render_history_tab
 from dashboard.components.live_overview import render_live_overview_tab
+from dashboard.components.pipeline import render_pipeline_tab
 from dashboard.data import check_db_health, get_db
 from dashboard.theme import register_lnta_theme
 
@@ -84,12 +85,6 @@ def render_alerts_tab(db, controls) -> None:
     """Tab 4: Alerts."""
     st.markdown("## 🚨 Alerts")
     st.info("Alerts tab — Active alerts with explanations, timeline, filters")
-
-
-def render_pipeline_tab(db, controls) -> None:
-    """Tab 6: Pipeline Health."""
-    st.markdown("## 🔧 Pipeline Health")
-    st.info("Pipeline tab — Stage status, batch metrics, end-to-end lag")
 
 
 _TAB_RENDERERS = [
