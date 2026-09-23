@@ -13,9 +13,10 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pyspark.sql import DataFrame
+if TYPE_CHECKING:
+    from pyspark.sql import DataFrame
 
 from common.serving_db import current_utc_iso
 
