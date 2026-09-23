@@ -1,0 +1,40 @@
+# dashboard/.streamlit/config.toml — Streamlit configuration for LNTA
+[theme]
+base = "dark"
+primaryColor = "#22D3EE"
+backgroundColor = "#0A0F1C"
+secondaryBackgroundColor = "#101828"
+textColor = "#E6EDF7"
+font = "monospace"
+
+[server]
+headless = true
+address = "127.0.0.1"
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+maxUploadSize = 200
+maxMessageSize = 200
+
+[browser]
+gatherUsageStats = false
+serverAddress = "127.0.0.1"
+serverPort = 8501
+
+[runner]
+magicEnabled = true
+installTracer = false
+fixMatplotlib = true
+postScriptGC = true
+
+[logger]
+level = "info"
+messageFormat = "%(asctime)s %(levelname)s %(name)s | %(message)s"
+dateFormat = "%Y-%m-%d %H:%M:%S"
+
+[client]
+toolbarMode = "minimal"
+showErrorDetails = true
+
+[map]
+mapboxToken = ""
