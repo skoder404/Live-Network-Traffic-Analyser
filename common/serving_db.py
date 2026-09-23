@@ -180,3 +180,4 @@ def cleanup(
             results[t] = cur.rowcount
 
     return results
+

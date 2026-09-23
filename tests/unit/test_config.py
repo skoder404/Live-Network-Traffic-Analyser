@@ -5,6 +5,7 @@ tests/unit/test_config.py — Unit tests for config loader and logging setup.
 import logging
 import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -53,25 +54,14 @@ class TestConfig(unittest.TestCase):
     def test_missing_required_key_raises_config_error(self):
         with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
             temp_path = f.name
-
+            # Write a partial config missing spark.trigger_s
             yaml.dump(
                 {
-                    "capture": {
-                        "iface": "w0",
-                        "rotate_seconds": 60,
-                        "rotate_mb": 10,
-                        "out_dir": "data",
-                        "sink": "file",
-                    },
-                    "flume": {
-                        "tcp_host": "localhost",
-                        "tcp_port": 44444,
-                    },
-                    "hdfs": {
-                        "namenode_uri": "hdfs://localhost",
-                        "root": "/traffic",
-                    },
+                    "capture": {"iface": "w0", "rotate_seconds": 60, "rotate_mb": 10, "out_dir": "data", "sink": "file"},
+                    "flume": {"tcp_host": "localhost", "tcp_port": 44444},
+                    "hdfs": {"namenode_uri": "hdfs://localhost", "root": "/traffic"},
                     "spark": {
+                        # trigger_s is missing!
                         "watermark_s": 30,
                         "windows_s": [10],
                         "slide_s": 5,
@@ -82,32 +72,12 @@ class TestConfig(unittest.TestCase):
                         "top_n_ports": 10,
                         "max_edges_per_window": 100,
                     },
-                    "serving": {
-                        "db_path": "test.db",
-                        "cleanup_every_s": 60,
-                        "retention_hours": 24,
-                    },
-                    "graph": {
-                        "lookback_s": 60,
-                        "top_n_nodes": 50,
-                    },
-                    "alerts": {
-                        "rules_path": "alert.yaml",
-                    },
-                    "dashboard": {
-                        "refresh_s": 2,
-                        "timezone": "UTC",
-                        "stale_after_s": 15,
-                    },
-                    "itemsets": {
-                        "window_s": 60,
-                        "every_s": 10,
-                        "min_support": 0.1,
-                        "num_buckets": 100,
-                    },
-                    "decay": {
-                        "half_lives_s": [10],
-                    },
+                    "serving": {"db_path": "test.db", "cleanup_every_s": 60, "retention_hours": 24},
+                    "graph": {"lookback_s": 60, "top_n_nodes": 50},
+                    "alerts": {"rules_path": "alert.yaml"},
+                    "dashboard": {"refresh_s": 2, "timezone": "UTC", "stale_after_s": 15},
+                    "itemsets": {"window_s": 60, "every_s": 10, "min_support": 0.1, "num_buckets": 100},
+                    "decay": {"half_lives_s": [10]},
                 },
                 f,
             )
@@ -115,7 +85,6 @@ class TestConfig(unittest.TestCase):
         try:
             with self.assertRaises(ConfigError) as ctx:
                 load_config(temp_path)
-
             self.assertIn("spark.trigger_s", str(ctx.exception))
         finally:
             if os.path.exists(temp_path):
@@ -127,10 +96,7 @@ class TestConfig(unittest.TestCase):
         self.assertIs(c1, c2)
 
     def test_utc_logging_formatter(self):
-        formatter = UTCFormatter(
-            fmt="%(asctime)s %(levelname)s %(name)s | %(message)s"
-        )
-
+        formatter = UTCFormatter(fmt="%(asctime)s %(levelname)s %(name)s | %(message)s")
         record = logging.LogRecord(
             name="test_logger",
             level=logging.INFO,
@@ -140,29 +106,19 @@ class TestConfig(unittest.TestCase):
             args=(),
             exc_info=None,
         )
-
         formatted = formatter.format(record)
         self.assertIn("INFO test_logger | Hello UTC", formatted)
 
+        # Ensure logging setup works with temporary log directory
         with tempfile.TemporaryDirectory() as tmp_dir:
-            logger = setup_logging(
-                "test_component",
-                log_dir=tmp_dir,
-                to_console=False,
-            )
-
+            logger = setup_logging("test_component", log_dir=tmp_dir, to_console=False)
             logger.info("Log test message")
-
             log_file = Path(tmp_dir) / "test_component.log"
             self.assertTrue(log_file.exists())
-
             content = log_file.read_text(encoding="utf-8")
             self.assertIn("Log test message", content)
-
-            for handler in logger.handlers[:]:
-                handler.close()
-                logger.removeHandler(handler)
 
 
 if __name__ == "__main__":
     unittest.main()
+

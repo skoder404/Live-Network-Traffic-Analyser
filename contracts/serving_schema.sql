@@ -218,3 +218,4 @@ CREATE TABLE IF NOT EXISTS hist_results (
     PRIMARY KEY (query_name, run_at)
 );
 CREATE INDEX IF NOT EXISTS idx_hist_results_run ON hist_results(run_at);
+

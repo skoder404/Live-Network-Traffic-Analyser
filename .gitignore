@@ -45,3 +45,10 @@ serving/*
 *.pcap
 *.pcapng
 *.cap
+
+# SSH public keys — share directly with teammates, not via git
+# Place keys at scripts/keys/<user>.pub then run sudo bash scripts/setup_remote_access.sh
+scripts/keys/*.pub
+
+# Local assistant documentation & walkthroughs
+documentation/

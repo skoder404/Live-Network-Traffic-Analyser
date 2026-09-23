@@ -266,3 +266,4 @@ def get_config(reload: bool = False) -> AppConfig:
     if _CONFIG_CACHE is None or reload:
         _CONFIG_CACHE = load_config()
     return _CONFIG_CACHE
+

@@ -1,1 +1,4 @@
-# Package marker for streaming.analytics
+"""
+streaming.analytics package — Lane B micro-batch algorithm plugins (foreachBatch).
+"""
+

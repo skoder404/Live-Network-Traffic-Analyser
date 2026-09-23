@@ -73,3 +73,4 @@ itemsets:
 
 decay:
   half_lives_s: [10, 30, 60]      # Half-lives for exponential decay scoring (seconds)
+

@@ -49,3 +49,4 @@ All team members push directly to the `main` branch. This requires strict adhere
    - Never commit `.env` or files containing live private credentials.
    - Only anonymised sample CSVs are permitted inside `data/sample/`.
 7. **Fix-Forward Rule:** If a commit inadvertently breaks `main`, the author must fix-forward within 30 minutes or immediately `git revert` the commit.
+

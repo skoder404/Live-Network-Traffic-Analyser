@@ -182,3 +182,4 @@ If Tailscale is blocked by a hostel network or free node limits are reached:
 2. Join network ID: `sudo zerotier-one join <16-digit-network-id>`
 3. Admin approves node in the ZeroTier Central web console.
 4. Use the assigned ZeroTier managed IP for SSH and Netcat feeds.
+
