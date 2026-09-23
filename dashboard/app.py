@@ -18,6 +18,7 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 from dashboard.components.header import render_header
+from dashboard.components.live_overview import render_live_overview_tab
 from dashboard.data import check_db_health, get_db
 from dashboard.theme import register_lnta_theme
 
@@ -62,13 +63,7 @@ def render_sidebar() -> dict:
         }
 
 
-# Tab renderers (placeholders for M2 implementation)
-def render_live_overview_tab(db, controls) -> None:
-    """Tab 1: Live Overview."""
-    st.markdown("## 📊 Live Overview")
-    st.info("Live Overview tab — Traffic over time, protocol mix, top ports, decay score")
-
-
+# Tab renderers (M2 implementation)
 def render_stream_analytics_tab(db, controls) -> None:
     """Tab 2: Stream Analytics."""
     st.markdown("## 🔬 Stream Analytics")
