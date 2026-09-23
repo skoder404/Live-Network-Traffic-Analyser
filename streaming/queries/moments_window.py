@@ -20,9 +20,7 @@ from common.serving_db import connect, upsert
 logger = logging.getLogger("MomentsWindowQuery")
 
 
-def build_moments_window(
-    df: DataFrame, window_len_s: int = 10, watermark_s: int = 30
-) -> DataFrame:
+def build_moments_window(df: DataFrame, window_len_s: int = 10, watermark_s: int = 30) -> DataFrame:
     """
     Constructs the windowed moments aggregation DataFrame from cleaned packet stream.
 
@@ -90,9 +88,7 @@ def start(
     checkpoint_root = spark_cfg.get("checkpoint_root", "data/checkpoints")
     checkpoint_dir = f"{checkpoint_root}/q_moments_{window_len_s}"
 
-    moments_df = build_moments_window(
-        stream_df, window_len_s=window_len_s, watermark_s=watermark_s
-    )
+    moments_df = build_moments_window(stream_df, window_len_s=window_len_s, watermark_s=watermark_s)
 
     def write_to_sqlite(batch_df: DataFrame, batch_id: int) -> None:
         rows = [row.asDict() for row in batch_df.collect()]

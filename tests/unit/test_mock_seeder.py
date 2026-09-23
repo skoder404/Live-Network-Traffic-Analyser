@@ -63,9 +63,13 @@ class TestMockSeeder(unittest.TestCase):
         self.assertGreater(spike_alerts, 0)
 
         # 5. Check distinct_counts exact vs hll within 10%
-        cur.execute("SELECT src_ips_exact, src_ips_hll, dst_ips_exact, dst_ips_hll FROM distinct_counts;")
+        cur.execute(
+            "SELECT src_ips_exact, src_ips_hll, dst_ips_exact, dst_ips_hll FROM distinct_counts;"
+        )
         for r in cur.fetchall():
-            self.assertAlmostEqual(r["src_ips_exact"], r["src_ips_hll"], delta=max(2, int(r["src_ips_exact"] * 0.15)))
+            self.assertAlmostEqual(
+                r["src_ips_exact"], r["src_ips_hll"], delta=max(2, int(r["src_ips_exact"] * 0.15))
+            )
 
         conn.close()
 

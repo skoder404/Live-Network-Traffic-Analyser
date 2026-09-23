@@ -4,6 +4,7 @@ tests/unit/test_edges.py — Unit tests for Lane A IP edges and source stats que
 
 try:
     import pytest
+
     from contracts.record_schema import to_spark_schema
     from streaming.common.cleaning import clean
     from streaming.common.session import get_spark
@@ -15,6 +16,7 @@ except (ImportError, ModuleNotFoundError):
 
 
 if HAS_DEPS:
+
     @pytest.fixture(scope="module")
     def spark():
         s = get_spark("LNTA-TestEdges")
@@ -27,10 +29,58 @@ def test_build_ip_edges():
     spark = get_spark("LNTA-TestEdges")
 
     data = [
-        ("2026-09-23 12:00:01.000", "192.168.1.10", "8.8.8.8", 1234, 443, "TCP", 100, None, None, None, 1.0),
-        ("2026-09-23 12:00:02.000", "192.168.1.10", "8.8.8.8", 1234, 443, "TCP", 200, None, None, None, 1.0),
-        ("2026-09-23 12:00:03.000", "192.168.1.10", "1.1.1.1", 1234, 53, "UDP", 50, None, None, None, 1.0),
-        ("2026-09-23 12:00:04.000", "192.168.1.20", "8.8.8.8", 5678, 443, "TCP", 300, None, None, None, 1.0),
+        (
+            "2026-09-23 12:00:01.000",
+            "192.168.1.10",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-23 12:00:02.000",
+            "192.168.1.10",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            200,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-23 12:00:03.000",
+            "192.168.1.10",
+            "1.1.1.1",
+            1234,
+            53,
+            "UDP",
+            50,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-23 12:00:04.000",
+            "192.168.1.20",
+            "8.8.8.8",
+            5678,
+            443,
+            "TCP",
+            300,
+            None,
+            None,
+            None,
+            1.0,
+        ),
     ]
 
     raw_df = spark.createDataFrame(data, schema=to_spark_schema())
@@ -70,10 +120,58 @@ def test_build_source_stats():
 
     # Client scanning 3 distinct ports and 2 distinct destinations
     data = [
-        ("2026-09-23 12:00:01.000", "192.168.1.50", "8.8.8.8", 1234, 443, "TCP", 100, None, None, None, 1.0),
-        ("2026-09-23 12:00:02.000", "192.168.1.50", "8.8.8.8", 1234, 80, "TCP", 100, None, None, None, 1.0),
-        ("2026-09-23 12:00:03.000", "192.168.1.50", "1.1.1.1", 1234, 53, "UDP", 100, None, None, None, 1.0),
-        ("2026-09-23 12:00:04.000", "192.168.1.50", "1.1.1.1", 1234, None, "ICMP", 64, None, None, None, 1.0),
+        (
+            "2026-09-23 12:00:01.000",
+            "192.168.1.50",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-23 12:00:02.000",
+            "192.168.1.50",
+            "8.8.8.8",
+            1234,
+            80,
+            "TCP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-23 12:00:03.000",
+            "192.168.1.50",
+            "1.1.1.1",
+            1234,
+            53,
+            "UDP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-23 12:00:04.000",
+            "192.168.1.50",
+            "1.1.1.1",
+            1234,
+            None,
+            "ICMP",
+            64,
+            None,
+            None,
+            None,
+            1.0,
+        ),
     ]
 
     raw_df = spark.createDataFrame(data, schema=to_spark_schema())

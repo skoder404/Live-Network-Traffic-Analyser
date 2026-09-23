@@ -5,7 +5,6 @@ tests/unit/test_config.py — Unit tests for config loader and logging setup.
 import logging
 import os
 import tempfile
-import time
 import unittest
 from pathlib import Path
 
@@ -57,7 +56,13 @@ class TestConfig(unittest.TestCase):
             # Write a partial config missing spark.trigger_s
             yaml.dump(
                 {
-                    "capture": {"iface": "w0", "rotate_seconds": 60, "rotate_mb": 10, "out_dir": "data", "sink": "file"},
+                    "capture": {
+                        "iface": "w0",
+                        "rotate_seconds": 60,
+                        "rotate_mb": 10,
+                        "out_dir": "data",
+                        "sink": "file",
+                    },
                     "flume": {"tcp_host": "localhost", "tcp_port": 44444},
                     "hdfs": {"namenode_uri": "hdfs://localhost", "root": "/traffic"},
                     "spark": {
@@ -76,7 +81,12 @@ class TestConfig(unittest.TestCase):
                     "graph": {"lookback_s": 60, "top_n_nodes": 50},
                     "alerts": {"rules_path": "alert.yaml"},
                     "dashboard": {"refresh_s": 2, "timezone": "UTC", "stale_after_s": 15},
-                    "itemsets": {"window_s": 60, "every_s": 10, "min_support": 0.1, "num_buckets": 100},
+                    "itemsets": {
+                        "window_s": 60,
+                        "every_s": 10,
+                        "min_support": 0.1,
+                        "num_buckets": 100,
+                    },
                     "decay": {"half_lives_s": [10]},
                 },
                 f,
@@ -121,4 +131,3 @@ class TestConfig(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

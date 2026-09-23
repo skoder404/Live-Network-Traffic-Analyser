@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 TSHARK_FIELDS = [
     "frame.time_epoch",
     "ip.src",

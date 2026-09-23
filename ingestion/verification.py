@@ -99,4 +99,7 @@ def freshness_seconds(report: dict[str, Any]) -> float | None:
     verified_at = report.get("verified_at")
     if not last_event or not verified_at:
         return None
-    return max(0.0, (datetime.fromisoformat(verified_at) - datetime.fromisoformat(last_event)).total_seconds())
+    return max(
+        0.0,
+        (datetime.fromisoformat(verified_at) - datetime.fromisoformat(last_event)).total_seconds(),
+    )

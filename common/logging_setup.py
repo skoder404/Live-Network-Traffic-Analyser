@@ -7,7 +7,6 @@ Format: %(asctime)s %(levelname)s %(name)s | %(message)s (strictly in UTC).
 from __future__ import annotations
 
 import logging
-import os
 import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -15,6 +14,7 @@ from pathlib import Path
 
 class UTCFormatter(logging.Formatter):
     """Formatter that outputs timestamps strictly in UTC."""
+
     converter = time.gmtime
 
 
@@ -67,4 +67,3 @@ def setup_logging(
 
     logger.propagate = False
     return logger
-

@@ -107,7 +107,7 @@
 | ☑ | T4-002 | Stream schema, parsing and cleaning | Sep 21 | MUST | 60 min |
 | ☑ | T4-003 | Streaming application runner (registry, dispatcher, health) | Sep 22 | MUST | 90 min |
 | ☑ | T4-004 | Window metrics — packets/sec and bytes/sec (Lane A) | Sep 22 | MUST | 60 min |
-| ☐ | T4-005 | Protocol counts and port counts (Lane A) | Sep 23 | MUST | 60 min |
+| ☑ | T4-005 | Protocol counts and port counts (Lane A) | Sep 23 | MUST | 60 min |
 | ☐ | T4-006 | Stream filtering (named filters + filtered sub-stream) | Sep 24 | MUST | 60 min |
 | ☐ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
 | ☐ | T4-008 | Count distinct — exact, HyperLogLog and Flajolet–Martin (Lane A + B) | Sep 25 | MUST | 90 min |
@@ -678,9 +678,9 @@ Implement streaming/queries/window_metrics.py: start(spark, stream_df, cfg, wind
 **Description:** `streaming/queries/counts.py`: per window count/bytes by `protocol` → `protocol_counts`; per window top-N destination ports (N from config, default 10) → `port_counts` (rank computed in `foreachBatch` on the window's aggregated rows).
 **Dependencies:** T4-004
 **Acceptance Criteria:**
-- [ ] Protocol counts sum to `window_metrics.packets` for each window (test)
-- [ ] `port_counts` keeps only the top-N per window by packets; empty/NULL ports excluded
-- [ ] Verified against pandas on `dns_heavy.csv` (UDP/53 dominant)
+- [x] Protocol counts sum to `window_metrics.packets` for each window (test)
+- [x] `port_counts` keeps only the top-N per window by packets; empty/NULL ports excluded
+- [x] Verified against pandas on `dns_heavy.csv` (UDP/53 dominant)
 **Estimated Effort:** 60 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 23 (Wed) · **Priority:** 🔴 MUST

@@ -27,8 +27,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from common.config import load_config
-from common.serving_db import connect, init_schema, upsert
+from common.config import load_config  # noqa: E402
+from common.serving_db import connect, init_schema, upsert  # noqa: E402
 
 # Node topology for the 12-node graph:
 # Node 1 is the main gateway/hub (high degree).
@@ -36,18 +36,18 @@ from common.serving_db import connect, init_schema, upsert
 # Node 11 is an isolated/dangling client.
 # Node 12 is a DNS/NTP resolver.
 MOCK_IPS = [
-    "192.168.1.1",     # Hub / Router Gateway
-    "192.168.1.50",    # Client A
-    "192.168.1.51",    # Client B
-    "192.168.1.52",    # Client C
-    "192.168.1.53",    # Client D
-    "8.8.8.8",         # Public DNS 1
-    "1.1.1.1",         # Public DNS 2
+    "192.168.1.1",  # Hub / Router Gateway
+    "192.168.1.50",  # Client A
+    "192.168.1.51",  # Client B
+    "192.168.1.52",  # Client C
+    "192.168.1.53",  # Client D
+    "8.8.8.8",  # Public DNS 1
+    "1.1.1.1",  # Public DNS 2
     "142.250.190.46",  # Web Server (HTTPS)
-    "157.240.22.35",   # Social Media Server
-    "104.244.42.1",    # CDN Server
-    "192.168.1.99",    # Dangling / Isolated Node
-    "192.168.1.254",   # Local DNS / PiHole
+    "157.240.22.35",  # Social Media Server
+    "104.244.42.1",  # CDN Server
+    "192.168.1.99",  # Dangling / Isolated Node
+    "192.168.1.254",  # Local DNS / PiHole
 ]
 
 COMMON_PORTS = [443, 80, 53, 22, 8080, 123]
@@ -100,10 +100,34 @@ def generate_window_dataset(
     ]
 
     protocol_counts = [
-        {"window_start": ws_str, "window_len_s": window_len_s, "protocol": "TCP", "packets": tcp_pkts, "bytes": tcp_bytes},
-        {"window_start": ws_str, "window_len_s": window_len_s, "protocol": "UDP", "packets": udp_pkts, "bytes": udp_bytes},
-        {"window_start": ws_str, "window_len_s": window_len_s, "protocol": "ICMP", "packets": icmp_pkts, "bytes": icmp_bytes},
-        {"window_start": ws_str, "window_len_s": window_len_s, "protocol": "OTHER", "packets": other_pkts, "bytes": other_bytes},
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "protocol": "TCP",
+            "packets": tcp_pkts,
+            "bytes": tcp_bytes,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "protocol": "UDP",
+            "packets": udp_pkts,
+            "bytes": udp_bytes,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "protocol": "ICMP",
+            "packets": icmp_pkts,
+            "bytes": icmp_bytes,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "protocol": "OTHER",
+            "packets": other_pkts,
+            "bytes": other_bytes,
+        },
     ]
 
     # 2. port_counts (Top destination ports)
@@ -129,8 +153,20 @@ def generate_window_dataset(
     web_pkts = sum(r["packets"] for r in port_counts if r["port"] in (80, 443))
     dns_pkts = sum(r["packets"] for r in port_counts if r["port"] == 53)
     filter_counts = [
-        {"window_start": ws_str, "window_len_s": window_len_s, "filter_name": "web_traffic", "packets": web_pkts, "bytes": web_pkts * 800},
-        {"window_start": ws_str, "window_len_s": window_len_s, "filter_name": "dns_traffic", "packets": dns_pkts, "bytes": dns_pkts * 120},
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "filter_name": "web_traffic",
+            "packets": web_pkts,
+            "bytes": web_pkts * 800,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "filter_name": "dns_traffic",
+            "packets": dns_pkts,
+            "bytes": dns_pkts * 120,
+        },
     ]
 
     # 4. distinct_counts (exact vs HLL within 5%, FM within 25%)
@@ -189,33 +225,186 @@ def generate_window_dataset(
 
     # 6. frequent_itemsets (A-Priori and PCY)
     frequent_itemsets = [
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "apriori", "itemset": "TCP:443", "size": 1, "support_count": int(total_pkts * 0.55), "support_ratio": 0.55, "passes": 1},
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "apriori", "itemset": "UDP:53", "size": 1, "support_count": int(total_pkts * 0.22), "support_ratio": 0.22, "passes": 1},
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "apriori", "itemset": "TCP:80", "size": 1, "support_count": int(total_pkts * 0.12), "support_ratio": 0.12, "passes": 1},
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "apriori", "itemset": "UDP:53 + TCP:443", "size": 2, "support_count": int(total_pkts * 0.10), "support_ratio": 0.10, "passes": 2},
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "pcy", "itemset": "TCP:443", "size": 1, "support_count": int(total_pkts * 0.55), "support_ratio": 0.55, "passes": 1},
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "pcy", "itemset": "UDP:53", "size": 1, "support_count": int(total_pkts * 0.22), "support_ratio": 0.22, "passes": 1},
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "pcy", "itemset": "TCP:80", "size": 1, "support_count": int(total_pkts * 0.12), "support_ratio": 0.12, "passes": 1},
-        {"window_start": ws_str, "window_len_s": window_len_s, "algorithm": "pcy", "itemset": "UDP:53 + TCP:443", "size": 2, "support_count": int(total_pkts * 0.10), "support_ratio": 0.10, "passes": 2},
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "apriori",
+            "itemset": "TCP:443",
+            "size": 1,
+            "support_count": int(total_pkts * 0.55),
+            "support_ratio": 0.55,
+            "passes": 1,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "apriori",
+            "itemset": "UDP:53",
+            "size": 1,
+            "support_count": int(total_pkts * 0.22),
+            "support_ratio": 0.22,
+            "passes": 1,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "apriori",
+            "itemset": "TCP:80",
+            "size": 1,
+            "support_count": int(total_pkts * 0.12),
+            "support_ratio": 0.12,
+            "passes": 1,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "apriori",
+            "itemset": "UDP:53 + TCP:443",
+            "size": 2,
+            "support_count": int(total_pkts * 0.10),
+            "support_ratio": 0.10,
+            "passes": 2,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "pcy",
+            "itemset": "TCP:443",
+            "size": 1,
+            "support_count": int(total_pkts * 0.55),
+            "support_ratio": 0.55,
+            "passes": 1,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "pcy",
+            "itemset": "UDP:53",
+            "size": 1,
+            "support_count": int(total_pkts * 0.22),
+            "support_ratio": 0.22,
+            "passes": 1,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "pcy",
+            "itemset": "TCP:80",
+            "size": 1,
+            "support_count": int(total_pkts * 0.12),
+            "support_ratio": 0.12,
+            "passes": 1,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "algorithm": "pcy",
+            "itemset": "UDP:53 + TCP:443",
+            "size": 2,
+            "support_count": int(total_pkts * 0.10),
+            "support_ratio": 0.10,
+            "passes": 2,
+        },
     ]
 
     # 7. ip_edges (12-node graph with hub MOCK_IPS[0] and dangling node MOCK_IPS[10])
     ip_edges = [
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[1], "dst_ip": MOCK_IPS[0], "packets": int(total_pkts * 0.25), "bytes": int(total_bytes * 0.25)},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[2], "dst_ip": MOCK_IPS[0], "packets": int(total_pkts * 0.20), "bytes": int(total_bytes * 0.20)},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[3], "dst_ip": MOCK_IPS[0], "packets": int(total_pkts * 0.15), "bytes": int(total_bytes * 0.15)},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[0], "dst_ip": MOCK_IPS[7], "packets": int(total_pkts * 0.20), "bytes": int(total_bytes * 0.20)},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[0], "dst_ip": MOCK_IPS[8], "packets": int(total_pkts * 0.10), "bytes": int(total_bytes * 0.10)},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[4], "dst_ip": MOCK_IPS[11], "packets": int(total_pkts * 0.05), "bytes": int(total_bytes * 0.05)},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[0], "dst_ip": MOCK_IPS[5], "packets": int(total_pkts * 0.05), "bytes": int(total_bytes * 0.05)},
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[1],
+            "dst_ip": MOCK_IPS[0],
+            "packets": int(total_pkts * 0.25),
+            "bytes": int(total_bytes * 0.25),
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[2],
+            "dst_ip": MOCK_IPS[0],
+            "packets": int(total_pkts * 0.20),
+            "bytes": int(total_bytes * 0.20),
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[3],
+            "dst_ip": MOCK_IPS[0],
+            "packets": int(total_pkts * 0.15),
+            "bytes": int(total_bytes * 0.15),
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[0],
+            "dst_ip": MOCK_IPS[7],
+            "packets": int(total_pkts * 0.20),
+            "bytes": int(total_bytes * 0.20),
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[0],
+            "dst_ip": MOCK_IPS[8],
+            "packets": int(total_pkts * 0.10),
+            "bytes": int(total_bytes * 0.10),
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[4],
+            "dst_ip": MOCK_IPS[11],
+            "packets": int(total_pkts * 0.05),
+            "bytes": int(total_bytes * 0.05),
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[0],
+            "dst_ip": MOCK_IPS[5],
+            "packets": int(total_pkts * 0.05),
+            "bytes": int(total_bytes * 0.05),
+        },
     ]
 
     # 8. source_stats
     source_stats = [
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[0], "packets": int(total_pkts * 0.35), "bytes": int(total_bytes * 0.35), "unique_dst_ips": 5, "unique_dst_ports": 4},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[1], "packets": int(total_pkts * 0.25), "bytes": int(total_bytes * 0.25), "unique_dst_ips": 2, "unique_dst_ports": 3},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[2], "packets": int(total_pkts * 0.20), "bytes": int(total_bytes * 0.20), "unique_dst_ips": 2, "unique_dst_ports": 2},
-        {"window_start": ws_str, "window_len_s": window_len_s, "src_ip": MOCK_IPS[3], "packets": int(total_pkts * 0.15), "bytes": int(total_bytes * 0.15), "unique_dst_ips": 1, "unique_dst_ports": 2},
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[0],
+            "packets": int(total_pkts * 0.35),
+            "bytes": int(total_bytes * 0.35),
+            "unique_dst_ips": 5,
+            "unique_dst_ports": 4,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[1],
+            "packets": int(total_pkts * 0.25),
+            "bytes": int(total_bytes * 0.25),
+            "unique_dst_ips": 2,
+            "unique_dst_ports": 3,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[2],
+            "packets": int(total_pkts * 0.20),
+            "bytes": int(total_bytes * 0.20),
+            "unique_dst_ips": 2,
+            "unique_dst_ports": 2,
+        },
+        {
+            "window_start": ws_str,
+            "window_len_s": window_len_s,
+            "src_ip": MOCK_IPS[3],
+            "packets": int(total_pkts * 0.15),
+            "bytes": int(total_bytes * 0.15),
+            "unique_dst_ips": 1,
+            "unique_dst_ports": 2,
+        },
     ]
 
     # 9. Time-series timestamp tables (ts = window end)
@@ -223,14 +412,37 @@ def generate_window_dataset(
     ts_str = format_iso(end_dt)
 
     sampling_compare = [
-        {"ts": ts_str, "method": "bernoulli", "k": 1000, "sample_n": int(total_pkts * 0.1), "sample_mean_len": round(mean_len * rng.uniform(0.96, 1.04), 2), "full_mean_len": mean_len, "err_pct": round(rng.uniform(1.2, 4.5), 2)},
-        {"ts": ts_str, "method": "reservoir", "k": 1000, "sample_n": min(total_pkts, 1000), "sample_mean_len": round(mean_len * rng.uniform(0.97, 1.03), 2), "full_mean_len": mean_len, "err_pct": round(rng.uniform(0.8, 3.2), 2)},
+        {
+            "ts": ts_str,
+            "method": "bernoulli",
+            "k": 1000,
+            "sample_n": int(total_pkts * 0.1),
+            "sample_mean_len": round(mean_len * rng.uniform(0.96, 1.04), 2),
+            "full_mean_len": mean_len,
+            "err_pct": round(rng.uniform(1.2, 4.5), 2),
+        },
+        {
+            "ts": ts_str,
+            "method": "reservoir",
+            "k": 1000,
+            "sample_n": min(total_pkts, 1000),
+            "sample_mean_len": round(mean_len * rng.uniform(0.97, 1.03), 2),
+            "full_mean_len": mean_len,
+            "err_pct": round(rng.uniform(0.8, 3.2), 2),
+        },
     ]
 
     exact_tcp_ones = tcp_pkts
     dgim_est = int(round(exact_tcp_ones * rng.uniform(0.93, 1.07)))
     counting_ones = [
-        {"ts": ts_str, "predicate_name": "is_tcp", "window_n": total_pkts, "exact_ones": exact_tcp_ones, "dgim_estimate": dgim_est, "err_pct": round(abs(dgim_est - exact_tcp_ones) * 100.0 / exact_tcp_ones, 2)}
+        {
+            "ts": ts_str,
+            "predicate_name": "is_tcp",
+            "window_n": total_pkts,
+            "exact_ones": exact_tcp_ones,
+            "dgim_estimate": dgim_est,
+            "err_pct": round(abs(dgim_est - exact_tcp_ones) * 100.0 / exact_tcp_ones, 2),
+        }
     ]
 
     decay_traffic = [
@@ -240,46 +452,86 @@ def generate_window_dataset(
     ]
 
     decay_top_keys = [
-        {"ts": ts_str, "key_type": "dst_ip", "key": MOCK_IPS[0], "score": round(pps * 0.40, 2), "rank": 1},
-        {"ts": ts_str, "key_type": "dst_ip", "key": MOCK_IPS[7], "score": round(pps * 0.25, 2), "rank": 2},
-        {"ts": ts_str, "key_type": "dst_port", "key": "443", "score": round(pps * 0.60, 2), "rank": 1},
-        {"ts": ts_str, "key_type": "dst_port", "key": "53", "score": round(pps * 0.20, 2), "rank": 2},
+        {
+            "ts": ts_str,
+            "key_type": "dst_ip",
+            "key": MOCK_IPS[0],
+            "score": round(pps * 0.40, 2),
+            "rank": 1,
+        },
+        {
+            "ts": ts_str,
+            "key_type": "dst_ip",
+            "key": MOCK_IPS[7],
+            "score": round(pps * 0.25, 2),
+            "rank": 2,
+        },
+        {
+            "ts": ts_str,
+            "key_type": "dst_port",
+            "key": "443",
+            "score": round(pps * 0.60, 2),
+            "rank": 1,
+        },
+        {
+            "ts": ts_str,
+            "key_type": "dst_port",
+            "key": "53",
+            "score": round(pps * 0.20, 2),
+            "rank": 2,
+        },
     ]
 
     pipeline_health = [
-        {"ts": ts_str, "component": "spark", "metric": "batch_duration_s", "value": round(rng.uniform(0.8, 2.1), 3)},
-        {"ts": ts_str, "component": "spark", "metric": "input_rows_per_batch", "value": float(total_pkts)},
+        {
+            "ts": ts_str,
+            "component": "spark",
+            "metric": "batch_duration_s",
+            "value": round(rng.uniform(0.8, 2.1), 3),
+        },
+        {
+            "ts": ts_str,
+            "component": "spark",
+            "metric": "input_rows_per_batch",
+            "value": float(total_pkts),
+        },
         {"ts": ts_str, "component": "flume", "metric": "events_per_sec", "value": pps},
         {"ts": ts_str, "component": "capture", "metric": "drop_queue_full", "value": 0.0},
     ]
 
     alerts: list[dict[str, Any]] = []
     if is_spike:
-        alerts.append({
-            "alert_id": f"alt-spike-{int(start_dt.timestamp())}",
-            "ts": ts_str,
-            "type": "spike",
-            "severity": "CRITICAL" if mult > 3.0 else "WARN",
-            "src_ip": MOCK_IPS[1],
-            "metric": "pps",
-            "current_value": pps,
-            "baseline_value": round(pps / mult, 2),
-            "change_pct": round((mult - 1.0) * 100.0, 1),
-            "threshold": 3.0,
-            "reason": f"Traffic volume spiked {mult:.1f}x above EWMA baseline",
-            "details_json": json.dumps({"window_pkts": total_pkts, "normal_pkts": int(total_pkts / mult)}),
-        })
+        alerts.append(
+            {
+                "alert_id": f"alt-spike-{int(start_dt.timestamp())}",
+                "ts": ts_str,
+                "type": "spike",
+                "severity": "CRITICAL" if mult > 3.0 else "WARN",
+                "src_ip": MOCK_IPS[1],
+                "metric": "pps",
+                "current_value": pps,
+                "baseline_value": round(pps / mult, 2),
+                "change_pct": round((mult - 1.0) * 100.0, 1),
+                "threshold": 3.0,
+                "reason": f"Traffic volume spiked {mult:.1f}x above EWMA baseline",
+                "details_json": json.dumps(
+                    {"window_pkts": total_pkts, "normal_pkts": int(total_pkts / mult)}
+                ),
+            }
+        )
 
     hist_results = [
         {
             "query_name": "daily_protocol_distribution",
             "run_at": ts_str,
             "columns_json": json.dumps(["protocol", "packets", "bytes"]),
-            "rows_json": json.dumps([
-                ["TCP", tcp_pkts * 10, tcp_bytes * 10],
-                ["UDP", udp_pkts * 10, udp_bytes * 10],
-                ["ICMP", icmp_pkts * 10, icmp_bytes * 10],
-            ]),
+            "rows_json": json.dumps(
+                [
+                    ["TCP", tcp_pkts * 10, tcp_bytes * 10],
+                    ["UDP", udp_pkts * 10, udp_bytes * 10],
+                    ["ICMP", icmp_pkts * 10, icmp_bytes * 10],
+                ]
+            ),
         }
     ]
 
@@ -361,14 +613,38 @@ def seed_database(
         # Periodically generate 30s and 60s aggregates
         if (i + 1) % 3 == 0:
             w_30s_start = w_start - timedelta(seconds=20)
-            data_30s = generate_window_dataset(w_30s_start, window_len_s=30, is_spike=is_spike, rng=rng)
-            for tbl in ["window_metrics", "protocol_counts", "port_counts", "filter_counts", "distinct_counts", "moments", "frequent_itemsets", "ip_edges", "source_stats"]:
+            data_30s = generate_window_dataset(
+                w_30s_start, window_len_s=30, is_spike=is_spike, rng=rng
+            )
+            for tbl in [
+                "window_metrics",
+                "protocol_counts",
+                "port_counts",
+                "filter_counts",
+                "distinct_counts",
+                "moments",
+                "frequent_itemsets",
+                "ip_edges",
+                "source_stats",
+            ]:
                 upsert(conn, tbl, TABLE_PRIMARY_KEYS[tbl], data_30s[tbl])
 
         if (i + 1) % 6 == 0:
             w_60s_start = w_start - timedelta(seconds=50)
-            data_60s = generate_window_dataset(w_60s_start, window_len_s=60, is_spike=is_spike, rng=rng)
-            for tbl in ["window_metrics", "protocol_counts", "port_counts", "filter_counts", "distinct_counts", "moments", "frequent_itemsets", "ip_edges", "source_stats"]:
+            data_60s = generate_window_dataset(
+                w_60s_start, window_len_s=60, is_spike=is_spike, rng=rng
+            )
+            for tbl in [
+                "window_metrics",
+                "protocol_counts",
+                "port_counts",
+                "filter_counts",
+                "distinct_counts",
+                "moments",
+                "frequent_itemsets",
+                "ip_edges",
+                "source_stats",
+            ]:
                 upsert(conn, tbl, TABLE_PRIMARY_KEYS[tbl], data_60s[tbl])
 
     conn.close()
@@ -391,14 +667,16 @@ def run_live_mode(db_path: str | Path, seed: int = 42) -> None:
         while True:
             step += 1
             curr_time += timedelta(seconds=10)
-            is_spike = (step % 20 == 0)  # Periodic spike every 20 windows
+            is_spike = step % 20 == 0  # Periodic spike every 20 windows
 
             data = generate_window_dataset(curr_time, window_len_s=10, is_spike=is_spike, rng=rng)
             for tbl, rows in data.items():
                 if rows:
                     upsert(conn, tbl, TABLE_PRIMARY_KEYS[tbl], rows)
 
-            print(f"    [+] Emitted window {format_iso(curr_time)} (pkts={data['window_metrics'][0]['packets']}, pps={data['window_metrics'][0]['pps']})")
+            print(
+                f"    [+] Emitted window {format_iso(curr_time)} (pkts={data['window_metrics'][0]['packets']}, pps={data['window_metrics'][0]['pps']})"
+            )
             time.sleep(2.0)
     except KeyboardInterrupt:
         print("\n[*] Live mock seeder stopped.")
@@ -409,10 +687,16 @@ def run_live_mode(db_path: str | Path, seed: int = 42) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="LNTA Mock Data Seeder")
     parser.add_argument("--db", type=str, default=None, help="Target SQLite database path")
-    parser.add_argument("--duration", type=int, default=10, help="Duration in minutes to seed (default: 10)")
+    parser.add_argument(
+        "--duration", type=int, default=10, help="Duration in minutes to seed (default: 10)"
+    )
     parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
-    parser.add_argument("--live", action="store_true", help="Run in continuous live mode appending windows")
-    parser.add_argument("--reset", action="store_true", help="Reset database and schema before seeding")
+    parser.add_argument(
+        "--live", action="store_true", help="Run in continuous live mode appending windows"
+    )
+    parser.add_argument(
+        "--reset", action="store_true", help="Reset database and schema before seeding"
+    )
 
     args = parser.parse_args()
 
@@ -435,4 +719,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

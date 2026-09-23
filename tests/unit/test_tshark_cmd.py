@@ -9,27 +9,17 @@ def test_build_tshark_command_contains_required_options():
     assert "-T" in command
     assert command[command.index("-T") + 1] == "fields"
 
-    assert ["-E", "separator=,"] in [
-        command[i:i + 2] for i in range(len(command) - 1)
-    ]
-    assert ["-E", "occurrence=f"] in [
-        command[i:i + 2] for i in range(len(command) - 1)
-    ]
-    assert ["-E", "header=n"] in [
-        command[i:i + 2] for i in range(len(command) - 1)
-    ]
-    assert ["-E", "quote=n"] in [
-        command[i:i + 2] for i in range(len(command) - 1)
-    ]
+    assert ["-E", "separator=,"] in [command[i : i + 2] for i in range(len(command) - 1)]
+    assert ["-E", "occurrence=f"] in [command[i : i + 2] for i in range(len(command) - 1)]
+    assert ["-E", "header=n"] in [command[i : i + 2] for i in range(len(command) - 1)]
+    assert ["-E", "quote=n"] in [command[i : i + 2] for i in range(len(command) - 1)]
 
 
 def test_build_tshark_command_contains_all_fields():
     command = build_tshark_command("2")
 
     for field in TSHARK_FIELDS:
-        assert ["-e", field] in [
-            command[i:i + 2] for i in range(len(command) - 1)
-        ]
+        assert ["-e", field] in [command[i : i + 2] for i in range(len(command) - 1)]
 
 
 def test_build_tshark_command_with_bpf_filter():

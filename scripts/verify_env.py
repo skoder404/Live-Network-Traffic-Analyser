@@ -29,9 +29,7 @@ def check_java():
         print("[!] Java: NOT FOUND in PATH")
         return False
     try:
-        out = subprocess.check_output(
-            ["java", "-version"], stderr=subprocess.STDOUT
-        ).decode()
+        out = subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT).decode()
         first_line = out.splitlines()[0] if out else "Unknown"
         print(f"[*] Java version: {first_line} (OK)")
         return True

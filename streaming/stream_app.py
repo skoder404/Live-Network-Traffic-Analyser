@@ -28,7 +28,7 @@ from streaming.analytics.base import BatchContext
 from streaming.common.cleaning import clean, split_valid
 from streaming.common.schema import read_stream
 from streaming.common.session import get_spark
-from streaming.queries import window_metrics
+from streaming.queries import counts, window_metrics
 from streaming.registry import get_enabled
 
 logger = logging.getLogger("StreamApp")
@@ -58,15 +58,11 @@ class StreamingApplication:
     def handle_shutdown(self, signum: int, _frame: Any) -> None:
         """Gracefully stops all running streaming queries on signal."""
         sig_name = signal.Signals(signum).name
-        logger.info(
-            "Received %s — initiating graceful streaming query shutdown...", sig_name
-        )
+        logger.info("Received %s — initiating graceful streaming query shutdown...", sig_name)
         self._running = False
         for q in self.queries:
             if q.isActive:
-                logger.info(
-                    "Stopping streaming query '%s' (%s)...", q.name or "unnamed", q.id
-                )
+                logger.info("Stopping streaming query '%s' (%s)...", q.name or "unnamed", q.id)
                 q.stop()
 
     def create_dispatcher(self) -> Any:
@@ -90,9 +86,7 @@ class StreamingApplication:
                     max_dt: datetime = max_row["max_et"]
                     if max_dt.tzinfo is None:
                         max_dt = max_dt.replace(tzinfo=timezone.utc)
-                    lag_s = max(
-                        0.0, (datetime.now(timezone.utc) - max_dt).total_seconds()
-                    )
+                    lag_s = max(0.0, (datetime.now(timezone.utc) - max_dt).total_seconds())
 
             # Dispatch to Lane B plugins
             active_plugins = get_enabled(cfg)
@@ -164,9 +158,7 @@ class StreamingApplication:
 
             conn = connect(db_path)
             try:
-                upsert(
-                    conn, "pipeline_health", ["ts", "component", "metric"], health_rows
-                )
+                upsert(conn, "pipeline_health", ["ts", "component", "metric"], health_rows)
             finally:
                 conn.close()
 
@@ -189,9 +181,7 @@ class StreamingApplication:
         signal.signal(signal.SIGINT, self.handle_shutdown)
         signal.signal(signal.SIGTERM, self.handle_shutdown)
 
-        spark: SparkSession = get_spark(
-            app_name="LNTA-StreamingEngine", config=self.cfg
-        )
+        spark: SparkSession = get_spark(app_name="LNTA-StreamingEngine", config=self.cfg)
         logger.info(
             "Spark session initialized: version=%s, tz=%s",
             spark.version,
@@ -208,6 +198,14 @@ class StreamingApplication:
         q_window = window_metrics.start(spark, valid_stream, self.cfg, window_len_s=10)
         self.queries.append(q_window)
 
+        # Protocol counts (10s window)
+        q_proto = counts.start_protocol_counts(spark, valid_stream, self.cfg, window_len_s=10)
+        self.queries.append(q_proto)
+
+        # Port counts (10s window)
+        q_ports = counts.start_port_counts(spark, valid_stream, self.cfg, window_len_s=10)
+        self.queries.append(q_ports)
+
         # 2. Start Lane B Dispatcher query
         checkpoint_root = self.spark_cfg.get("checkpoint_root", "data/checkpoints")
         trigger_s = self.spark_cfg.get("trigger_s", 5)
@@ -221,9 +219,7 @@ class StreamingApplication:
         )
         self.queries.append(q_lane_b)
 
-        logger.info(
-            "All streaming queries started successfully. Awaiting termination..."
-        )
+        logger.info("All streaming queries started successfully. Awaiting termination...")
 
         for q in self.queries:
             q.awaitTermination()
@@ -231,15 +227,9 @@ class StreamingApplication:
 
 def main() -> None:
     """CLI entry point for stream_app."""
-    parser = argparse.ArgumentParser(
-        description="LNTA Spark Structured Streaming Application"
-    )
-    parser.add_argument(
-        "--config", default="config/settings.yaml", help="Path to settings.yaml"
-    )
-    parser.add_argument(
-        "--input", default=None, help="Input stream directory or HDFS URI"
-    )
+    parser = argparse.ArgumentParser(description="LNTA Spark Structured Streaming Application")
+    parser.add_argument("--config", default="config/settings.yaml", help="Path to settings.yaml")
+    parser.add_argument("--input", default=None, help="Input stream directory or HDFS URI")
     args = parser.parse_args()
 
     cfg_path = Path(args.config)

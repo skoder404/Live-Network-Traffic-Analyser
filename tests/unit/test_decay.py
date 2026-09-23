@@ -2,10 +2,7 @@
 tests/unit/test_decay.py — Unit tests for exponential decaying window algorithm and key table.
 """
 
-import math
-import tempfile
 import unittest
-from pathlib import Path
 
 from streaming.analytics.decay import DecayingCounter, DecayingKeyTable
 

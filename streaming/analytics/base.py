@@ -29,9 +29,7 @@ class BatchContext:
     db_path: str | Path
     conn: sqlite3.Connection | None = None
     clock: float = field(default_factory=time.time)
-    logger: logging.Logger = field(
-        default_factory=lambda: logging.getLogger("AnalyticPlugin")
-    )
+    logger: logging.Logger = field(default_factory=lambda: logging.getLogger("AnalyticPlugin"))
     batch_time: str = field(default_factory=current_utc_iso)
 
 
@@ -41,9 +39,7 @@ class Analytic(ABC):
     name: str = "base_analytic"
 
     @abstractmethod
-    def process_batch(
-        self, batch_df: DataFrame, batch_id: int, ctx: BatchContext
-    ) -> None:
+    def process_batch(self, batch_df: DataFrame, batch_id: int, ctx: BatchContext) -> None:
         """
         Processes a single micro-batch DataFrame.
 
@@ -63,10 +59,6 @@ class NoopAnalytic(Analytic):
     def __init__(self) -> None:
         self.processed_batches: list[int] = []
 
-    def process_batch(
-        self, batch_df: DataFrame, batch_id: int, ctx: BatchContext
-    ) -> None:
+    def process_batch(self, batch_df: DataFrame, batch_id: int, ctx: BatchContext) -> None:
         self.processed_batches.append(batch_id)
-        ctx.logger.debug(
-            "NoopAnalytic processed batch %d with %d rows", batch_id, batch_df.count()
-        )
+        ctx.logger.debug("NoopAnalytic processed batch %d with %d rows", batch_id, batch_df.count())

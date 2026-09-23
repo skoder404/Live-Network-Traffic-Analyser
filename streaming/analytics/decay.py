@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -108,9 +108,7 @@ class DecayingKeyTable:
 
     def prune(self, t: float) -> None:
         """Evicts keys whose decayed score falls below epsilon."""
-        keys_to_remove = [
-            k for k, c in self.counters.items() if c.value(t) < self.epsilon
-        ]
+        keys_to_remove = [k for k, c in self.counters.items() if c.value(t) < self.epsilon]
         for k in keys_to_remove:
             del self.counters[k]
 
@@ -189,7 +187,7 @@ class DecayAnalytic(Analytic):
         if not state_file.exists():
             return
         try:
-            with open(state_file, "r", encoding="utf-8") as f:
+            with open(state_file, encoding="utf-8") as f:
                 state = json.load(f)
 
             for hl, c_data in state.get("traffic_counters", {}).items():
@@ -211,9 +209,7 @@ class DecayAnalytic(Analytic):
         except Exception as e:
             logger.warning("Failed to restore decay state from %s: %s", state_file, e)
 
-    def process_batch(
-        self, batch_df: DataFrame, batch_id: int, ctx: BatchContext
-    ) -> None:
+    def process_batch(self, batch_df: DataFrame, batch_id: int, ctx: BatchContext) -> None:
         from pyspark.sql import functions as F
 
         self._ensure_initialized(ctx.cfg)
@@ -260,12 +256,14 @@ class DecayAnalytic(Analytic):
             counter.add(row_count, current_t)
             score_val = round(counter.value(current_t), 2)
 
-            traffic_rows.append({
-                "ts": ts_iso,
-                "half_life_s": hl,
-                "score": score_val,
-                "raw_pps": raw_pps,
-            })
+            traffic_rows.append(
+                {
+                    "ts": ts_iso,
+                    "half_life_s": hl,
+                    "score": score_val,
+                    "raw_pps": raw_pps,
+                }
+            )
 
             # 2. Key tables
             ip_tbl = self.dst_ip_tables[hl]
@@ -280,22 +278,26 @@ class DecayAnalytic(Analytic):
 
             # Extract top-10 for primary half-life
             for rank, (ip, score) in enumerate(ip_tbl.top_k(10, current_t), start=1):
-                top_key_rows.append({
-                    "ts": ts_iso,
-                    "key_type": "dst_ip",
-                    "key": ip,
-                    "score": round(score, 2),
-                    "rank": rank,
-                })
+                top_key_rows.append(
+                    {
+                        "ts": ts_iso,
+                        "key_type": "dst_ip",
+                        "key": ip,
+                        "score": round(score, 2),
+                        "rank": rank,
+                    }
+                )
 
             for rank, (port, score) in enumerate(port_tbl.top_k(10, current_t), start=1):
-                top_key_rows.append({
-                    "ts": ts_iso,
-                    "key_type": "dst_port",
-                    "key": port,
-                    "score": round(score, 2),
-                    "rank": rank,
-                })
+                top_key_rows.append(
+                    {
+                        "ts": ts_iso,
+                        "key_type": "dst_port",
+                        "key": port,
+                        "score": round(score, 2),
+                        "rank": rank,
+                    }
+                )
 
         # Upsert into serving store
         conn = ctx.conn

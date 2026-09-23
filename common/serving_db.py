@@ -103,9 +103,7 @@ def upsert(
     cols_set.add("updated_at")
 
     # Order columns deterministically: key_cols first, then remaining
-    ordered_cols: list[str] = list(key_cols) + sorted(
-        [c for c in cols_set if c not in key_cols]
-    )
+    ordered_cols: list[str] = list(key_cols) + sorted([c for c in cols_set if c not in key_cols])
 
     update_cols = [c for c in ordered_cols if c not in key_cols]
     if not update_cols:
@@ -148,9 +146,9 @@ def cleanup(
     Deletes records older than retention_hours from serving tables.
     Returns a dict mapping table name to count of deleted rows.
     """
-    cutoff = (
-        datetime.now(timezone.utc) - timedelta(hours=retention_hours)
-    ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=retention_hours)).strftime(
+        "%Y-%m-%dT%H:%M:%S.%f"
+    )[:-3] + "Z"
 
     results: dict[str, int] = {}
     target_window_tables = (
@@ -159,9 +157,7 @@ def cleanup(
         else TABLES_WITH_WINDOW_START
     )
     target_ts_tables = (
-        [t for t in TABLES_WITH_TS if t in tables]
-        if tables is not None
-        else TABLES_WITH_TS
+        [t for t in TABLES_WITH_TS if t in tables] if tables is not None else TABLES_WITH_TS
     )
 
     with conn:
@@ -180,4 +176,3 @@ def cleanup(
             results[t] = cur.rowcount
 
     return results
-

@@ -19,9 +19,7 @@ from streaming.stream_app import StreamingApplication
 class FailingAnalytic(Analytic):
     name = "failing_test_plugin"
 
-    def process_batch(
-        self, batch_df: DataFrame, batch_id: int, ctx: BatchContext
-    ) -> None:
+    def process_batch(self, batch_df: DataFrame, batch_id: int, ctx: BatchContext) -> None:
         raise ValueError("Simulated plugin failure")
 
 

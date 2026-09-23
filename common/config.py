@@ -165,7 +165,7 @@ def _apply_env_overrides(data: dict[str, Any], prefix: str = "LNTA_") -> dict[st
     for env_key, env_val in os.environ.items():
         if not env_key.startswith(prefix):
             continue
-        key_body = env_key[len(prefix):].lower()
+        key_body = env_key[len(prefix) :].lower()
         if "__" not in key_body:
             continue
         section, key = key_body.split("__", 1)
@@ -209,12 +209,10 @@ def load_config(config_path: str | Path | None = None) -> AppConfig:
                 break
 
     if resolved_path is None or not resolved_path.exists():
-        raise ConfigError(
-            "Could not locate config/settings.yaml or config/settings.example.yaml"
-        )
+        raise ConfigError("Could not locate config/settings.yaml or config/settings.example.yaml")
 
     try:
-        with open(resolved_path, "r", encoding="utf-8") as f:
+        with open(resolved_path, encoding="utf-8") as f:
             raw_data = yaml.safe_load(f) or {}
     except Exception as e:
         raise ConfigError(f"Failed to parse YAML file at {resolved_path}: {e}") from e
@@ -266,4 +264,3 @@ def get_config(reload: bool = False) -> AppConfig:
     if _CONFIG_CACHE is None or reload:
         _CONFIG_CACHE = load_config()
     return _CONFIG_CACHE
-

@@ -21,9 +21,7 @@ from common.serving_db import connect, upsert
 logger = logging.getLogger("EdgesQuery")
 
 
-def build_ip_edges(
-    df: DataFrame, window_len_s: int = 10, watermark_s: int = 30
-) -> DataFrame:
+def build_ip_edges(df: DataFrame, window_len_s: int = 10, watermark_s: int = 30) -> DataFrame:
     """
     Aggregates directed traffic between (src_ip, dst_ip) pairs per event-time window.
     """
@@ -49,9 +47,7 @@ def build_ip_edges(
     )
 
 
-def build_source_stats(
-    df: DataFrame, window_len_s: int = 10, watermark_s: int = 30
-) -> DataFrame:
+def build_source_stats(df: DataFrame, window_len_s: int = 10, watermark_s: int = 30) -> DataFrame:
     """
     Aggregates per-source activity: total packets, bytes, and unique destinations/ports.
     """
@@ -64,11 +60,9 @@ def build_source_stats(
             F.count("*").alias("packets"),
             F.coalesce(F.sum("packet_length"), F.lit(0)).alias("bytes"),
             F.size(F.collect_set("dst_ip")).alias("unique_dst_ips"),
-            F.size(
-                F.collect_set(
-                    F.when(F.col("dst_port").isNotNull(), F.col("dst_port"))
-                )
-            ).alias("unique_dst_ports"),
+            F.size(F.collect_set(F.when(F.col("dst_port").isNotNull(), F.col("dst_port")))).alias(
+                "unique_dst_ports"
+            ),
         )
         .select(
             F.date_format(F.col("window.start"), "yyyy-MM-dd'T'HH:mm:ss.000'Z'").alias(
@@ -101,9 +95,7 @@ def start_edges(
     checkpoint_root = spark_cfg.get("checkpoint_root", "data/checkpoints")
     checkpoint_dir = f"{checkpoint_root}/q_edges_{window_len_s}"
 
-    edges_df = build_ip_edges(
-        stream_df, window_len_s=window_len_s, watermark_s=watermark_s
-    )
+    edges_df = build_ip_edges(stream_df, window_len_s=window_len_s, watermark_s=watermark_s)
 
     def write_edges(batch_df: DataFrame, batch_id: int) -> None:
         rows = [row.asDict() for row in batch_df.collect()]
@@ -117,7 +109,7 @@ def start_edges(
             by_window.setdefault(ws, []).append(r)
 
         capped_rows: list[dict[str, Any]] = []
-        for ws, w_rows in by_window.items():
+        for _ws, w_rows in by_window.items():
             w_rows.sort(key=lambda x: x.get("bytes", 0), reverse=True)
             capped_rows.extend(w_rows[:max_edges])
 
@@ -166,9 +158,7 @@ def start_source_stats(
     checkpoint_root = spark_cfg.get("checkpoint_root", "data/checkpoints")
     checkpoint_dir = f"{checkpoint_root}/q_source_stats_{window_len_s}"
 
-    stats_df = build_source_stats(
-        stream_df, window_len_s=window_len_s, watermark_s=watermark_s
-    )
+    stats_df = build_source_stats(stream_df, window_len_s=window_len_s, watermark_s=watermark_s)
 
     def write_stats(batch_df: DataFrame, batch_id: int) -> None:
         rows = [row.asDict() for row in batch_df.collect()]

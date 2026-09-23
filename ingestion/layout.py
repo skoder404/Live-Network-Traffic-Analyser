@@ -56,7 +56,9 @@ def create_hdfs_zones(layout: StorageLayout, hdfs_bin: str = "hdfs") -> None:
     try:
         result = subprocess.run(command, check=False, capture_output=True, text=True)
     except OSError as exc:
-        raise RuntimeError(f"Unable to execute {hdfs_bin!r}; install Hadoop or use --local") from exc
+        raise RuntimeError(
+            f"Unable to execute {hdfs_bin!r}; install Hadoop or use --local"
+        ) from exc
     if result.returncode:
         raise RuntimeError(result.stderr.strip() or "hdfs dfs -mkdir failed")
 
@@ -64,8 +66,11 @@ def create_hdfs_zones(layout: StorageLayout, hdfs_bin: str = "hdfs") -> None:
 def hdfs_available(hdfs_bin: str = "hdfs") -> bool:
     """Return whether the Hadoop CLI can be executed."""
     try:
-        return subprocess.run(
-            [hdfs_bin, "version"], capture_output=True, check=False, timeout=10
-        ).returncode == 0
+        return (
+            subprocess.run(
+                [hdfs_bin, "version"], capture_output=True, check=False, timeout=10
+            ).returncode
+            == 0
+        )
     except (OSError, subprocess.TimeoutExpired):
         return False

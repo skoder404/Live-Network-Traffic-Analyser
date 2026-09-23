@@ -5,6 +5,7 @@ tests/unit/test_moments_window.py — Unit tests for Lane A windowed moments cal
 try:
     import pandas as pd
     import pytest
+
     from contracts.record_schema import to_spark_schema
     from streaming.common.cleaning import clean
     from streaming.common.session import get_spark
@@ -16,6 +17,7 @@ except (ImportError, ModuleNotFoundError):
 
 
 if HAS_DEPS:
+
     @pytest.fixture(scope="module")
     def spark():
         s = get_spark("LNTA-TestMomentsWindow")
@@ -139,10 +141,7 @@ def test_moments_vs_pandas_comparison():
 
     raw_df = spark.createDataFrame(records, schema=to_spark_schema())
     cleaned_df = clean(raw_df)
-    spark_rows = (
-        build_moments_window(cleaned_df, window_len_s=10, watermark_s=30)
-        .collect()
-    )
+    spark_rows = build_moments_window(cleaned_df, window_len_s=10, watermark_s=30).collect()
 
     assert len(spark_rows) == 1
     s_row = spark_rows[0]

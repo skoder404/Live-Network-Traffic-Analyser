@@ -98,8 +98,7 @@ def to_spark_schema(nullable_all: bool = True) -> Any:
         )
     except ImportError as e:
         raise ImportError(
-            "pyspark is required to build the Spark schema. "
-            "Install it via 'pip install pyspark'."
+            "pyspark is required to build the Spark schema. Install it via 'pip install pyspark'."
         ) from e
 
     return StructType(
