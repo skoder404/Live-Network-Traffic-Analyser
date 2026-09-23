@@ -71,8 +71,8 @@
 | ☐ | T1-003 | Traffic record contract module (CSV schema v1) | Sep 21 | MUST | 60 min |
 | ☐ | T2-006 | Synthetic traffic generator with scenarios and ground truth | Sep 21 | MUST | 90 min |
 | ☐ | T2-008 | Anonymiser and committed sample datasets | Sep 21 | MUST | 45 min |
-| ☐ | T2-001 | TShark setup, permissions and Wi-Fi interface detection | Sep 22 | MUST | 45 min |
-| ☐ | T2-002 | TShark command builder | Sep 22 | MUST | 30 min |
+| ☑ | T2-001 | TShark setup, permissions and Wi-Fi interface detection | Sep 22 | MUST | 45 min |
+| ☑ | T2-002 | TShark command builder | Sep 22 | MUST | 30 min |
 | ☐ | T2-003 | Line parser / normaliser (raw TShark line → contract record) | Sep 22 | MUST | 90 min |
 | ☐ | T2-005 | Output writers (rotating CSV, JSON-lines, TCP, stdout) | Sep 22 | MUST | 60 min |
 | ☐ | T2-004 | Capture runner (subprocess, queue, restart, stats) | Sep 23 | MUST | 90 min |
@@ -85,15 +85,15 @@
 
 | ✔ | Task | Title | Due | Priority | Effort |
 |---|---|---|---|---|---|
-| ☐ | T3-001 | HDFS pseudo-distributed setup and zone layout | Sep 21 | MUST | 60 min |
-| ☐ | T3-002 | Flume install and Hadoop-compatibility check | Sep 21 | MUST | 60 min |
-| ☐ | T3-003 | Flume agent config — TAILDIR source, channels, replicating selector | Sep 22 | MUST | 45 min |
-| ☐ | T3-004 | Flume HDFS sinks and "in-progress files are invisible" test | Sep 22 | MUST | 60 min |
-| ☐ | T3-005 | Flume control script and status JSON | Sep 23 | SHOULD | 45 min |
-| ☐ | T3-006 | Ingestion verification (loss, duplicates, latency) | Sep 23 | MUST | 60 min |
-| ☐ | T3-010 | Spark ↔ HDFS connection helper (secondary duty) | Sep 23 | MUST | 45 min |
-| ☐ | T3-008 | Hive metastore and external tables | Sep 25 | SHOULD | 90 min |
-| ☐ | T3-009 | Historical query pack and exporter to the serving store | Sep 26 | SHOULD | 75 min |
+| ☑ | T3-001 | HDFS pseudo-distributed setup and zone layout | Sep 21 | MUST | 60 min |
+| ☑ | T3-002 | Flume install and Hadoop-compatibility check | Sep 21 | MUST | 60 min |
+| ☑ | T3-003 | Flume agent config — TAILDIR source, channels, replicating selector | Sep 22 | MUST | 45 min |
+| ☑ | T3-004 | Flume HDFS sinks and "in-progress files are invisible" test | Sep 22 | MUST | 60 min |
+| ☑ | T3-005 | Flume control script and status JSON | Sep 23 | SHOULD | 45 min |
+| ☑ | T3-006 | Ingestion verification (loss, duplicates, latency) | Sep 23 | MUST | 60 min |
+| ☑ | T3-010 | Spark ↔ HDFS connection helper (secondary duty) | Sep 23 | MUST | 45 min |
+| ☑ | T3-008 | Hive metastore and external tables | Sep 25 | SHOULD | 90 min |
+| ☑ | T3-009 | Historical query pack and exporter to the serving store | Sep 26 | SHOULD | 75 min |
 | ☐ | T3-011 | Failure and restart tests for ingestion | Sep 27 | SHOULD | 45 min |
 | ☐ | T8-004 | Runbook and offline fallback snapshot | Sep 29 | MUST | 45 min |
 | ☐ | T9-003 | Repository sanitisation audit and release tag | Sep 30 | MUST | 30 min |
@@ -103,10 +103,10 @@
 
 | ✔ | Task | Title | Due | Priority | Effort |
 |---|---|---|---|---|---|
-| ☐ | T4-001 | Spark environment, session factory and submit wrapper | Sep 21 | MUST | 45 min |
-| ☐ | T4-002 | Stream schema, parsing and cleaning | Sep 21 | MUST | 60 min |
-| ☐ | T4-003 | Streaming application runner (registry, dispatcher, health) | Sep 22 | MUST | 90 min |
-| ☐ | T4-004 | Window metrics — packets/sec and bytes/sec (Lane A) | Sep 22 | MUST | 60 min |
+| ☑ | T4-001 | Spark environment, session factory and submit wrapper | Sep 21 | MUST | 45 min |
+| ☑ | T4-002 | Stream schema, parsing and cleaning | Sep 21 | MUST | 60 min |
+| ☑ | T4-003 | Streaming application runner (registry, dispatcher, health) | Sep 22 | MUST | 90 min |
+| ☑ | T4-004 | Window metrics — packets/sec and bytes/sec (Lane A) | Sep 22 | MUST | 60 min |
 | ☐ | T4-005 | Protocol counts and port counts (Lane A) | Sep 23 | MUST | 60 min |
 | ☐ | T4-006 | Stream filtering (named filters + filtered sub-stream) | Sep 24 | MUST | 60 min |
 | ☐ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
@@ -118,15 +118,15 @@
 
 | ✔ | Task | Title | Due | Priority | Effort |
 |---|---|---|---|---|---|
-| ☐ | T1-001 | Repository scaffold, ignores, ownership map | Sep 21 | MUST | 30 min |
-| ☐ | T1-002 | Config loader and logging setup | Sep 21 | MUST | 45 min |
-| ☐ | T1-004 | Serving-store DDL and DB helper | Sep 21 | MUST | 60 min |
-| ☐ | T1-007 | Remote-access network for a distributed team (VPN overlay + SSH) | Sep 21 | MUST | 60 min |
-| ☐ | T1-005 | Mock data seeder for dashboard/analytics development | Sep 22 | MUST | 60 min |
-| ☐ | T1-006 | Dev tooling, CI and ENVIRONMENT.md | Sep 22 | SHOULD | 60 min |
-| ☐ | T5-003 | Exponentially decaying window (recent-traffic score) | Sep 22 | MUST | 90 min |
-| ☐ | T5-001 | Windowed moments — mean, variance, std, inter-arrival (Lane A) | Sep 23 | MUST | 60 min |
-| ☐ | T5-005 | Edge and per-source aggregation (feeds Link Analysis and Alerts) | Sep 23 | MUST | 60 min |
+| ☑ | T1-001 | Repository scaffold, ignores, ownership map | Sep 21 | MUST | 30 min |
+| ☑ | T1-002 | Config loader and logging setup | Sep 21 | MUST | 45 min |
+| ☑ | T1-004 | Serving-store DDL and DB helper | Sep 21 | MUST | 60 min |
+| ☑ | T1-007 | Remote-access network for a distributed team (VPN overlay + SSH) | Sep 21 | MUST | 60 min |
+| ☑ | T1-005 | Mock data seeder for dashboard/analytics development | Sep 22 | MUST | 60 min |
+| ☑ | T1-006 | Dev tooling, CI and ENVIRONMENT.md | Sep 22 | SHOULD | 60 min |
+| ☑ | T5-003 | Exponentially decaying window (recent-traffic score) | Sep 22 | MUST | 90 min |
+| ☑ | T5-001 | Windowed moments — mean, variance, std, inter-arrival (Lane A) | Sep 23 | MUST | 60 min |
+| ☑ | T5-005 | Edge and per-source aggregation (feeds Link Analysis and Alerts) | Sep 23 | MUST | 60 min |
 | ☐ | T5-002 | AMS second-moment (F2) estimator and iat fallback | Sep 24 | MUST | 75 min |
 | ☐ | T5-004 | Market-basket model and limited-pass frequent itemsets (A-Priori + PCY) | Sep 26 | MUST | 90 min |
 | ☐ | T5-009 | Group B unit and integration tests | Sep 27 | SHOULD | 60 min |
