@@ -1,0 +1,21 @@
+# config/alert_rules.yaml — Alert thresholds for LNTA
+# All thresholds are tunable; calibrate during testing.
+
+traffic_spike:
+  ewma_alpha: 0.1           # EWMA smoothing factor
+  warmup_windows: 30        # Minimum windows before alerting
+  warn_multiplier: 3.0      # WARN: pps > 3x EWMA baseline
+  critical_multiplier: 6.0  # CRITICAL: pps > 6x EWMA baseline
+  min_pps: 50               # Minimum pps to trigger (avoid noise)
+
+unusual_port_activity:
+  max_distinct_dst_ports: 20  # WARN if src_ip exceeds this in a window
+
+high_fanout:
+  max_distinct_dst_ips: 30    # WARN if src_ip exceeds this in a window
+
+# Cooldown to prevent alert storms (seconds per alert type + src_ip)
+cooldown_seconds: 60
+
+# Minimum volume floor — alerts only fire if window has at least this many packets
+min_window_packets: 10
