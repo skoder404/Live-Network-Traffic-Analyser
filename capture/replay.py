@@ -124,7 +124,9 @@ class ReplayEngine:
                     if self.restamp:
                         new_epoch = wall_start + cum_simulated
                         rec_dict["timestamp"] = _format_ts_epoch(new_epoch)
-                        rec_dict["iat_ms"] = round(gap * 1000.0, 3) if self.records_replayed > 0 else 0.0
+                        rec_dict["iat_ms"] = (
+                            round(gap * 1000.0, 3) if self.records_replayed > 0 else 0.0
+                        )
 
                     try:
                         self.writer.write(rec_dict)
@@ -145,10 +147,16 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="Paced & restamped traffic replay tool.")
     parser.add_argument("--file", required=True, help="Input sample CSV file.")
-    parser.add_argument("--speed", type=float, default=1.0, help="Speed scaling factor (e.g. 2.0 = 2x faster).")
+    parser.add_argument(
+        "--speed", type=float, default=1.0, help="Speed scaling factor (e.g. 2.0 = 2x faster)."
+    )
     parser.add_argument("--pps", type=float, help="Fixed replay rate in packets/sec.")
-    parser.add_argument("--restamp", action="store_true", help="Rewrite timestamps to current wall clock.")
-    parser.add_argument("--loop", action="store_true", help="Repeat file continuously until stopped.")
+    parser.add_argument(
+        "--restamp", action="store_true", help="Rewrite timestamps to current wall clock."
+    )
+    parser.add_argument(
+        "--loop", action="store_true", help="Repeat file continuously until stopped."
+    )
     parser.add_argument("--sink", choices=["file", "tcp", "stdout"], default="file")
     parser.add_argument("--out-dir", default=cfg.capture.out_dir)
     args = parser.parse_args()

@@ -136,6 +136,7 @@ def get_interface_ips_fallback() -> dict[str, str]:
     ips: dict[str, str] = {}
     try:
         import psutil
+
         for iface, addrs in psutil.net_if_addrs().items():
             for addr in addrs:
                 if addr.family.name in ("AF_INET", "AF_INET6"):
@@ -213,8 +214,7 @@ def format_table(interfaces: list[InterfaceInfo]) -> str:
     header_line = "  ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers))
     sep_line = "  ".join("-" * col_widths[i] for i in range(len(headers)))
     data_lines = [
-        "  ".join(row[i].ljust(col_widths[i]) for i in range(len(headers)))
-        for row in rows
+        "  ".join(row[i].ljust(col_widths[i]) for i in range(len(headers))) for row in rows
     ]
 
     return "\n".join([header_line, sep_line] + data_lines)

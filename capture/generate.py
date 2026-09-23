@@ -317,7 +317,11 @@ def compute_ground_truth(records: list[Record]) -> dict[str, Any]:
 
     mean_len = sum(lengths) / total_packets
     pop_var = sum((x - mean_len) ** 2 for x in lengths) / total_packets
-    sample_var = sum((x - mean_len) ** 2 for x in lengths) / (total_packets - 1) if total_packets > 1 else 0.0
+    sample_var = (
+        sum((x - mean_len) ** 2 for x in lengths) / (total_packets - 1)
+        if total_packets > 1
+        else 0.0
+    )
 
     return {
         "packets": total_packets,

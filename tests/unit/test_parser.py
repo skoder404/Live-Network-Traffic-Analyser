@@ -16,21 +16,21 @@ def make_raw_line(**overrides) -> str:
     """Helper to assemble a valid 16-field raw TShark line with overrides."""
     fields = [
         "1758638400.123456",  # 0: frame.time_epoch
-        "192.168.1.10",       # 1: ip.src
-        "8.8.8.8",            # 2: ip.dst
-        "",                   # 3: ipv6.src
-        "",                   # 4: ipv6.dst
-        "54321",              # 5: tcp.srcport
-        "443",                # 6: tcp.dstport
-        "",                   # 7: udp.srcport
-        "",                   # 8: udp.dstport
-        "6",                  # 9: ip.proto (TCP)
-        "",                   # 10: ipv6.nxt
-        "1500",               # 11: frame.len
+        "192.168.1.10",  # 1: ip.src
+        "8.8.8.8",  # 2: ip.dst
+        "",  # 3: ipv6.src
+        "",  # 4: ipv6.dst
+        "54321",  # 5: tcp.srcport
+        "443",  # 6: tcp.dstport
+        "",  # 7: udp.srcport
+        "",  # 8: udp.dstport
+        "6",  # 9: ip.proto (TCP)
+        "",  # 10: ipv6.nxt
+        "1500",  # 11: frame.len
         "aa:bb:cc:dd:ee:ff",  # 12: eth.src
         "11:22:33:44:55:66",  # 13: eth.dst
-        "0x0018",             # 14: tcp.flags
-        "0.025",              # 15: frame.time_delta
+        "0x0018",  # 14: tcp.flags
+        "0.025",  # 15: frame.time_delta
     ]
     names = [
         "epoch",

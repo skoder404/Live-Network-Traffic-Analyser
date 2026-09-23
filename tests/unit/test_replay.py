@@ -27,7 +27,9 @@ def create_test_csv(path: Path, num_rows: int = 5) -> None:
     lines = []
     for i in range(num_rows):
         ts = f"2026-09-22 10:00:{i:02d}.000"
-        lines.append(f"{ts},192.168.1.10,8.8.8.8,50000,443,TCP,100,aa:bb:cc:dd:ee:ff,11:22:33:44:55:66,0x0018,1000.0")
+        lines.append(
+            f"{ts},192.168.1.10,8.8.8.8,50000,443,TCP,100,aa:bb:cc:dd:ee:ff,11:22:33:44:55:66,0x0018,1000.0"
+        )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

@@ -100,4 +100,6 @@ def test_ground_truth_matches_pandas(tmp_path: Path):
 
     # Check mean and sample variance
     assert abs(truth["packet_length_mean"] - float(df["packet_length"].mean())) < 1e-3
-    assert abs(truth["packet_length_variance_sample"] - float(df["packet_length"].var(ddof=1))) < 1e-3
+    assert (
+        abs(truth["packet_length_variance_sample"] - float(df["packet_length"].var(ddof=1))) < 1e-3
+    )

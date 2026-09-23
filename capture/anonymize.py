@@ -27,7 +27,9 @@ _MAC_REGEX = re.compile(r"^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$")
 
 
 def _get_digest(key: str, val: str) -> bytes:
-    return hmac.new(key.encode("utf-8"), val.strip().lower().encode("utf-8"), hashlib.sha256).digest()
+    return hmac.new(
+        key.encode("utf-8"), val.strip().lower().encode("utf-8"), hashlib.sha256
+    ).digest()
 
 
 _RFC1918_NETWORKS = (
@@ -124,7 +126,9 @@ def anonymize_file(in_path: str | Path, out_path: str | Path, key: str) -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Anonymize IP and MAC addresses in LNTA CSV files.")
+    parser = argparse.ArgumentParser(
+        description="Anonymize IP and MAC addresses in LNTA CSV files."
+    )
     parser.add_argument("--in", dest="in_file", required=True, help="Input CSV path.")
     parser.add_argument("--out", dest="out_file", required=True, help="Output CSV path.")
     parser.add_argument(

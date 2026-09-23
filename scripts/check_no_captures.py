@@ -43,7 +43,7 @@ def main() -> int:
         print("Please remove these files and ensure all datasets are anonymized in data/sample/.")
         return 1
 
-    print("[✓] Capture security check passed: No forbidden capture files found.")
+    print("[OK] Capture security check passed: No forbidden capture files found.")
     return 0
 
 

@@ -40,9 +40,15 @@ def test_check_is_wireless_heuristics():
 
 def test_auto_select_wifi_with_ip():
     ifaces = [
-        InterfaceInfo(1, "eth0", "Ethernet", is_wireless=False, has_ip=True, ip_address="192.168.1.5"),
-        InterfaceInfo(2, "wlan0", "Wi-Fi", is_wireless=True, has_ip=True, ip_address="192.168.1.10"),
-        InterfaceInfo(3, "docker0", "Bridge", is_wireless=False, has_ip=True, ip_address="172.17.0.1"),
+        InterfaceInfo(
+            1, "eth0", "Ethernet", is_wireless=False, has_ip=True, ip_address="192.168.1.5"
+        ),
+        InterfaceInfo(
+            2, "wlan0", "Wi-Fi", is_wireless=True, has_ip=True, ip_address="192.168.1.10"
+        ),
+        InterfaceInfo(
+            3, "docker0", "Bridge", is_wireless=False, has_ip=True, ip_address="172.17.0.1"
+        ),
     ]
     selected = auto_select_wifi(ifaces)
     assert selected is not None
@@ -61,7 +67,9 @@ def test_auto_select_wifi_none():
 def test_format_table_output():
     ifaces = [
         InterfaceInfo(1, "eth0", "Ethernet adapter", is_wireless=False, has_ip=False),
-        InterfaceInfo(2, "wlan0", "Wireless adapter", is_wireless=True, has_ip=True, ip_address="192.168.1.10"),
+        InterfaceInfo(
+            2, "wlan0", "Wireless adapter", is_wireless=True, has_ip=True, ip_address="192.168.1.10"
+        ),
     ]
     table = format_table(ifaces)
     assert "wlan0" in table

@@ -55,6 +55,7 @@ def test_round_trip():
 
 # 12+ Invalid cases asserting specific reason strings:
 
+
 def test_invalid_column_count_too_few():
     fields = ["2026-09-19 18:20:01.482", "192.168.1.10", "8.8.8.8"]
     ok, reason = validate_row(fields)

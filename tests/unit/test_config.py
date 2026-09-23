@@ -122,11 +122,16 @@ class TestConfig(unittest.TestCase):
         # Ensure logging setup works with temporary log directory
         with tempfile.TemporaryDirectory() as tmp_dir:
             logger = setup_logging("test_component", log_dir=tmp_dir, to_console=False)
-            logger.info("Log test message")
-            log_file = Path(tmp_dir) / "test_component.log"
-            self.assertTrue(log_file.exists())
-            content = log_file.read_text(encoding="utf-8")
-            self.assertIn("Log test message", content)
+            try:
+                logger.info("Log test message")
+                log_file = Path(tmp_dir) / "test_component.log"
+                self.assertTrue(log_file.exists())
+                content = log_file.read_text(encoding="utf-8")
+                self.assertIn("Log test message", content)
+            finally:
+                for handler in list(logger.handlers):
+                    handler.close()
+                    logger.removeHandler(handler)
 
 
 if __name__ == "__main__":

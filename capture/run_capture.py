@@ -263,7 +263,12 @@ class CaptureRunner:
                         self._stop_event.set()
                         return 1
                     delay = backoffs[restarts - 1]
-                    logger.info("Auto-restarting TShark in %s seconds (attempt %s/%s)...", delay, restarts, max_restarts)
+                    logger.info(
+                        "Auto-restarting TShark in %s seconds (attempt %s/%s)...",
+                        delay,
+                        restarts,
+                        max_restarts,
+                    )
                     time.sleep(delay)
 
         # Clean shutdown: terminate child, drain queue, flush writer
@@ -300,7 +305,9 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="Live Network Traffic Analyser capture runner.")
     parser.add_argument("--iface", help="Capture network interface name or index.")
-    parser.add_argument("--auto", action="store_true", help="Automatically detect active Wi-Fi interface.")
+    parser.add_argument(
+        "--auto", action="store_true", help="Automatically detect active Wi-Fi interface."
+    )
     parser.add_argument("--sink", choices=["file", "tcp", "stdout"], default=cfg.capture.sink)
     parser.add_argument("--format", choices=["csv", "json"], default="csv")
     parser.add_argument("--filter", help="BPF capture filter expression.")
