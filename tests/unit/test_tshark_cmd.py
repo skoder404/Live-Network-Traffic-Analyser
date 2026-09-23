@@ -1,58 +1,105 @@
-from capture.tshark_cmd import TSHARK_FIELDS, build_tshark_command
+"""
+tests/unit/test_tshark_cmd.py — Unit tests for capture/tshark_cmd.py.
+"""
+
+import pytest
+
+from capture.tshark_cmd import (
+    RAW_FIELDS,
+    TSHARK_FIELDS,
+    build_command,
+    build_tshark_command,
+)
 
 
-def test_build_tshark_command_contains_required_options():
-    command = build_tshark_command("2")
-
-    assert command[:4] == ["tshark", "-i", "2", "-l"]
-    assert "-n" in command
-    assert "-T" in command
-    assert command[command.index("-T") + 1] == "fields"
-
-    assert ["-E", "separator=,"] in [command[i : i + 2] for i in range(len(command) - 1)]
-    assert ["-E", "occurrence=f"] in [command[i : i + 2] for i in range(len(command) - 1)]
-    assert ["-E", "header=n"] in [command[i : i + 2] for i in range(len(command) - 1)]
-    assert ["-E", "quote=n"] in [command[i : i + 2] for i in range(len(command) - 1)]
-
-
-def test_build_tshark_command_contains_all_fields():
-    command = build_tshark_command("2")
-
-    for field in TSHARK_FIELDS:
-        assert ["-e", field] in [command[i : i + 2] for i in range(len(command) - 1)]
-
-
-def test_build_tshark_command_with_bpf_filter():
-    command = build_tshark_command("2", bpf_filter="tcp")
-
-    assert command[-2:] == ["-f", "tcp"]
-
-
-def test_build_tshark_command_with_duration():
-    command = build_tshark_command("2", duration_seconds=60)
-
-    assert command[-2:] == ["-a", "duration:60"]
-
-
-def test_build_tshark_command_with_filter_and_duration():
-    command = build_tshark_command(
-        "2",
-        bpf_filter="tcp",
-        duration_seconds=60,
-    )
-
-    assert command[-4:] == [
-        "-f",
-        "tcp",
-        "-a",
-        "duration:60",
+def test_raw_fields_spec():
+    expected_16 = [
+        "frame.time_epoch",
+        "ip.src",
+        "ip.dst",
+        "ipv6.src",
+        "ipv6.dst",
+        "tcp.srcport",
+        "tcp.dstport",
+        "udp.srcport",
+        "udp.dstport",
+        "ip.proto",
+        "ipv6.nxt",
+        "frame.len",
+        "eth.src",
+        "eth.dst",
+        "tcp.flags",
+        "frame.time_delta",
     ]
+    assert RAW_FIELDS == expected_16
+    assert TSHARK_FIELDS == RAW_FIELDS
 
 
-def test_build_tshark_command_rejects_invalid_duration():
-    try:
-        build_tshark_command("2", duration_seconds=0)
-    except ValueError as exc:
-        assert "greater than 0" in str(exc)
-    else:
-        raise AssertionError("Expected ValueError")
+def test_build_command_default():
+    cmd = build_command("wlan0")
+
+    expected_prefix = [
+        "tshark",
+        "-i",
+        "wlan0",
+        "-l",
+        "-n",
+        "-T",
+        "fields",
+        "-E",
+        "separator=,",
+        "-E",
+        "occurrence=f",
+        "-E",
+        "header=n",
+        "-E",
+        "quote=n",
+    ]
+    assert cmd[: len(expected_prefix)] == expected_prefix
+
+    # Check that all 16 fields are included in order with -e
+    extracted_fields = []
+    i = len(expected_prefix)
+    while i < len(cmd):
+        if cmd[i] == "-e":
+            extracted_fields.append(cmd[i + 1])
+            i += 2
+        else:
+            break
+
+    assert extracted_fields == RAW_FIELDS
+    assert len(cmd) == len(expected_prefix) + 2 * len(RAW_FIELDS)
+
+
+def test_build_command_custom_tshark_path():
+    cmd = build_command("eth0", tshark_path="/usr/bin/tshark")
+    assert cmd[0] == "/usr/bin/tshark"
+
+
+def test_build_command_with_bpf_filter():
+    cmd = build_command("wlan0", capture_filter="tcp port 443")
+    assert cmd[-2:] == ["-f", "tcp port 443"]
+
+
+def test_build_command_with_duration():
+    cmd = build_command("wlan0", duration_s=45)
+    assert cmd[-2:] == ["-a", "duration:45"]
+
+
+def test_build_command_with_both_filter_and_duration():
+    cmd = build_command("wlan0", capture_filter="udp port 53", duration_s=10)
+    assert cmd[-4:] == ["-f", "udp port 53", "-a", "duration:10"]
+
+
+def test_build_command_invalid_duration():
+    with pytest.raises(ValueError, match="duration_s must be greater than 0"):
+        build_command("wlan0", duration_s=0)
+
+    with pytest.raises(ValueError, match="duration_s must be greater than 0"):
+        build_command("wlan0", duration_s=-5)
+
+
+def test_backward_compatibility_alias():
+    cmd1 = build_command("wlan0", capture_filter="tcp", duration_s=30)
+    cmd2 = build_tshark_command("wlan0", bpf_filter="tcp", duration_seconds=30)
+    assert cmd1 == cmd2

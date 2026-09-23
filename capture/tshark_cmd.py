@@ -1,8 +1,13 @@
-"""Build TShark command lines for live packet capture."""
+"""
+capture/tshark_cmd.py — Build TShark command lines for live packet capture.
+
+Generates the exact argument vector for tshark subprocess execution according
+to TECH_RULES §3.1.
+"""
 
 from __future__ import annotations
 
-TSHARK_FIELDS = [
+RAW_FIELDS: list[str] = [
     "frame.time_epoch",
     "ip.src",
     "ip.dst",
@@ -21,18 +26,32 @@ TSHARK_FIELDS = [
     "frame.time_delta",
 ]
 
+# Backward compatibility alias
+TSHARK_FIELDS = RAW_FIELDS
 
-def build_tshark_command(
-    interface: str,
-    bpf_filter: str | None = None,
-    duration_seconds: int | None = None,
+
+def build_command(
+    iface: str,
+    capture_filter: str | None = None,
+    duration_s: int | None = None,
+    tshark_path: str = "tshark",
 ) -> list[str]:
-    """Build the TShark subprocess command."""
+    """
+    Build the exact argv list for running TShark.
 
-    command = [
-        "tshark",
+    Args:
+        iface: Network interface name or index (e.g. 'wlan0' or '1')
+        capture_filter: Optional BPF capture filter (e.g. 'tcp or udp')
+        duration_s: Optional capture duration in seconds
+        tshark_path: Executable path for tshark (defaults to 'tshark')
+
+    Returns:
+        argv list suitable for subprocess.Popen
+    """
+    cmd: list[str] = [
+        tshark_path,
         "-i",
-        interface,
+        str(iface),
         "-l",
         "-n",
         "-T",
@@ -47,15 +66,28 @@ def build_tshark_command(
         "quote=n",
     ]
 
-    for field in TSHARK_FIELDS:
-        command.extend(["-e", field])
+    for field in RAW_FIELDS:
+        cmd.extend(["-e", field])
 
-    if bpf_filter:
-        command.extend(["-f", bpf_filter])
+    if capture_filter:
+        cmd.extend(["-f", capture_filter])
 
-    if duration_seconds is not None:
-        if duration_seconds <= 0:
-            raise ValueError("duration_seconds must be greater than 0")
-        command.extend(["-a", f"duration:{duration_seconds}"])
+    if duration_s is not None:
+        if duration_s <= 0:
+            raise ValueError("duration_s must be greater than 0")
+        cmd.extend(["-a", f"duration:{duration_s}"])
 
-    return command
+    return cmd
+
+
+def build_tshark_command(
+    interface: str,
+    bpf_filter: str | None = None,
+    duration_seconds: int | None = None,
+) -> list[str]:
+    """Backward compatibility alias for build_command."""
+    return build_command(
+        iface=interface,
+        capture_filter=bpf_filter,
+        duration_s=duration_seconds,
+    )

@@ -1,0 +1,5 @@
+1. eth0
+2. wlan0
+3. any (Pseudo-device that captures on all interfaces)
+4. lo [Loopback]
+5. docker0

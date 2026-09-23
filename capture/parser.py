@@ -1,100 +1,104 @@
-"""Parse and normalise raw TShark field output into traffic records."""
+"""
+capture/parser.py — Line parser and normaliser for raw TShark output.
+
+Converts raw TShark comma-separated lines into contract-compliant Record instances
+or structured Reject instances with specific RejectReason enums.
+"""
 
 from __future__ import annotations
 
 import ipaddress
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+from enum import Enum
+from typing import Any
+
+from capture.tshark_cmd import RAW_FIELDS
+from contracts.record_schema import format_row, validate_row
+
+EXPECTED_RAW_COLUMNS = len(RAW_FIELDS)  # 16
 
 
-TsharkRecord = dict[str, object]
+class RejectReason(str, Enum):
+    WRONG_COLUMNS = "WRONG_COLUMNS"
+    NON_IP = "NON_IP"
+    BAD_TIMESTAMP = "BAD_TIMESTAMP"
+    BAD_LENGTH = "BAD_LENGTH"
+    BAD_PORT = "BAD_PORT"
+    BAD_IP = "BAD_IP"
+    VALIDATION = "VALIDATION"
 
-EXPECTED_COLUMNS = 16
 
-REJECT_WRONG_COLUMNS = "WRONG_COLUMNS"
-REJECT_NON_IP = "NON_IP"
-REJECT_BAD_TIMESTAMP = "BAD_TIMESTAMP"
-REJECT_BAD_LENGTH = "BAD_LENGTH"
-REJECT_BAD_PORT = "BAD_PORT"
-REJECT_BAD_IP = "BAD_IP"
-REJECT_VALIDATION = "VALIDATION"
+# Backward compatibility constants
+REJECT_WRONG_COLUMNS = RejectReason.WRONG_COLUMNS.value
+REJECT_NON_IP = RejectReason.NON_IP.value
+REJECT_BAD_TIMESTAMP = RejectReason.BAD_TIMESTAMP.value
+REJECT_BAD_LENGTH = RejectReason.BAD_LENGTH.value
+REJECT_BAD_PORT = RejectReason.BAD_PORT.value
+REJECT_BAD_IP = RejectReason.BAD_IP.value
+REJECT_VALIDATION = RejectReason.VALIDATION.value
+
+
+@dataclass(frozen=True)
+class Record:
+    timestamp: str
+    src_ip: str
+    dst_ip: str
+    src_port: int | None
+    dst_port: int | None
+    protocol: str
+    packet_length: int
+    src_mac: str | None
+    dst_mac: str | None
+    tcp_flags: str | None
+    iat_ms: float | None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert record to a dictionary with exact contract field names."""
+        return asdict(self)
+
+    def to_csv_row(self) -> str:
+        """Convert record to contract CSV row (no header)."""
+        return format_row(self.to_dict())
+
+
+@dataclass(frozen=True)
+class Reject:
+    reason: RejectReason
+    raw_line: str
+    detail: str = ""
 
 
 def _parse_timestamp(value: str) -> str:
-    """Convert TShark epoch timestamp to UTC contract format."""
-    try:
-        timestamp = float(value)
-        dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
-    except (TypeError, ValueError, OverflowError, OSError) as exc:
-        raise ValueError(REJECT_BAD_TIMESTAMP) from exc
-
-    milliseconds = dt.microsecond // 1000
-    return dt.strftime("%Y-%m-%d %H:%M:%S") + f".{milliseconds:03d}"
+    """Convert TShark epoch timestamp to UTC contract format (truncating milliseconds)."""
+    ts = float(value)
+    dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+    millis = dt.microsecond // 1000
+    return dt.strftime("%Y-%m-%d %H:%M:%S") + f".{millis:03d}"
 
 
-def _parse_ip(value: str) -> str:
-    """Validate and return an IP address."""
-    try:
-        return str(ipaddress.ip_address(value))
-    except ValueError as exc:
-        raise ValueError(REJECT_BAD_IP) from exc
-
-
-def _parse_port(value: str) -> int | None:
-    """Validate and return a TCP/UDP port."""
-    if value == "":
-        return None
-
-    try:
-        port = int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(REJECT_BAD_PORT) from exc
-
-    if not 0 <= port <= 65535:
-        raise ValueError(REJECT_BAD_PORT)
-
-    return port
-
-
-def _parse_length(value: str) -> int:
-    """Validate and return packet length."""
-    try:
-        length = int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(REJECT_BAD_LENGTH) from exc
-
-    if length < 0:
-        raise ValueError(REJECT_BAD_LENGTH)
-
-    return length
-
-
-def _parse_iat(value: str) -> float | None:
-    """Convert TShark frame delta from seconds to milliseconds."""
-    if value == "":
-        return None
-
-    try:
-        return float(value) * 1000.0
-    except (TypeError, ValueError) as exc:
-        raise ValueError(REJECT_VALIDATION) from exc
-
-
-def parse_tshark_line(line: str) -> TsharkRecord:
-    """Parse one raw TShark CSV line into a normalised traffic record.
-
-    Expected TShark field order:
-    frame.time_epoch, ip.src, ip.dst, ipv6.src, ipv6.dst,
-    tcp.srcport, tcp.dstport, udp.srcport, udp.dstport,
-    ip.proto, ipv6.nxt, frame.len, eth.src, eth.dst,
-    tcp.flags, frame.time_delta
+def parse_line(raw: str) -> Record | Reject:
     """
-    columns = line.rstrip("\r\n").split(",")
+    Parse one raw TShark CSV line into a contract Record or Reject.
 
-    if len(columns) != EXPECTED_COLUMNS:
-        raise ValueError(REJECT_WRONG_COLUMNS)
+    Expected 16 raw fields:
+    0: frame.time_epoch, 1: ip.src, 2: ip.dst, 3: ipv6.src, 4: ipv6.dst,
+    5: tcp.srcport, 6: tcp.dstport, 7: udp.srcport, 8: udp.dstport,
+    9: ip.proto, 10: ipv6.nxt, 11: frame.len, 12: eth.src, 13: eth.dst,
+    14: tcp.flags, 15: frame.time_delta
+    """
+    clean_line = raw.rstrip("\r\n")
+    cols = clean_line.split(",")
+
+    if len(cols) != EXPECTED_RAW_COLUMNS:
+        return Reject(
+            reason=RejectReason.WRONG_COLUMNS,
+            raw_line=raw,
+            detail=f"Expected {EXPECTED_RAW_COLUMNS} columns, got {len(cols)}",
+        )
 
     (
-        timestamp_raw,
+        epoch_str,
         ipv4_src,
         ipv4_dst,
         ipv6_src,
@@ -104,71 +108,202 @@ def parse_tshark_line(line: str) -> TsharkRecord:
         udp_src,
         udp_dst,
         ip_proto,
-        ipv6_next_header,
-        packet_length_raw,
-        src_mac,
-        dst_mac,
+        ipv6_nxt,
+        len_str,
+        eth_src,
+        eth_dst,
         tcp_flags,
-        iat_raw,
-    ) = columns
+        delta_str,
+    ) = cols
 
-    if not ip_proto and not ipv6_next_header:
-        raise ValueError(REJECT_NON_IP)
+    # Reject non-IP packets (ARP, etc.) where neither IPv4 proto nor IPv6 next-header is present
+    if not ip_proto and not ipv6_nxt:
+        return Reject(
+            reason=RejectReason.NON_IP,
+            raw_line=raw,
+            detail="Neither ip.proto nor ipv6.nxt present",
+        )
 
-    timestamp = _parse_timestamp(timestamp_raw)
-
+    # Coalesce source and destination IP addresses
     src_raw = ipv4_src or ipv6_src
     dst_raw = ipv4_dst or ipv6_dst
 
     if not src_raw or not dst_raw:
-        raise ValueError(REJECT_BAD_IP)
-
-    src_ip = _parse_ip(src_raw)
-    dst_ip = _parse_ip(dst_raw)
-
-    packet_length = _parse_length(packet_length_raw)
-
-    protocol_number = ip_proto or ipv6_next_header
+        return Reject(
+            reason=RejectReason.BAD_IP,
+            raw_line=raw,
+            detail="Missing source or destination IP",
+        )
 
     try:
-        protocol_value = int(protocol_number)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(REJECT_VALIDATION) from exc
+        src_ip = str(ipaddress.ip_address(src_raw.strip()))
+        dst_ip = str(ipaddress.ip_address(dst_raw.strip()))
+    except ValueError as exc:
+        return Reject(
+            reason=RejectReason.BAD_IP,
+            raw_line=raw,
+            detail=str(exc),
+        )
 
-    if protocol_value == 6:
+    # Timestamp conversion
+    if not epoch_str:
+        return Reject(
+            reason=RejectReason.BAD_TIMESTAMP,
+            raw_line=raw,
+            detail="Empty timestamp",
+        )
+    try:
+        timestamp = _parse_timestamp(epoch_str)
+    except (ValueError, OverflowError, OSError) as exc:
+        return Reject(
+            reason=RejectReason.BAD_TIMESTAMP,
+            raw_line=raw,
+            detail=str(exc),
+        )
+
+    # Frame length conversion
+    if not len_str:
+        return Reject(
+            reason=RejectReason.BAD_LENGTH,
+            raw_line=raw,
+            detail="Empty packet length",
+        )
+    try:
+        packet_len = int(len_str)
+        if not 1 <= packet_len <= 65535:
+            return Reject(
+                reason=RejectReason.BAD_LENGTH,
+                raw_line=raw,
+                detail=f"Packet length {packet_len} out of bounds (1-65535)",
+            )
+    except ValueError as exc:
+        return Reject(
+            reason=RejectReason.BAD_LENGTH,
+            raw_line=raw,
+            detail=str(exc),
+        )
+
+    # Protocol mapping: 6 -> TCP, 17 -> UDP, 1 or 58 -> ICMP, else OTHER
+    proto_num_str = ip_proto or ipv6_nxt
+    try:
+        proto_num = int(proto_num_str)
+    except ValueError:
+        return Reject(
+            reason=RejectReason.VALIDATION,
+            raw_line=raw,
+            detail=f"Invalid protocol number: {proto_num_str}",
+        )
+
+    if proto_num == 6:
         protocol = "TCP"
-    elif protocol_value == 17:
+    elif proto_num == 17:
         protocol = "UDP"
-    elif protocol_value in (1, 58):
+    elif proto_num in (1, 58):
         protocol = "ICMP"
     else:
         protocol = "OTHER"
 
+    # Ports extraction
+    src_port: int | None = None
+    dst_port: int | None = None
+
     if protocol == "TCP":
-        src_port_raw = tcp_src
-        dst_port_raw = tcp_dst
+        src_p_raw, dst_p_raw = tcp_src, tcp_dst
     elif protocol == "UDP":
-        src_port_raw = udp_src
-        dst_port_raw = udp_dst
+        src_p_raw, dst_p_raw = udp_src, udp_dst
     else:
-        src_port_raw = ""
-        dst_port_raw = ""
+        src_p_raw, dst_p_raw = "", ""
 
-    src_port = _parse_port(src_port_raw)
-    dst_port = _parse_port(dst_port_raw)
+    if src_p_raw:
+        try:
+            sp = int(src_p_raw)
+            if not 0 <= sp <= 65535:
+                return Reject(
+                    reason=RejectReason.BAD_PORT,
+                    raw_line=raw,
+                    detail=f"Source port {sp} out of range",
+                )
+            src_port = sp
+        except ValueError:
+            return Reject(
+                reason=RejectReason.BAD_PORT,
+                raw_line=raw,
+                detail=f"Invalid source port: {src_p_raw}",
+            )
 
-    iat_ms = _parse_iat(iat_raw)
+    if dst_p_raw:
+        try:
+            dp = int(dst_p_raw)
+            if not 0 <= dp <= 65535:
+                return Reject(
+                    reason=RejectReason.BAD_PORT,
+                    raw_line=raw,
+                    detail=f"Destination port {dp} out of range",
+                )
+            dst_port = dp
+        except ValueError:
+            return Reject(
+                reason=RejectReason.BAD_PORT,
+                raw_line=raw,
+                detail=f"Invalid destination port: {dst_p_raw}",
+            )
 
-    return {
-        "timestamp": timestamp,
-        "src_ip": src_ip,
-        "dst_ip": dst_ip,
-        "src_port": src_port,
-        "dst_port": dst_port,
-        "protocol": protocol,
-        "packet_length": packet_length,
-        "src_mac": src_mac.lower() if src_mac else None,
-        "dst_mac": dst_mac.lower() if dst_mac else None,
-        "tcp_flags": tcp_flags or None,
-        "iat_ms": iat_ms,
-    }
+    # IAT ms calculation (frame.time_delta * 1000)
+    iat_ms: float | None = None
+    if delta_str:
+        try:
+            val = float(delta_str) * 1000.0
+            if val < 0.0:
+                return Reject(
+                    reason=RejectReason.VALIDATION,
+                    raw_line=raw,
+                    detail="Negative frame time delta",
+                )
+            iat_ms = val
+        except ValueError:
+            return Reject(
+                reason=RejectReason.VALIDATION,
+                raw_line=raw,
+                detail=f"Invalid frame time delta: {delta_str}",
+            )
+
+    # MACs and TCP flags normalisation
+    src_mac = eth_src.strip().lower() if eth_src.strip() else None
+    dst_mac = eth_dst.strip().lower() if eth_dst.strip() else None
+    flags = tcp_flags.strip() if tcp_flags.strip() else None
+
+    record = Record(
+        timestamp=timestamp,
+        src_ip=src_ip,
+        dst_ip=dst_ip,
+        src_port=src_port,
+        dst_port=dst_port,
+        protocol=protocol,
+        packet_length=packet_len,
+        src_mac=src_mac,
+        dst_mac=dst_mac,
+        tcp_flags=flags,
+        iat_ms=iat_ms,
+    )
+
+    # Validate against data contract
+    ok, reason_str = validate_row(record.to_dict())
+    if not ok:
+        return Reject(
+            reason=RejectReason.VALIDATION,
+            raw_line=raw,
+            detail=reason_str,
+        )
+
+    return record
+
+
+def parse_tshark_line(line: str) -> dict[str, Any]:
+    """
+    Backward-compatibility helper that parses a raw TShark line into a dict,
+    raising ValueError on rejection matching previous behavior.
+    """
+    res = parse_line(line)
+    if isinstance(res, Reject):
+        raise ValueError(res.reason.value)
+    return res.to_dict()
