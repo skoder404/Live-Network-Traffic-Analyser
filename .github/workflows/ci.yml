@@ -13,6 +13,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Java 11 (required by PySpark)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "11"
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -34,6 +40,8 @@ jobs:
         run: |
           python scripts/check_no_captures.py
 
-      - name: Run Unit Tests (Fast non-Spark)
+      - name: Run Unit Tests
+        env:
+          PYTHONPATH: "."
         run: |
-          pytest -m "not spark and not e2e" --cov=. --cov-report=xml --cov-report=term-missing
+          pytest tests/unit/ --cov=. --cov-report=xml --cov-report=term-missing -v
