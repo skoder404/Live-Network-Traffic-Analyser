@@ -17,9 +17,10 @@ import json
 import logging
 import random
 from collections import Counter
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pyspark.sql import DataFrame
@@ -79,10 +80,7 @@ def compute_iat_from_timestamps(
         return []
 
     epoch_ms_list.sort()
-    return [
-        round(epoch_ms_list[i] - epoch_ms_list[i - 1], 3)
-        for i in range(1, len(epoch_ms_list))
-    ]
+    return [round(epoch_ms_list[i] - epoch_ms_list[i - 1], 3) for i in range(1, len(epoch_ms_list))]
 
 
 class AMSF2:
@@ -159,9 +157,7 @@ class AMSF2:
 
         for g in range(self.num_groups):
             start_idx = g * group_size
-            end_idx = (
-                (g + 1) * group_size if g < self.num_groups - 1 else self.num_estimators
-            )
+            end_idx = (g + 1) * group_size if g < self.num_groups - 1 else self.num_estimators
             slice_vals = values[start_idx:end_idx]
             if slice_vals:
                 group_means.append(sum(slice_vals) / len(slice_vals))
@@ -257,13 +253,11 @@ class MomentsAnalytic(Analytic):
         if not state_file.exists():
             return
         try:
-            with open(state_file, "r", encoding="utf-8") as f:
+            with open(state_file, encoding="utf-8") as f:
                 state = json.load(f)
 
             self.window_len_s = int(state.get("window_len_s", 10))
-            self.window_exact = {
-                w: Counter(c) for w, c in state.get("window_exact", {}).items()
-            }
+            self.window_exact = {w: Counter(c) for w, c in state.get("window_exact", {}).items()}
             self.window_ams = {}
             for w, ams_data in state.get("window_ams", {}).items():
                 ams = AMSF2()
@@ -273,9 +267,7 @@ class MomentsAnalytic(Analytic):
         except Exception as e:
             logger.warning("Failed to restore moments state from %s: %s", state_file, e)
 
-    def process_batch(
-        self, batch_df: DataFrame, batch_id: int, ctx: BatchContext
-    ) -> None:
+    def process_batch(self, batch_df: DataFrame, batch_id: int, ctx: BatchContext) -> None:
         self._ensure_initialized(ctx.cfg)
 
         if batch_df.count() == 0:
@@ -306,9 +298,7 @@ class MomentsAnalytic(Analytic):
             epoch_s = int(dt.timestamp())
             floor_epoch_s = epoch_s - (epoch_s % self.window_len_s)
             w_start_dt = datetime.fromtimestamp(floor_epoch_s, timezone.utc)
-            ws_iso = (
-                w_start_dt.strftime("%Y-%m-%dT%H:%M:%S.000") + "Z"
-            )
+            ws_iso = w_start_dt.strftime("%Y-%m-%dT%H:%M:%S.000") + "Z"
 
             if ws_iso not in self.window_exact:
                 self.window_exact[ws_iso] = Counter()
@@ -333,19 +323,19 @@ class MomentsAnalytic(Analytic):
             f2_ex = exact_f2(self.window_exact[ws])
             f2_est = self.window_ams[ws].estimate()
 
-            moments_rows.append({
-                "window_start": ws,
-                "window_len_s": self.window_len_s,
-                "f2_exact": f2_ex,
-                "f2_ams": f2_est,
-            })
+            moments_rows.append(
+                {
+                    "window_start": ws,
+                    "window_len_s": self.window_len_s,
+                    "f2_exact": f2_ex,
+                    "f2_ams": f2_est,
+                }
+            )
 
         # Partial upsert: write ONLY f2_exact and f2_ams to moments table
         conn = ctx.conn
         if conn is not None and moments_rows:
             upsert(conn, "moments", ["window_start", "window_len_s"], moments_rows)
-            logger.debug(
-                "Upserted %d moments F2 rows (batch %d)", len(moments_rows), batch_id
-            )
+            logger.debug("Upserted %d moments F2 rows (batch %d)", len(moments_rows), batch_id)
 
         self._persist_state()

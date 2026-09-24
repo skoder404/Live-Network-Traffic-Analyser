@@ -192,4 +192,3 @@ def start_source_stats(
 
     logger.info("Started source_stats query (window=%ds, id=%s)", window_len_s, query.id)
     return query
-

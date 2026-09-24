@@ -2,10 +2,9 @@
 tests/unit/test_moments.py — Unit tests for AMS F2 second-moment estimator and Moments Analytic.
 """
 
-from collections import Counter
 import random
 import unittest
-from datetime import datetime
+from collections import Counter
 
 from streaming.analytics.moments import (
     AMSF2,
@@ -49,9 +48,7 @@ class TestMoments(unittest.TestCase):
         """
         rng = random.Random(123)
         # Heavy hitter represents 70% of traffic
-        items = ["192.168.1.100"] * 700 + [
-            f"10.0.0.{rng.randint(1, 50)}" for _ in range(300)
-        ]
+        items = ["192.168.1.100"] * 700 + [f"10.0.0.{rng.randint(1, 50)}" for _ in range(300)]
         rng.shuffle(items)
 
         counter = Counter(items)
