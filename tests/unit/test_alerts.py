@@ -1,13 +1,12 @@
 """
 tests/unit/test_alerts.py — Unit tests for alert engine.
 """
+
 import pytest
-import time
 
 from linkanalysis.alerts import (
     AlertEngine,
     AlertRuleConfig,
-    AlertState,
     load_alert_config,
 )
 

@@ -1,18 +1,27 @@
 """
 tests/unit/test_linkanalysis.py — Unit tests for link analysis module.
 """
-import pytest
 import networkx as nx
+import pytest
 
-from linkanalysis.graph import build_graph_from_edges, prune_graph_top_n, classify_ip
-from linkanalysis.pagerank import pagerank_networkx, pagerank_power_iteration, validate_pagerank_agreement
-from linkanalysis.markov import build_markov_matrix, markov_next_hop, markov_transition_heatmap, stationary_distribution
 from linkanalysis.centrality import (
+    betweenness_centrality,
     degree_centrality,
     in_degree_centrality,
     out_degree_centrality,
-    betweenness_centrality,
     top_centrality_nodes,
+)
+from linkanalysis.graph import build_graph_from_edges, classify_ip, prune_graph_top_n
+from linkanalysis.markov import (
+    build_markov_matrix,
+    markov_next_hop,
+    markov_transition_heatmap,
+    stationary_distribution,
+)
+from linkanalysis.pagerank import (
+    pagerank_networkx,
+    pagerank_power_iteration,
+    validate_pagerank_agreement,
 )
 
 
@@ -125,7 +134,7 @@ class TestPageRank:
 
 class TestMarkov:
     def test_build_markov_matrix(self, toy_graph):
-        node_to_idx, P = build_markov_matrix(toy_graph, weight="packets")
+        _node_to_idx, P = build_markov_matrix(toy_graph, weight="packets")
         assert P.shape == (4, 4)
         # Rows should sum to 1
         row_sums = P.sum(axis=1)
@@ -133,7 +142,7 @@ class TestMarkov:
 
     def test_markov_rows_sum_to_one(self, toy_graph):
         """TECH_RULES §3.6: Markov rows sum to 1."""
-        node_to_idx, P = build_markov_matrix(toy_graph)
+        _node_to_idx, P = build_markov_matrix(toy_graph)
         for row in P:
             assert abs(row.sum() - 1.0) < 1e-6
 
@@ -208,7 +217,7 @@ class TestIntegration:
         pr = pagerank_power_iteration(G)
         assert len(pr) == G.number_of_nodes()
 
-        node_to_idx, P = build_markov_matrix(G)
+        _node_to_idx, P = build_markov_matrix(G)
         assert P.shape == (G.number_of_nodes(), G.number_of_nodes())
 
         dc = degree_centrality(G)

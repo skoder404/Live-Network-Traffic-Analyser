@@ -3,11 +3,9 @@ linkanalysis/pagerank.py — PageRank implementations (NetworkX + from-scratch p
 
 Pure domain logic: no I/O, no framework dependencies.
 """
-from typing import Dict, Optional
 
 import networkx as nx
 import numpy as np
-
 
 # Constants (per TECH_RULES §3.6)
 DEFAULT_ALPHA = 0.85
@@ -21,7 +19,7 @@ def pagerank_networkx(
     G: nx.DiGraph,
     alpha: float = DEFAULT_ALPHA,
     weight: str = DEFAULT_WEIGHT,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Compute PageRank using NetworkX.
 
@@ -42,8 +40,8 @@ def pagerank_power_iteration(
     weight: str = DEFAULT_WEIGHT,
     max_iter: int = DEFAULT_MAX_ITER,
     tol: float = DEFAULT_TOL,
-    personalization: Optional[Dict[str, float]] = None,
-) -> Dict[str, float]:
+    personalization: dict[str, float] | None = None,
+) -> dict[str, float]:
     """
     Compute PageRank using from-scratch power iteration.
 

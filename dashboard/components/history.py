@@ -4,13 +4,14 @@ dashboard/components/history.py — History tab for LNTA dashboard.
 Shows historical query results from Hive/Spark SQL over HDFS.
 Per DESIGN.md §109-112.
 """
+import sqlite3
 from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.data import ServingDB
+from dashboard.data import ServingDB, get_hist_results
 from dashboard.theme import LNTA_COLORS
 
 
@@ -18,12 +19,28 @@ def render_history_tab(db: ServingDB, controls: dict[str, Any]) -> None:
     """Render the History tab with query selector and results."""
     st.markdown("## 📜 History")
 
-    # Fetch available queries
+    # Fetch available queries with loading state
     with st.spinner("Loading historical queries..."):
-        hist_df = db.get_hist_results(limit=100)
+        try:
+            hist_df = get_hist_results(db, limit=100)
+        except (sqlite3.Error, pd.errors.DatabaseError, OSError) as e:
+            st.error(f"Failed to load historical data: {e}")
+            return
 
+    # Empty state
     if hist_df.empty:
-        st.info("📜 No historical results yet — run `run_historical.py`.")
+        st.markdown(
+            """
+            <div class="empty-state" role="status" aria-live="polite">
+                <div class="empty-state-icon">📜</div>
+                <div>No historical results yet.</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
+                    Run <code>run_historical.py</code> to generate historical query results.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         return
 
     # Parse JSON columns
@@ -31,9 +48,27 @@ def render_history_tab(db: ServingDB, controls: dict[str, Any]) -> None:
     hist_df["columns"] = hist_df["columns_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
     hist_df["rows"] = hist_df["rows_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
 
-    # Query selector
+    # Check for stale data
+    latest_run = hist_df["run_at"].max()
+    latest_ts = pd.Timestamp(latest_run)
+    now_utc = pd.Timestamp.now(tz="UTC")
+    if latest_ts.tz is None:
+        latest_ts = latest_ts.tz_localize("UTC")
+    if latest_ts < now_utc - pd.Timedelta(hours=24):
+        st.warning("⚠️ Historical data may be stale (last run > 24h ago)")
+
+    # Parse JSON columns
+    hist_df["columns"] = hist_df["columns_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
+    hist_df["rows"] = hist_df["rows_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
+
+    # Query selector with accessible label
     query_names = hist_df["query_name"].unique().tolist()
-    selected_query = st.selectbox("Select Query", query_names, key="history_query_select")
+    selected_query = st.selectbox(
+        "Select Historical Query",
+        query_names,
+        key="history_query_select",
+        help="Choose a historical query to view its results",
+    )
 
     # Filter to selected query
     query_data = hist_df[hist_df["query_name"] == selected_query].iloc[0]
@@ -107,4 +142,4 @@ def render_history_chart(df: pd.DataFrame, columns: list) -> None:
             hovermode="x unified",
         )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})

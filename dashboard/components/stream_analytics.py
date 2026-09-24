@@ -4,17 +4,28 @@ dashboard/components/stream_analytics.py — Stream Analytics tab for LNTA dashb
 Shows 7 concept cards: Filtering, Sampling, Count Distinct, Counting Ones, Moments, Decay, Frequent Itemsets.
 Each card shows exact vs approximate comparison per DESIGN.md §81-94.
 """
-from typing import Any, Dict, List
+import sqlite3
+from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.data import ServingDB
-from dashboard.theme import LNTA_COLORS, get_protocol_color
+from dashboard.data import (
+    ServingDB,
+    get_counting_ones,
+    get_decay_top_keys,
+    get_decay_traffic,
+    get_distinct_counts,
+    get_filter_counts,
+    get_frequent_itemsets,
+    get_moments,
+    get_sampling_compare,
+)
+from dashboard.theme import LNTA_COLORS
 
 
-def render_stream_analytics_tab(db: ServingDB, controls: Dict[str, Any]) -> None:
+def render_stream_analytics_tab(db: ServingDB, controls: dict[str, Any]) -> None:
     """Render the Stream Analytics tab with 7 concept cards."""
     st.markdown("## 🔬 Stream Analytics")
 
@@ -22,14 +33,18 @@ def render_stream_analytics_tab(db: ServingDB, controls: Dict[str, Any]) -> None
 
     # Fetch all data needed for the 7 concepts
     with st.spinner("Loading stream analytics..."):
-        filter_df = db.get_filter_counts(window_len, limit=120)
-        sampling_df = db.get_sampling_compare(limit=120)
-        distinct_df = db.get_distinct_counts(window_len, limit=120)
-        counting_ones_df = db.get_counting_ones(limit=120)
-        moments_df = db.get_moments(window_len, limit=120)
-        decay_df = db.get_decay_traffic(limit=120)
-        decay_keys_df = db.get_decay_top_keys(window_len, key_type="src_ip", limit=20)
-        itemsets_df = db.get_frequent_itemsets(window_len, algorithm="A-Priori", limit=50)
+        try:
+            filter_df = get_filter_counts(db, window_len, limit=120)
+            sampling_df = get_sampling_compare(db, limit=120)
+            distinct_df = get_distinct_counts(db, window_len, limit=120)
+            counting_ones_df = get_counting_ones(db, limit=120)
+            moments_df = get_moments(db, window_len, limit=120)
+            decay_df = get_decay_traffic(db, limit=120)
+            decay_keys_df = get_decay_top_keys(db, limit=20)
+            itemsets_df = get_frequent_itemsets(db, window_len, algorithm="A-Priori", limit=50)
+        except (sqlite3.Error, pd.errors.DatabaseError, OSError) as e:
+            st.error(f"Failed to load stream analytics: {e}")
+            return
 
     # --- 7 Concept Cards in 2-column grid ---
     st.markdown("### Streaming Algorithm Concepts")
@@ -102,11 +117,11 @@ def render_filtering_card(df: pd.DataFrame) -> None:
     fig.update_layout(
         template="lnta_dark",
         height=250,
-        margin=dict(l=120, r=20, t=20, b=20),
-        xaxis=dict(title="% of Total Packets", range=[0, max(agg["pct"]) * 1.2]),
-        yaxis=dict(autorange="reversed"),
+        margin={"l": 120, "r": 20, "t": 20, "b": 20},
+        xaxis={"title": "% of Total Packets", "range": [0, max(agg["pct"]) * 1.2]},
+        yaxis={"autorange": "reversed"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_sampling_card(df: pd.DataFrame) -> None:
@@ -137,18 +152,18 @@ def render_sampling_card(df: pd.DataFrame) -> None:
         x=df["ts"],
         y=df["err_pct"],
         mode="lines+markers",
-        line=dict(color=LNTA_COLORS["warn"]),
+        line={"color": LNTA_COLORS["warn"]},
         fill="tozeroy",
         hovertemplate="Error: %{y:.2f}%<extra></extra>",
     ))
     fig.update_layout(
         template="lnta_dark",
         height=200,
-        margin=dict(l=60, r=20, t=20, b=40),
-        yaxis=dict(title="Error %"),
-        xaxis=dict(title="Time"),
+        margin={"l": 60, "r": 20, "t": 20, "b": 40},
+        yaxis={"title": "Error %"},
+        xaxis={"title": "Time"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_distinct_card(df: pd.DataFrame) -> None:
@@ -222,16 +237,16 @@ def render_counting_ones_card(df: pd.DataFrame) -> None:
         x=df["ts"],
         y=df["err_pct"],
         mode="lines",
-        line=dict(color=LNTA_COLORS["proto_icmp"]),
+        line={"color": LNTA_COLORS["proto_icmp"]},
         hovertemplate="DGIM Error: %{y:.1f}%<extra></extra>",
     ))
     fig.update_layout(
         template="lnta_dark",
         height=180,
-        margin=dict(l=60, r=20, t=20, b=40),
-        yaxis=dict(title="Error %"),
+        margin={"l": 60, "r": 20, "t": 20, "b": 40},
+        yaxis={"title": "Error %"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_moments_card(df: pd.DataFrame) -> None:
@@ -309,18 +324,19 @@ def render_decay_card(decay_df: pd.DataFrame, decay_keys_df: pd.DataFrame) -> No
         x=decay_df["ts"],
         y=decay_df["score"],
         mode="lines",
-        line=dict(color=LNTA_COLORS["proto_udp"]),
+        line={"color": LNTA_COLORS["proto_udp"]},
         fill="tozeroy",
+        fillcolor="rgba(167, 139, 250, 0.1)",
         hovertemplate="Score: %{y:.2f}<extra></extra>",
     ))
     fig.update_layout(
         template="lnta_dark",
         height=200,
-        margin=dict(l=60, r=20, t=20, b=40),
-        yaxis=dict(title="Decay Score"),
-        xaxis=dict(title="Time"),
+        margin={"l": 60, "r": 20, "t": 20, "b": 40},
+        yaxis={"title": "Decay Score"},
+        xaxis={"title": "Time"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     # Top decayed keys
     if not decay_keys_df.empty:
@@ -375,11 +391,11 @@ def render_itemsets_card(df: pd.DataFrame) -> None:
     fig.update_layout(
         template="lnta_dark",
         height=350,
-        margin=dict(l=200, r=20, t=20, b=40),
-        xaxis=dict(title="Support %", range=[0, max(latest_df["support_ratio"]) * 120]),
-        yaxis=dict(autorange="reversed"),
+        margin={"l": 200, "r": 20, "t": 20, "b": 40},
+        xaxis={"title": "Support %", "range": [0, max(latest_df["support_ratio"]) * 120]},
+        yaxis={"autorange": "reversed"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     # Table with details
     st.dataframe(
@@ -398,4 +414,3 @@ def render_itemsets_card(df: pd.DataFrame) -> None:
             ),
         },
     )
-EOF

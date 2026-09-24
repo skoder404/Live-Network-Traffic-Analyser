@@ -4,13 +4,14 @@ dashboard/components/pipeline.py — Pipeline tab for LNTA dashboard.
 Shows pipeline stage health, batch metrics, and end-to-end lag.
 Per DESIGN.md §114-117.
 """
+import sqlite3
 from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.data import ServingDB
+from dashboard.data import ServingDB, get_pipeline_health
 from dashboard.theme import LNTA_COLORS
 
 
@@ -18,12 +19,38 @@ def render_pipeline_tab(db: ServingDB, controls: dict[str, Any]) -> None:
     """Render the Pipeline tab with stage tiles and health metrics."""
     st.markdown("## 🔧 Pipeline Health")
 
-    # Fetch pipeline health data
+    # Fetch pipeline health data with loading state
     with st.spinner("Loading pipeline health..."):
-        health_df = db.get_pipeline_health(limit=200)
+        try:
+            health_df = get_pipeline_health(db, limit=200)
+        except (sqlite3.Error, pd.errors.DatabaseError, OSError) as e:
+            st.error(f"Failed to load pipeline health: {e}")
+            return
 
+    # Check for stale data
+    if not health_df.empty:
+        latest_ts = health_df["ts"].max()
+        latest_ts = pd.Timestamp(latest_ts)
+        now_utc = pd.Timestamp.now(tz="UTC")
+        if latest_ts.tz is None:
+            latest_ts = latest_ts.tz_localize("UTC")
+        if latest_ts < now_utc - pd.Timedelta(seconds=30):
+            st.warning("⚠️ Pipeline data may be stale (last update > 30s ago)")
+
+    # Empty state
     if health_df.empty:
-        st.info("🔧 No pipeline health data available yet.")
+        st.markdown(
+            """
+            <div class="empty-state" role="status" aria-live="polite">
+                <div class="empty-state-icon">🔧</div>
+                <div>No pipeline health data available yet.</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
+                    Start the pipeline to see stage health and metrics.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         return
 
     # --- Stage Tiles ---
@@ -86,12 +113,21 @@ def render_stage_tiles(df: pd.DataFrame) -> None:
             }
             color = status_colors.get(status, LNTA_COLORS["text_muted"])
 
+            # Accessible status with icon + text (not color-only)
+            status_icons = {
+                "OK": "✅",
+                "LAGGING": "⚠️",
+                "DOWN": "🔴",
+                "UNKNOWN": "❓",
+            }
+            status_icon = status_icons.get(status, "❓")
+
             st.markdown(
                 f"""
-                <div class="panel-card" style="text-align:center; border-left: 4px solid {color};">
-                    <div style="font-size:24px;">{icon}</div>
+                <div class="panel-card" style="text-align:center; border-left: 4px solid {color};" role="status" aria-label="{name} stage: {status}">
+                    <div style="font-size:24px;" aria-hidden="true">{icon}</div>
                     <div style="font-weight:600; margin:8px 0;">{name}</div>
-                    <div style="color:{color}; font-weight:600;">{status}</div>
+                    <div style="color:{color}; font-weight:600;">{status_icon} {status}</div>
                     <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Last: {last_seen}</div>
                 </div>
                 """,
@@ -103,7 +139,15 @@ def render_batch_duration_chart(df: pd.DataFrame) -> None:
     """Render batch duration vs trigger interval chart."""
     batch_df = df[df["metric"] == "batch_duration_ms"].copy()
     if batch_df.empty:
-        st.info("No batch duration data")
+        st.markdown(
+            """
+            <div class="empty-state" role="status" aria-live="polite">
+                <div class="empty-state-icon">📊</div>
+                <div>No batch duration data</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         return
 
     batch_df = batch_df.sort_values("ts")
@@ -138,14 +182,22 @@ def render_batch_duration_chart(df: pd.DataFrame) -> None:
         hovermode="x unified",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_input_rows_chart(df: pd.DataFrame) -> None:
     """Render input rows per batch chart."""
     rows_df = df[df["metric"] == "input_rows"].copy()
     if rows_df.empty:
-        st.info("No input rows data")
+        st.markdown(
+            """
+            <div class="empty-state" role="status" aria-live="polite">
+                <div class="empty-state-icon">📊</div>
+                <div>No input rows data</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         return
 
     rows_df = rows_df.sort_values("ts")
@@ -165,14 +217,22 @@ def render_input_rows_chart(df: pd.DataFrame) -> None:
         yaxis={"title": "Input Rows"},
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_e2e_lag_chart(df: pd.DataFrame) -> None:
     """Render end-to-end lag chart."""
     lag_df = df[df["metric"] == "e2e_lag_ms"].copy()
     if lag_df.empty:
-        st.info("No end-to-end lag data")
+        st.markdown(
+            """
+            <div class="empty-state" role="status" aria-live="polite">
+                <div class="empty-state-icon">📊</div>
+                <div>No end-to-end lag data</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         return
 
     lag_df = lag_df.sort_values("ts")
@@ -196,7 +256,7 @@ def render_e2e_lag_chart(df: pd.DataFrame) -> None:
         hovermode="x unified",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_counters(df: pd.DataFrame) -> None:

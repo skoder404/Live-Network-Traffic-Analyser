@@ -3,11 +3,10 @@ linkanalysis/graph.py — Build directed weighted IP communication graph.
 
 Pure domain logic: no I/O, no framework dependencies.
 """
-from typing import Iterable
+import ipaddress
+from collections.abc import Iterable
 
 import networkx as nx
-import ipaddress
-
 
 # Constants
 DEFAULT_TOP_N = 50

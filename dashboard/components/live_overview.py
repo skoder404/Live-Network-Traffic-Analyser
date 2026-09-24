@@ -4,13 +4,20 @@ dashboard/components/live_overview.py — Live Overview tab for LNTA dashboard.
 Shows traffic over time, protocol distribution, top ports, and decay score.
 Per DESIGN.md §73-79.
 """
+import sqlite3
 from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.data import ServingDB
+from dashboard.data import (
+    ServingDB,
+    get_decay_traffic,
+    get_latest_window_metrics,
+    get_port_counts,
+    get_protocol_counts,
+)
 from dashboard.theme import LNTA_COLORS, get_protocol_color
 
 
@@ -20,15 +27,42 @@ def render_live_overview_tab(db: ServingDB, controls: dict[str, Any]) -> None:
 
     window_len = controls["window_len_s"]
 
-    # Fetch data
+    # Fetch data with loading state
     with st.spinner("Loading live overview data..."):
-        metrics_df = db.get_latest_window_metrics(window_len, limit=120)
-        protocol_df = db.get_protocol_counts(window_len, limit=120)
-        ports_df = db.get_port_counts(window_len, limit=20)
-        decay_df = db.get_decay_traffic(limit=120)
+        try:
+            metrics_df = get_latest_window_metrics(db, window_len, limit=120)
+            protocol_df = get_protocol_counts(db, window_len, limit=120)
+            ports_df = get_port_counts(db, window_len, limit=20)
+            decay_df = get_decay_traffic(db, limit=120)
+        except (sqlite3.Error, pd.errors.DatabaseError, OSError) as e:
+            st.error(f"Failed to load data: {e}")
+            return
 
+    # Check for stale data
+    if not metrics_df.empty:
+        latest_ts = metrics_df["window_start"].max()
+        # Handle both tz-naive and tz-aware timestamps
+        latest_ts = pd.Timestamp(latest_ts)
+        now_utc = pd.Timestamp.now(tz="UTC")
+        if latest_ts.tz is None:
+            latest_ts = latest_ts.tz_localize("UTC")
+        if latest_ts < now_utc - pd.Timedelta(seconds=15):
+            st.warning("⚠️ Data may be stale (last update > 15s ago)")
+
+    # Empty state
     if metrics_df.empty:
-        st.info("📊 No traffic data available yet. Start capture or replay to see live overview.")
+        st.markdown(
+            """
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <div>No traffic data available yet.</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
+                    Start capture or replay to see live overview.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         return
 
     # --- Row 1: Traffic over time (dual-axis) ---
@@ -94,7 +128,7 @@ def render_traffic_chart(df: pd.DataFrame) -> None:
         hovermode="x unified",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_protocol_donut(df: pd.DataFrame) -> None:
@@ -127,7 +161,7 @@ def render_protocol_donut(df: pd.DataFrame) -> None:
         legend={"orientation": "v", "yanchor": "middle", "y": 0.5, "xanchor": "left", "x": 1.05},
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_top_ports(df: pd.DataFrame) -> None:
@@ -165,7 +199,7 @@ def render_top_ports(df: pd.DataFrame) -> None:
         yaxis={"autorange": "reversed"},
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_decay_score(df: pd.DataFrame) -> None:
@@ -195,7 +229,7 @@ def render_decay_score(df: pd.DataFrame) -> None:
         hovermode="x unified",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     # Trend arrow
     if len(df) >= 2:

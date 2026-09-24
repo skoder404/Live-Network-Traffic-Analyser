@@ -13,7 +13,7 @@ import time
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import yaml
 
@@ -43,14 +43,14 @@ class AlertRuleConfig:
 class AlertState:
     """Persistent state for alert evaluation."""
     # EWMA baseline per metric (key: metric_name)
-    ewma_baselines: Dict[str, float] = field(default_factory=dict)
-    ewma_counts: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
+    ewma_baselines: dict[str, float] = field(default_factory=dict)
+    ewma_counts: dict[str, int] = field(default_factory=lambda: defaultdict(int))
 
     # Cooldown tracking: (alert_type, src_ip) -> last_alert_timestamp
-    cooldowns: Dict[Tuple[str, str], float] = field(default_factory=dict)
+    cooldowns: dict[tuple[str, str], float] = field(default_factory=dict)
 
     # Alert history for deduplication
-    recent_alerts: List[Dict[str, Any]] = field(default_factory=list)
+    recent_alerts: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -69,7 +69,7 @@ class Alert:
     reason: str
     details_json: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "alert_id": self.alert_id,
             "ts": self.ts,
@@ -114,7 +114,7 @@ class AlertEngine:
     Maintains state (EWMA baselines, cooldowns) across calls.
     """
 
-    def __init__(self, config: Optional[AlertRuleConfig] = None, state: Optional[AlertState] = None):
+    def __init__(self, config: AlertRuleConfig | None = None, state: AlertState | None = None):
         self.config = config or AlertRuleConfig()
         self.state = state or AlertState()
 
@@ -123,10 +123,10 @@ class AlertEngine:
         window_start: str,
         window_len_s: int,
         pps: float,
-        src_ip_port_counts: Dict[str, int],
-        src_ip_dst_ip_counts: Dict[str, int],
-        src_ip_packet_counts: Dict[str, int],
-    ) -> List[Alert]:
+        src_ip_port_counts: dict[str, int],
+        src_ip_dst_ip_counts: dict[str, int],
+        src_ip_packet_counts: dict[str, int],
+    ) -> list[Alert]:
         """
         Evaluate all alert rules for a single window.
 
@@ -170,7 +170,7 @@ class AlertEngine:
 
         return alerts
 
-    def _check_traffic_spike(self, window_start: str, pps: float) -> Optional[Alert]:
+    def _check_traffic_spike(self, window_start: str, pps: float) -> Alert | None:
         """Check for traffic spike vs EWMA baseline."""
         metric = "global_pps"
         alpha = self.config.ewma_alpha
@@ -255,7 +255,7 @@ class AlertEngine:
 
     def _check_unusual_port_activity(
         self, window_start: str, src_ip: str, distinct_port_count: int
-    ) -> Optional[Alert]:
+    ) -> Alert | None:
         """Check if single source accesses too many distinct destination ports."""
         max_ports = self.config.max_distinct_dst_ports
         if distinct_port_count <= max_ports:
@@ -287,7 +287,7 @@ class AlertEngine:
 
     def _check_high_fanout(
         self, window_start: str, src_ip: str, distinct_ip_count: int
-    ) -> Optional[Alert]:
+    ) -> Alert | None:
         """Check if single source communicates with too many distinct destination IPs."""
         max_ips = self.config.max_distinct_dst_ips
         if distinct_ip_count <= max_ips:
@@ -317,18 +317,18 @@ class AlertEngine:
         self._set_cooldown(cooldown_key)
         return alert
 
-    def _in_cooldown(self, key: Tuple[str, str]) -> bool:
+    def _in_cooldown(self, key: tuple[str, str]) -> bool:
         """Check if alert type + src_ip is in cooldown period."""
         last_ts = self.state.cooldowns.get(key)
         if last_ts is None:
             return False
         return (time.time() - last_ts) < self.config.cooldown_seconds
 
-    def _set_cooldown(self, key: Tuple[str, str]) -> None:
+    def _set_cooldown(self, key: tuple[str, str]) -> None:
         """Record alert timestamp for cooldown."""
         self.state.cooldowns[key] = time.time()
 
-    def get_state_snapshot(self) -> Dict[str, Any]:
+    def get_state_snapshot(self) -> dict[str, Any]:
         """Get serializable state for persistence."""
         return {
             "ewma_baselines": self.state.ewma_baselines,
@@ -337,7 +337,7 @@ class AlertEngine:
         }
 
     @classmethod
-    def from_state_snapshot(cls, snapshot: Dict[str, Any], config: Optional[AlertRuleConfig] = None) -> "AlertEngine":
+    def from_state_snapshot(cls, snapshot: dict[str, Any], config: AlertRuleConfig | None = None) -> "AlertEngine":
         """Restore engine from persisted state."""
         state = AlertState(
             ewma_baselines=snapshot.get("ewma_baselines", {}),

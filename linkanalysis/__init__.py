@@ -1,17 +1,17 @@
 """
 linkanalysis — IP communication graph, PageRank, Markov analysis.
 """
+from .centrality import betweenness_centrality, degree_centrality
 from .graph import build_graph_from_edges
-from .pagerank import pagerank_networkx, pagerank_power_iteration
 from .markov import build_markov_matrix, markov_next_hop
-from .centrality import degree_centrality, betweenness_centrality
+from .pagerank import pagerank_networkx, pagerank_power_iteration
 
 __all__ = [
+    "betweenness_centrality",
     "build_graph_from_edges",
+    "build_markov_matrix",
+    "degree_centrality",
+    "markov_next_hop",
     "pagerank_networkx",
     "pagerank_power_iteration",
-    "build_markov_matrix",
-    "markov_next_hop",
-    "degree_centrality",
-    "betweenness_centrality",
 ]

@@ -3,18 +3,18 @@ dashboard/components/link_analysis.py — Link Analysis tab for LNTA dashboard.
 
 Shows IP communication graph, PageRank rankings, Markov transitions, and centrality.
 """
-import json
-from typing import Any, Dict, List, Optional, Tuple
+import sqlite3
+from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.data import ServingDB
-from dashboard.theme import get_protocol_color, LNTA_COLORS
+from dashboard.data import ServingDB, get_ip_edges, get_source_stats
+from dashboard.theme import LNTA_COLORS
 
 
-def render_link_analysis_tab(db: ServingDB, controls: Dict[str, Any]) -> None:
+def render_link_analysis_tab(db: ServingDB, controls: dict[str, Any]) -> None:
     """Render the Link Analysis tab with graph, PageRank, Markov, and centrality."""
     st.markdown("## 🕸️ Link Analysis")
 
@@ -23,18 +23,24 @@ def render_link_analysis_tab(db: ServingDB, controls: Dict[str, Any]) -> None:
 
     # Fetch data
     with st.spinner("Loading link analysis data..."):
-        ip_edges_df = db.get_ip_edges(window_len, limit=5000)
-        source_stats_df = db.get_source_stats(window_len, limit=200)
+        try:
+            ip_edges_df = get_ip_edges(db, window_len, limit=5000)
+            get_source_stats(db, window_len, limit=200)
+        except (sqlite3.Error, pd.errors.DatabaseError, OSError) as e:
+            st.error(f"Failed to load link analysis data: {e}")
+            return
 
     if ip_edges_df.empty:
         st.info("🔍 No IP edges data available yet. Start capture or replay to see link analysis.")
         return
 
     # Build graph from edges
+    from linkanalysis.centrality import centrality_summary
     from linkanalysis.graph import build_graph_from_edges, prune_graph_top_n
+    from linkanalysis.markov import (
+        build_markov_matrix,
+    )
     from linkanalysis.pagerank import pagerank_power_iteration
-    from linkanalysis.markov import build_markov_matrix, markov_next_hop, markov_transition_heatmap
-    from linkanalysis.centrality import centrality_summary, top_centrality_nodes
 
     edges_records = ip_edges_df.to_dict("records")
     G = build_graph_from_edges(edges_records)
@@ -48,7 +54,7 @@ def render_link_analysis_tab(db: ServingDB, controls: Dict[str, Any]) -> None:
 
     # Compute analytics
     pr_scores = pagerank_power_iteration(G)
-    node_to_idx, markov_matrix = build_markov_matrix(G)
+    _node_to_idx, _markov_matrix = build_markov_matrix(G)
     centrality = centrality_summary(G)
 
     # --- Layout: Two columns ---
@@ -89,7 +95,7 @@ def render_link_analysis_tab(db: ServingDB, controls: Dict[str, Any]) -> None:
 
 
 def render_ip_graph(
-    G, pr_scores: Dict[str, float], centrality: Dict[str, Dict[str, float]]
+    G, pr_scores: dict[str, float], centrality: dict[str, dict[str, float]]
 ) -> None:
     """Render interactive Plotly graph of IP communication."""
     import networkx as nx
@@ -157,7 +163,7 @@ def render_ip_graph(
     fig.add_trace(go.Scatter(
         x=edge_x, y=edge_y,
         mode="lines",
-        line=dict(width=0.5, color=LNTA_COLORS["border"]),
+        line={"width": 0.5, "color": LNTA_COLORS["border"]},
         hoverinfo="none",
         showlegend=False,
     ))
@@ -166,15 +172,15 @@ def render_ip_graph(
     fig.add_trace(go.Scatter(
         x=node_x, y=node_y,
         mode="markers+text",
-        marker=dict(
-            size=node_size,
-            color=node_color,
-            line=dict(width=1, color="white"),
-            opacity=0.9,
-        ),
+        marker={
+            "size": node_size,
+            "color": node_color,
+            "line": {"width": 1, "color": "white"},
+            "opacity": 0.9,
+        },
         text=[n[:15] for n in G.nodes()],  # Truncate long IPs
         textposition="top center",
-        textfont=dict(size=8, color=LNTA_COLORS["text_secondary"]),
+        textfont={"size": 8, "color": LNTA_COLORS["text_secondary"]},
         hovertext=node_text,
         hoverinfo="text",
         showlegend=False,
@@ -184,20 +190,20 @@ def render_ip_graph(
         template="lnta_dark",
         showlegend=False,
         hovermode="closest",
-        margin=dict(l=20, r=20, t=40, b=20),
+        margin={"l": 20, "r": 20, "t": 40, "b": 20},
         height=500,
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        xaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
+        yaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
         plot_bgcolor=LNTA_COLORS["bg_base"],
         paper_bgcolor=LNTA_COLORS["bg_base"],
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_pagerank_table(
-    pr_scores: Dict[str, float],
-    centrality: Dict[str, Dict[str, float]],
+    pr_scores: dict[str, float],
+    centrality: dict[str, dict[str, float]],
     top_n: int = 15,
 ) -> None:
     """Render PageRank rankings table."""
@@ -260,15 +266,15 @@ def render_markov_heatmap(G, top_k: int = 15) -> None:
     fig.update_layout(
         template="lnta_dark",
         height=400,
-        xaxis=dict(title="Destination IP", tickangle=45),
-        yaxis=dict(title="Source IP"),
-        margin=dict(l=80, r=20, t=40, b=80),
+        xaxis={"title": "Destination IP", "tickangle": 45},
+        yaxis={"title": "Source IP"},
+        margin={"l": 80, "r": 20, "t": 40, "b": 80},
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
-def render_next_hop_selector(G, pr_scores: Dict[str, float]) -> None:
+def render_next_hop_selector(G, pr_scores: dict[str, float]) -> None:
     """Selector to view next-hop probabilities for a source IP."""
     # Top 10 by PageRank for selector
     top_ips = sorted(pr_scores.items(), key=lambda x: x[1], reverse=True)[:10]
@@ -292,7 +298,7 @@ def render_next_hop_selector(G, pr_scores: Dict[str, float]) -> None:
             st.info(f"No outbound connections from {src_ip}")
 
 
-def render_centrality_bars(centrality: Dict[str, Dict[str, float]], top_n: int = 10) -> None:
+def render_centrality_bars(centrality: dict[str, dict[str, float]], top_n: int = 10) -> None:
     """Render horizontal bar charts for centrality measures."""
     from linkanalysis.centrality import top_centrality_nodes
 
@@ -322,10 +328,9 @@ def render_centrality_bars(centrality: Dict[str, Dict[str, float]], top_n: int =
             template="lnta_dark",
             title=title,
             height=250,
-            margin=dict(l=100, r=20, t=40, b=20),
-            xaxis=dict(showgrid=True, gridcolor=LNTA_COLORS["border"]),
-            yaxis=dict(autorange="reversed"),
+            margin={"l": 100, "r": 20, "t": 40, "b": 20},
+            xaxis={"showgrid": True, "gridcolor": LNTA_COLORS["border"]},
+            yaxis={"autorange": "reversed"},
         )
 
-        st.plotly_chart(fig, use_container_width=True)
-EOF
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})

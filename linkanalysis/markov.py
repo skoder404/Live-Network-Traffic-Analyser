@@ -3,11 +3,9 @@ linkanalysis/markov.py — Markov transition matrix and next-hop probabilities.
 
 Pure domain logic: no I/O, no framework dependencies.
 """
-from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
-
 
 # Constants
 DEFAULT_WEIGHT = "packets"
@@ -39,7 +37,7 @@ def _normalize_rows(matrix: np.ndarray) -> np.ndarray:
 def build_markov_matrix(
     G: nx.DiGraph,
     weight: str = DEFAULT_WEIGHT,
-) -> Tuple[Dict[str, int], np.ndarray]:
+) -> tuple[dict[str, int], np.ndarray]:
     """
     Build row-stochastic Markov transition matrix from weighted graph.
 
@@ -81,7 +79,7 @@ def markov_next_hop(
     src_ip: str,
     weight: str = DEFAULT_WEIGHT,
     top_k: int = 10,
-) -> List[Tuple[str, float]]:
+) -> list[tuple[str, float]]:
     """
     Get next-hop probabilities from a source IP.
 
@@ -111,7 +109,7 @@ def markov_transition_heatmap(
     G: nx.DiGraph,
     top_k: int = 20,
     weight: str = DEFAULT_WEIGHT,
-) -> Tuple[List[str], np.ndarray]:
+) -> tuple[list[str], np.ndarray]:
     """
     Get transition matrix for top-K nodes by weighted degree for heatmap.
 
@@ -158,7 +156,7 @@ def stationary_distribution(
     weight: str = DEFAULT_WEIGHT,
     max_iter: int = DEFAULT_MAX_ITER,
     tol: float = DEFAULT_TOL,
-) -> Optional[Dict[str, float]]:
+) -> dict[str, float] | None:
     """
     Compute stationary distribution of the Markov chain (Nice-to-have).
 

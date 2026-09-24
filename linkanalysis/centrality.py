@@ -3,10 +3,8 @@ linkanalysis/centrality.py — Degree and betweenness centrality.
 
 Pure domain logic: no I/O, no framework dependencies.
 """
-from typing import Dict, List, Tuple, Optional
 
 import networkx as nx
-
 
 # Constants (per TECH_RULES §3.6)
 MAX_NODES_FOR_BETWEENNESS = 300
@@ -17,7 +15,7 @@ def _normalized_degree(
     G: nx.DiGraph,
     weight: str,
     degree_func,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Compute normalized degree centrality using a degree function.
 
@@ -37,7 +35,7 @@ def _normalized_degree(
     return {node: deg / (n - 1) for node, deg in degrees.items()}
 
 
-def degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> Dict[str, float]:
+def degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> dict[str, float]:
     """
     Compute weighted degree centrality (total degree).
 
@@ -51,12 +49,12 @@ def degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> Dict[str, 
     return _normalized_degree(G, weight, G.degree)
 
 
-def in_degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> Dict[str, float]:
+def in_degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> dict[str, float]:
     """Weighted in-degree centrality."""
     return _normalized_degree(G, weight, G.in_degree)
 
 
-def out_degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> Dict[str, float]:
+def out_degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> dict[str, float]:
     """Weighted out-degree centrality."""
     return _normalized_degree(G, weight, G.out_degree)
 
@@ -64,9 +62,9 @@ def out_degree_centrality(G: nx.DiGraph, weight: str = DEFAULT_WEIGHT) -> Dict[s
 def betweenness_centrality(
     G: nx.DiGraph,
     weight: str = DEFAULT_WEIGHT,
-    k: Optional[int] = None,
+    k: int | None = None,
     normalized: bool = True,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Compute betweenness centrality (only for graphs with <= 300 nodes per TECH_RULES §3.6).
 
@@ -98,9 +96,9 @@ def betweenness_centrality(
 
 
 def top_centrality_nodes(
-    centrality: Dict[str, float],
+    centrality: dict[str, float],
     top_n: int = 10,
-) -> List[Tuple[str, float]]:
+) -> list[tuple[str, float]]:
     """Return top-N nodes by centrality score."""
     return sorted(centrality.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
@@ -108,7 +106,7 @@ def top_centrality_nodes(
 def centrality_summary(
     G: nx.DiGraph,
     weight: str = DEFAULT_WEIGHT,
-) -> Dict[str, Dict[str, float]]:
+) -> dict[str, dict[str, float]]:
     """
     Compute all centrality measures for a graph.
 

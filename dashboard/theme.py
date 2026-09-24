@@ -6,7 +6,6 @@ No side effects on import. Call register_lnta_theme() explicitly.
 import plotly.graph_objects as go
 import plotly.io as pio
 
-
 LNTA_COLORS = {
     "bg_base": "#0A0F1C",
     "bg_panel": "#101828",
@@ -51,42 +50,42 @@ def get_lnta_dark_template() -> go.layout.Template:
     """Create the LNTA dark Plotly template."""
     return go.layout.Template(
         layout=go.Layout(
-            font=dict(
-                family="JetBrains Mono, Consolas, Courier New, monospace",
-                color=LNTA_COLORS["text_primary"],
-                size=12,
-            ),
-            title=dict(
-                font=dict(size=16, color=LNTA_COLORS["text_primary"]), x=0.02
-            ),
+            font={
+                "family": "JetBrains Mono, Consolas, Courier New, monospace",
+                "color": LNTA_COLORS["text_primary"],
+                "size": 12,
+            },
+            title={
+                "font": {"size": 16, "color": LNTA_COLORS["text_primary"]}, "x": 0.02
+            },
             paper_bgcolor=LNTA_COLORS["bg_base"],
             plot_bgcolor=LNTA_COLORS["bg_panel"],
-            xaxis=dict(
-                gridcolor=LNTA_COLORS["border"],
-                zerolinecolor=LNTA_COLORS["border"],
-                linecolor=LNTA_COLORS["border"],
-                tickfont=dict(color=LNTA_COLORS["text_secondary"]),
-                title=dict(font=dict(color=LNTA_COLORS["text_primary"])),
-            ),
-            yaxis=dict(
-                gridcolor=LNTA_COLORS["border"],
-                zerolinecolor=LNTA_COLORS["border"],
-                linecolor=LNTA_COLORS["border"],
-                tickfont=dict(color=LNTA_COLORS["text_secondary"]),
-                title=dict(font=dict(color=LNTA_COLORS["text_primary"])),
-            ),
-            legend=dict(
-                bgcolor=LNTA_COLORS["bg_panel"],
-                bordercolor=LNTA_COLORS["border"],
-                font=dict(color=LNTA_COLORS["text_primary"]),
-            ),
+            xaxis={
+                "gridcolor": LNTA_COLORS["border"],
+                "zerolinecolor": LNTA_COLORS["border"],
+                "linecolor": LNTA_COLORS["border"],
+                "tickfont": {"color": LNTA_COLORS["text_secondary"]},
+                "title": {"font": {"color": LNTA_COLORS["text_primary"]}},
+            },
+            yaxis={
+                "gridcolor": LNTA_COLORS["border"],
+                "zerolinecolor": LNTA_COLORS["border"],
+                "linecolor": LNTA_COLORS["border"],
+                "tickfont": {"color": LNTA_COLORS["text_secondary"]},
+                "title": {"font": {"color": LNTA_COLORS["text_primary"]}},
+            },
+            legend={
+                "bgcolor": LNTA_COLORS["bg_panel"],
+                "bordercolor": LNTA_COLORS["border"],
+                "font": {"color": LNTA_COLORS["text_primary"]},
+            },
             colorway=CATEGORICAL_PALETTE,
-            hoverlabel=dict(
-                bgcolor=LNTA_COLORS["bg_elevated"],
-                bordercolor=LNTA_COLORS["border"],
-                font=dict(color=LNTA_COLORS["text_primary"]),
-            ),
-            margin=dict(l=60, r=30, t=50, b=50),
+            hoverlabel={
+                "bgcolor": LNTA_COLORS["bg_elevated"],
+                "bordercolor": LNTA_COLORS["border"],
+                "font": {"color": LNTA_COLORS["text_primary"]},
+            },
+            margin={"l": 60, "r": 30, "t": 50, "b": 50},
         )
     )
 

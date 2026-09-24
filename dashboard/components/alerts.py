@@ -4,24 +4,28 @@ dashboard/components/alerts.py — Alerts tab for LNTA dashboard.
 Shows active alerts with explanations, timeline, and filters.
 Per DESIGN.md §103-108 and PRD §FR-ALR.
 """
-from datetime import datetime
-from typing import Any, Dict, List
+import sqlite3
+from typing import Any
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard.data import ServingDB
+from dashboard.data import ServingDB, get_active_alerts
 from dashboard.theme import LNTA_COLORS, get_severity_color
 
 
-def render_alerts_tab(db: ServingDB, controls: Dict[str, Any]) -> None:
+def render_alerts_tab(db: ServingDB, controls: dict[str, Any]) -> None:
     """Render the Alerts tab with active alerts, timeline, and filters."""
     st.markdown("## 🚨 Alerts")
 
     # Fetch alerts
     with st.spinner("Loading alerts..."):
-        alerts_df = db.get_active_alerts(limit=100)
+        try:
+            alerts_df = get_active_alerts(db, limit=100)
+        except (sqlite3.Error, pd.errors.DatabaseError, OSError) as e:
+            st.error(f"Failed to load alerts: {e}")
+            return
 
     if alerts_df.empty:
         st.success("✅ No alerts in the recent period")
@@ -88,7 +92,7 @@ def render_alerts_tab(db: ServingDB, controls: Dict[str, Any]) -> None:
 def render_alert_card(alert: pd.Series) -> None:
     """Render a single alert card with full explanation."""
     severity = alert["severity"]
-    severity_color = get_severity_color(severity)
+    get_severity_color(severity)
     severity_icon = {"CRITICAL": "🔴", "WARN": "🟡", "INFO": "🔵"}.get(severity, "⚪")
 
     # Parse details JSON
@@ -154,6 +158,7 @@ def render_alert_card(alert: pd.Series) -> None:
             "baseline_value": alert["baseline_value"],
             "change_pct": alert["change_pct"],
             "threshold": alert["threshold"],
+            "reason": alert["reason"],
             "details": details,
         })
 
@@ -185,12 +190,12 @@ def render_alert_timeline(df: pd.DataFrame) -> None:
             x=sev_df["ts_parsed"],
             y=sev_df["type"],
             mode="markers",
-            marker=dict(
-                color=props["color"],
-                symbol=props["symbol"],
-                size=props["size"],
-                line=dict(width=1, color="white"),
-            ),
+            marker={
+                "color": props["color"],
+                "symbol": props["symbol"],
+                "size": props["size"],
+                "line": {"width": 1, "color": "white"},
+            },
             name=severity,
             hovertemplate=(
                 "<b>%{y}</b><br>"
@@ -212,14 +217,14 @@ def render_alert_timeline(df: pd.DataFrame) -> None:
     fig.update_layout(
         template="lnta_dark",
         height=300,
-        margin=dict(l=150, r=20, t=20, b=40),
-        xaxis=dict(title="Time (UTC)"),
-        yaxis=dict(title="Alert Type", autorange="reversed"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin={"l": 150, "r": 20, "t": 20, "b": 40},
+        xaxis={"title": "Time (UTC)"},
+        yaxis={"title": "Alert Type", "autorange": "reversed"},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
         hovermode="closest",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_alert_summary(df: pd.DataFrame) -> None:
@@ -249,4 +254,3 @@ def render_alert_summary(df: pd.DataFrame) -> None:
         top_ips = df.groupby("src_ip").size().sort_values(ascending=False).head(5)
         ip_df = pd.DataFrame({"Source IP": top_ips.index, "Alert Count": top_ips.values})
         st.dataframe(ip_df, use_container_width=True, hide_index=True)
-EOF
