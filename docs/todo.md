@@ -127,7 +127,7 @@
 | ☑ | T5-003 | Exponentially decaying window (recent-traffic score) | Sep 22 | MUST | 90 min |
 | ☑ | T5-001 | Windowed moments — mean, variance, std, inter-arrival (Lane A) | Sep 23 | MUST | 60 min |
 | ☑ | T5-005 | Edge and per-source aggregation (feeds Link Analysis and Alerts) | Sep 23 | MUST | 60 min |
-| ☐ | T5-002 | AMS second-moment (F2) estimator and iat fallback | Sep 24 | MUST | 75 min |
+| ☑ | T5-002 | AMS second-moment (F2) estimator and iat fallback | Sep 24 | MUST | 75 min |
 | ☐ | T5-004 | Market-basket model and limited-pass frequent itemsets (A-Priori + PCY) | Sep 26 | MUST | 90 min |
 | ☐ | T5-009 | Group B unit and integration tests | Sep 27 | SHOULD | 60 min |
 | ☐ | T5-010 | Cross-validation with M A Sushil Kumar's results | Sep 27 | SHOULD | 45 min |

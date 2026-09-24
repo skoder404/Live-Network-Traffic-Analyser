@@ -47,3 +47,4 @@ sqlite3 :memory: "PRAGMA journal_mode=WAL;"
 # 4. Git status
 git status
 ```
+

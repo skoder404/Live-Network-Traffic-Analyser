@@ -3,8 +3,23 @@ streaming.analytics package — Lane B micro-batch algorithm plugins (foreachBat
 """
 
 from streaming.analytics.decay import DecayAnalytic, DecayingCounter, DecayingKeyTable
-from streaming.analytics.filters import FilterSpec, apply_filter, parse_filters, validate_filters
-from streaming.analytics.sampling import ReservoirSampler, SamplingAnalytic, bernoulli_sample
+from streaming.analytics.filters import (
+    FilterSpec,
+    apply_filter,
+    parse_filters,
+    validate_filters,
+)
+from streaming.analytics.moments import (
+    AMSF2,
+    MomentsAnalytic,
+    compute_iat_from_timestamps,
+    exact_f2,
+)
+from streaming.analytics.sampling import (
+    ReservoirSampler,
+    SamplingAnalytic,
+    bernoulli_sample,
+)
 
 __all__ = [
     "DecayAnalytic",
@@ -17,4 +32,8 @@ __all__ = [
     "ReservoirSampler",
     "bernoulli_sample",
     "SamplingAnalytic",
+    "MomentsAnalytic",
+    "AMSF2",
+    "exact_f2",
+    "compute_iat_from_timestamps",
 ]

@@ -13,3 +13,4 @@ repos:
         entry: python3 scripts/check_no_captures.py
         language: system
         pass_filenames: false
+

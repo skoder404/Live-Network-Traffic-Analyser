@@ -74,9 +74,10 @@ Team: Naveena MS (capture) · Rithika GV (ingestion/storage) · M A Sushil Kumar
 | **T5-003** | Exponentially decaying window (`streaming/analytics/decay.py`) | Yashwant Vadhan M | ✅ **Completed** | Continuous decay, top-k heavy hitters, bounded memory (`9c698c6`) |
 | **T5-001** | Windowed moments query (`streaming/queries/moments_window.py`) | Yashwant Vadhan M | ✅ **Completed** | Packet length moments, inter-arrival stats, null variance handling (`25e83ec`) |
 | **T5-005** | IP edges and source stats queries (`streaming/queries/edges.py`) | Yashwant Vadhan M | ✅ **Completed** | Directed edges aggregation & per-source fan-out stats (`580cb7a`) |
+| **T5-002** | AMS second-moment $F_2$ estimator (`streaming/analytics/moments.py`) | Yashwant Vadhan M | ✅ **Completed** | Reservoir AMS estimator, median-of-means, exact $F_2$, iat helper |
 
 - **Acceptance Criteria:**
-  - [x] `window_metrics` and advanced queries (`moments`, `edges`, `source_stats`, `decay`) implemented in Spark Lane A & B
+  - [x] `window_metrics` and advanced queries (`moments`, `edges`, `source_stats`, `decay`, `ams_f2`) implemented in Spark Lane A & B
   - [ ] 5-minute replay: captured lines == lines in HDFS raw and stream_in
   - [ ] Tag `m1-slice` (Gate G2, Sep 24 noon)
 
