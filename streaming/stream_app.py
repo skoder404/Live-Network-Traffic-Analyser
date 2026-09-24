@@ -25,11 +25,13 @@ from common.config import load_config
 from common.logging_setup import setup_logging
 from common.serving_db import connect, current_utc_iso, init_schema, upsert
 from streaming.analytics.base import BatchContext
+from streaming.analytics.decay import DecayAnalytic
+from streaming.analytics.sampling import SamplingAnalytic
 from streaming.common.cleaning import clean, split_valid
 from streaming.common.schema import read_stream
 from streaming.common.session import get_spark
-from streaming.queries import counts, window_metrics
-from streaming.registry import get_enabled
+from streaming.queries import counts, filter_counts, window_metrics
+from streaming.registry import get_enabled, get_registered, register
 
 logger = logging.getLogger("StreamApp")
 
@@ -47,13 +49,19 @@ class StreamingApplication:
         self._consecutive_slow_batches = 0
 
     def init_storage(self) -> None:
-        """Ensures the SQLite serving store schema is initialized."""
+        """Ensures the SQLite serving store schema is initialized and default plugins registered."""
         conn = connect(self.db_path)
         try:
             init_schema(conn)
             logger.info("Serving schema initialized at %s", self.db_path)
         finally:
             conn.close()
+
+        # Register default Lane B plugins if not already registered
+        if get_registered("decay") is None:
+            register(DecayAnalytic())
+        if get_registered("sampling") is None:
+            register(SamplingAnalytic())
 
     def handle_shutdown(self, signum: int, _frame: Any) -> None:
         """Gracefully stops all running streaming queries on signal."""
@@ -205,6 +213,12 @@ class StreamingApplication:
         # Port counts (10s window)
         q_ports = counts.start_port_counts(spark, valid_stream, self.cfg, window_len_s=10)
         self.queries.append(q_ports)
+
+        # Filter counts (10s window)
+        q_filters = filter_counts.start_filter_counts(
+            spark, valid_stream, self.cfg, window_len_s=10
+        )
+        self.queries.append(q_filters)
 
         # 2. Start Lane B Dispatcher query
         checkpoint_root = self.spark_cfg.get("checkpoint_root", "data/checkpoints")

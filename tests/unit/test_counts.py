@@ -15,7 +15,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from contracts.record_schema import to_spark_schema
+from contracts.record_schema import FIELD_NAMES, to_spark_schema
 from streaming.common.cleaning import clean
 from streaming.common.session import get_spark
 from streaming.queries.counts import build_port_counts, build_protocol_counts
@@ -295,14 +295,14 @@ def test_counts_vs_pandas_dns_heavy(spark):
     csv_path = Path("data/sample/dns_heavy.csv")
     assert csv_path.exists(), "data/sample/dns_heavy.csv must exist"
 
-    raw_df = spark.read.option("header", "true").schema(to_spark_schema()).csv(str(csv_path))
+    raw_df = spark.read.schema(to_spark_schema()).csv(str(csv_path))
     cleaned_df = clean(raw_df)
 
     # 1. Protocol counts validation
     proto_df = build_protocol_counts(cleaned_df, window_len_s=10, watermark_s=30)
     spark_proto_rows = proto_df.orderBy("window_start", "protocol").collect()
 
-    pdf = pd.read_csv(csv_path)
+    pdf = pd.read_csv(csv_path, header=None, names=FIELD_NAMES)
     pdf["event_time"] = pd.to_datetime(pdf["timestamp"], utc=True)
     pdf["window_bucket"] = pdf["event_time"].dt.floor("10s")
     pdf["window_start"] = pdf["window_bucket"].dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")

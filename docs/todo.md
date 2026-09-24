@@ -108,8 +108,8 @@
 | ☑ | T4-003 | Streaming application runner (registry, dispatcher, health) | Sep 22 | MUST | 90 min |
 | ☑ | T4-004 | Window metrics — packets/sec and bytes/sec (Lane A) | Sep 22 | MUST | 60 min |
 | ☑ | T4-005 | Protocol counts and port counts (Lane A) | Sep 23 | MUST | 60 min |
-| ☐ | T4-006 | Stream filtering (named filters + filtered sub-stream) | Sep 24 | MUST | 60 min |
-| ☐ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
+| ☑ | T4-006 | Stream filtering (named filters + filtered sub-stream) | Sep 24 | MUST | 60 min |
+| ☑ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
 | ☐ | T4-008 | Count distinct — exact, HyperLogLog and Flajolet–Martin (Lane A + B) | Sep 25 | MUST | 90 min |
 | ☐ | T4-009 | Counting ones — DGIM sliding-window estimator | Sep 26 | MUST | 90 min |
 | ☐ | T4-010 | Group A unit + streaming validation tests | Sep 27 | SHOULD | 75 min |
@@ -693,9 +693,9 @@ Implement streaming/queries/counts.py with start_protocol_counts(...) and start_
 **Description:** `streaming/analytics/filters.py`: config-defined named filters (`tcp_only`, `dport_443`, `udp_only`, `size_gt_1000`, `src_ip=<ip>`) implemented as Spark column expressions via `FilterSpec`; `apply_filter(df, name)` returns the filtered stream; a Lane A query counts packets/bytes per filter per window using conditional aggregation → `filter_counts`.
 **Dependencies:** T4-004
 **Acceptance Criteria:**
-- [ ] Adding a filter in `config/settings.yaml` creates a new `filter_name` series without code changes
-- [ ] `tcp_only` count equals `protocol_counts` TCP packets in the same window
-- [ ] Invalid filter spec fails at startup with a clear error
+- [x] Adding a filter in `config/settings.yaml` creates a new `filter_name` series without code changes
+- [x] `tcp_only` count equals `protocol_counts` TCP packets in the same window
+- [x] Invalid filter spec fails at startup with a clear error
 **Estimated Effort:** 60 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 24 (Thu) · **Priority:** 🔴 MUST
@@ -708,9 +708,9 @@ Implement streaming/analytics/filters.py (pure spec parsing + Spark expression b
 **Description:** `streaming/analytics/sampling.py`: pure-Python `ReservoirSampler(k, seed)` (Algorithm R) and `bernoulli_sample(rows, p, seed)`; `SamplingAnalytic` (Lane B) feeds each batch's `packet_length`/protocol into the sampler, and writes to `sampling_compare`: sample size, sample mean packet length vs full-batch mean, error %.
 **Dependencies:** T4-003
 **Acceptance Criteria:**
-- [ ] Reservoir sampler is uniform (chi-square-style statistical test with fixed seed passes)
-- [ ] Sample mean converges to full mean as k grows (test with k=100/1000)
-- [ ] Rows per batch capped at `max_rows_per_batch` with a WARN when exceeded
+- [x] Reservoir sampler is uniform (chi-square-style statistical test with fixed seed passes)
+- [x] Sample mean converges to full mean as k grows (test with k=100/1000)
+- [x] Rows per batch capped at `max_rows_per_batch` with a WARN when exceeded
 **Estimated Effort:** 75 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 24 (Thu) · **Priority:** 🔴 MUST
