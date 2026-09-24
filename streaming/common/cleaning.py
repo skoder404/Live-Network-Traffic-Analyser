@@ -105,6 +105,6 @@ def split_valid(df: DataFrame) -> tuple[DataFrame, DataFrame]:
         Tuple of (valid_df, invalid_df).
     """
     cleaned = clean(df) if "is_valid" not in df.columns else df
-    valid_df = cleaned.filter(F.col("is_valid") == True)
-    invalid_df = cleaned.filter(F.col("is_valid") == False)
+    valid_df = cleaned.filter(F.col("is_valid"))
+    invalid_df = cleaned.filter(~F.col("is_valid"))
     return valid_df, invalid_df

@@ -1,4 +1,5 @@
 """
+<<<<<<< HEAD
 dashboard — Streamlit dashboard for LNTA.
 """
 from .data import ServingDB, get_db
@@ -17,3 +18,7 @@ __all__ = [
     "get_severity_color",
     "register_lnta_theme",
 ]
+=======
+dashboard package — Streamlit interactive real-time network traffic dashboard.
+"""
+>>>>>>> origin/main

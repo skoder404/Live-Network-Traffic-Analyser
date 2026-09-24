@@ -1,0 +1,76 @@
+# config/settings.example.yaml — Baseline configuration for Live Network Traffic Analyser (LNTA)
+# Copy this file to config/settings.yaml and adjust values for your local environment.
+# Values can also be overridden using environment variables: LNTA_<SECTION>__<KEY>
+# e.g., LNTA_SPARK__TRIGGER_S=10, LNTA_CAPTURE__IFACE=wlan1
+
+capture:
+  iface: "wlan0"                  # Network interface for TShark capture
+  rotate_seconds: 60              # Rotate CSV file every N seconds
+  rotate_mb: 10                   # Rotate CSV file after reaching N megabytes
+  out_dir: "data/capture"         # Destination directory for rotated CSV files
+  sink: "file"                    # Writer sink type: file | tcp | stdout
+
+flume:
+  tcp_host: "127.0.0.1"           # Flume Netcat source listener host
+  tcp_port: 44444                 # Flume Netcat source listener port
+
+hdfs:
+  namenode_uri: "hdfs://localhost:9000"  # Hadoop NameNode URI
+  root: "/traffic"                       # HDFS root directory for all LNTA data
+
+spark:
+  trigger_s: 5                    # Structured streaming micro-batch trigger interval (seconds)
+  watermark_s: 30                 # Event-time watermark delay (seconds)
+  windows_s: [10, 30, 60]         # Sliding window lengths in seconds
+  slide_s: 5                      # Sliding step for window operations (seconds)
+  max_files_per_trigger: 10       # Maximum files read per micro-batch trigger
+  max_rows_per_batch: 50000       # Driver protection row cap for Lane B plugins
+  checkpoint_root: "hdfs://localhost:9000/traffic/checkpoints" # Checkpoint storage path
+  plugins_enabled:
+    - "filters"
+    - "sampling"
+    - "distinct"
+    - "counting_ones"
+    - "decay"
+    - "itemsets"
+    - "edges"
+    - "moments"
+  top_n_ports: 20                 # Number of top destination ports to track
+  max_edges_per_window: 500       # Limit for IP edges persisted per window
+  filters:
+    - name: "web_traffic"
+      dst_ports: [80, 443]
+    - name: "dns_traffic"
+      dst_ports: [53]
+  predicates:
+    - name: "is_tcp"
+      protocol: "TCP"
+    - name: "is_large_packet"
+      min_length: 1000
+
+serving:
+  db_path: "serving/analytics.db" # Path to SQLite serving store database
+  cleanup_every_s: 600            # Interval to run retention cleaner (seconds)
+  retention_hours: 24             # Retention period in hours for live serving tables
+
+graph:
+  lookback_s: 60                  # Sliding window of IP edges used to build graph (seconds)
+  top_n_nodes: 50                 # Maximum nodes rendered in interactive visualization
+
+alerts:
+  rules_path: "config/alert_rules.yaml" # Path to alert threshold rules specification
+
+dashboard:
+  refresh_s: 2                    # Streamlit auto-refresh interval (seconds)
+  timezone: "Asia/Kolkata"        # Local display timezone
+  stale_after_s: 15               # Threshold to flag pipeline health as stale (seconds)
+
+itemsets:
+  window_s: 60                    # Market-basket analysis time window (seconds)
+  every_s: 10                     # Frequent itemset execution interval (seconds)
+  min_support: 0.05               # Minimum support ratio threshold
+  num_buckets: 10007              # Hash bucket size for PCY algorithm
+
+decay:
+  half_lives_s: [10, 30, 60]      # Half-lives for exponential decay scoring (seconds)
+

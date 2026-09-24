@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Environment variables
 .env
 .env.local
@@ -15,16 +16,62 @@ bda-env/
 __pycache__/
 *.pyc
 .env
+=======
+# Byte-compiled / optimized / DLL files
+>>>>>>> origin/main
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# C extensions
+*.so
+
+# Distribution / packaging
 .Python
 env/
 venv/
 .venv/
 ENV/
 *.egg-info/
+dist/
+build/
+
+# Testing & coverage
 .pytest_cache/
 .coverage
 htmlcov/
+<<<<<<< HEAD
+=======
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Local active configuration (settings.example.yaml is committed)
+config/settings.yaml
+
+# Data, logs, serving store and flume runtime artefacts
+data/*
+!data/sample/
+!data/sample/**
+logs/*
+!logs/.gitkeep
+serving/*
+!serving/.gitkeep
+.flume/
+
+# Network captures (never commit real captures)
+*.pcap
+*.pcapng
+*.cap
+
+# SSH public keys — share directly with teammates, not via git
+# Place keys at scripts/keys/<user>.pub then run sudo bash scripts/setup_remote_access.sh
+scripts/keys/*.pub
+
+# Local assistant documentation & walkthroughs
+documentation/
+>>>>>>> origin/main

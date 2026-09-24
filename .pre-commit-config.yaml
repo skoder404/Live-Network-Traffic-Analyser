@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: check-no-captures
+        name: Check No Raw Captures
+        entry: python3 scripts/check_no_captures.py
+        language: system
+        pass_filenames: false
+

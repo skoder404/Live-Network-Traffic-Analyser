@@ -1,4 +1,5 @@
 """
+<<<<<<< HEAD
 linkanalysis — IP communication graph, PageRank, Markov analysis.
 """
 from .centrality import betweenness_centrality, degree_centrality
@@ -15,3 +16,7 @@ __all__ = [
     "pagerank_networkx",
     "pagerank_power_iteration",
 ]
+=======
+linkanalysis package — Graph construction, PageRank, Markov models, and alert engine.
+"""
+>>>>>>> origin/main

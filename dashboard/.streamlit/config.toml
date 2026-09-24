@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # dashboard/.streamlit/config.toml — Streamlit configuration for LNTA
 [theme]
 base = "dark"
@@ -38,3 +39,21 @@ showErrorDetails = true
 
 [map]
 mapboxToken = ""
+=======
+[server]
+port = 8501
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "dark"
+primaryColor = "#3B82F6"
+backgroundColor = "#0F172A"
+secondaryBackgroundColor = "#1E293B"
+textColor = "#F8FAFC"
+
+>>>>>>> origin/main
