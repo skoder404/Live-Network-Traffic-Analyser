@@ -9,6 +9,12 @@ todo.md
 docs/todo.md
 
 # Python
+
+
+bda-env/
+__pycache__/
+*.pyc
+.env
 __pycache__/
 *.py[cod]
 *$py.class
