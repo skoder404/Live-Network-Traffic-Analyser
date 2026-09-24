@@ -111,5 +111,95 @@ class TestMoments(unittest.TestCase):
         self.assertEqual(ams.estimate(), ams_restored.estimate())
 
 
+def test_moments_analytic_process_batch(tmp_path):
+    """Tests MomentsAnalytic Lane B plugin micro-batch processing against SQLite."""
+    from common.serving_db import connect, init_schema
+    from contracts.record_schema import to_spark_schema
+    from streaming.analytics.base import BatchContext
+    from streaming.analytics.moments import MomentsAnalytic
+    from streaming.common.cleaning import clean
+    from streaming.common.session import get_spark
+
+    spark = get_spark("LNTA-TestMomentsAnalytic")
+    db_path = tmp_path / "test_moments_analytic.db"
+    conn = connect(db_path)
+    init_schema(conn)
+
+    records = [
+        (
+            "2026-09-24 12:00:01.000",
+            "192.168.1.1",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-24 12:00:02.000",
+            "192.168.1.2",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            200,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-24 12:00:03.000",
+            "192.168.1.3",
+            "1.1.1.1",
+            1234,
+            53,
+            "UDP",
+            300,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+    ]
+    raw_df = spark.createDataFrame(records, schema=to_spark_schema())
+    cleaned_df = clean(raw_df)
+
+    cfg = {
+        "spark": {"windows_s": [10], "max_rows_per_batch": 1000},
+        "serving": {"db_path": str(db_path)},
+    }
+    ctx = BatchContext(
+        cfg=cfg,
+        db_path=db_path,
+        conn=conn,
+        batch_time="2026-09-24T12:00:10.000Z",
+    )
+
+    state_dir = tmp_path / "state"
+    plugin = MomentsAnalytic(state_dir=state_dir)
+    plugin.process_batch(cleaned_df, batch_id=1, ctx=ctx)
+
+    # Verify rows in moments table
+    cur = conn.cursor()
+    cur.execute("SELECT window_start, window_len_s, f2_exact, f2_ams FROM moments;")
+    rows = cur.fetchall()
+    conn.close()
+
+    assert len(rows) == 1
+    # 8.8.8.8 count=2, 1.1.1.1 count=1 -> f2_exact = 2^2 + 1^2 = 5.0
+    assert rows[0][2] == 5.0
+    assert rows[0][3] > 0.0
+
+    # Test state restore
+    plugin_restored = MomentsAnalytic(state_dir=state_dir)
+    plugin_restored._ensure_initialized(cfg)
+    assert len(plugin_restored.window_exact) > 0
+
+
 if __name__ == "__main__":
     unittest.main()

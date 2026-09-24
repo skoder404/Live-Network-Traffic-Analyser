@@ -87,5 +87,99 @@ class TestDecay(unittest.TestCase):
         self.assertAlmostEqual(counter_restored.value(t=35.0), counter.value(t=35.0), places=9)
 
 
+def test_decay_analytic_process_batch(tmp_path):
+    """Tests DecayAnalytic Lane B plugin micro-batch processing and SQLite table writes."""
+    from common.serving_db import connect, init_schema
+    from contracts.record_schema import to_spark_schema
+    from streaming.analytics.base import BatchContext
+    from streaming.analytics.decay import DecayAnalytic
+    from streaming.common.cleaning import clean
+    from streaming.common.session import get_spark
+
+    spark = get_spark("LNTA-TestDecayAnalytic")
+    db_path = tmp_path / "test_decay_analytic.db"
+    conn = connect(db_path)
+    init_schema(conn)
+
+    records = [
+        (
+            "2026-09-24 12:00:01.000",
+            "192.168.1.10",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-24 12:00:02.000",
+            "192.168.1.20",
+            "8.8.8.8",
+            1234,
+            443,
+            "TCP",
+            200,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+        (
+            "2026-09-24 12:00:03.000",
+            "192.168.1.30",
+            "1.1.1.1",
+            1234,
+            53,
+            "UDP",
+            300,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+    ]
+    raw_df = spark.createDataFrame(records, schema=to_spark_schema())
+    cleaned_df = clean(raw_df)
+
+    cfg = {
+        "spark": {"trigger_s": 5, "max_rows_per_batch": 1000},
+        "decay": {"half_lives_s": [10, 30, 60]},
+        "serving": {"db_path": str(db_path)},
+    }
+    ctx = BatchContext(
+        cfg=cfg,
+        db_path=db_path,
+        conn=conn,
+        clock=100.0,
+        batch_time="2026-09-24T12:00:10.000Z",
+    )
+
+    state_dir = tmp_path / "state"
+    plugin = DecayAnalytic(state_dir=state_dir)
+    plugin.process_batch(cleaned_df, batch_id=1, ctx=ctx)
+
+    # Verify rows in decay_traffic
+    cur = conn.cursor()
+    cur.execute("SELECT ts, half_life_s, score, raw_pps FROM decay_traffic ORDER BY half_life_s;")
+    traffic_rows = cur.fetchall()
+    assert len(traffic_rows) == 3
+
+    # Verify rows in decay_top_keys
+    cur.execute("SELECT key_type, key, score, rank FROM decay_top_keys ORDER BY rank;")
+    key_rows = cur.fetchall()
+    assert len(key_rows) > 0
+
+    conn.close()
+
+    # Test state restore
+    plugin_restored = DecayAnalytic(state_dir=state_dir)
+    plugin_restored._ensure_initialized(cfg)
+    assert 10 in plugin_restored.traffic_counters
+
+
 if __name__ == "__main__":
     unittest.main()
