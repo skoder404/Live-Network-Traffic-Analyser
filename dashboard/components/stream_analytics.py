@@ -4,6 +4,7 @@ dashboard/components/stream_analytics.py — Stream Analytics tab for LNTA dashb
 Shows 7 concept cards: Filtering, Sampling, Count Distinct, Counting Ones, Moments, Decay, Frequent Itemsets.
 Each card shows exact vs approximate comparison per DESIGN.md §81-94.
 """
+
 import sqlite3
 from typing import Any
 
@@ -105,15 +106,17 @@ def render_filtering_card(df: pd.DataFrame) -> None:
     total_pkts = agg["packets"].sum()
     agg["pct"] = (agg["packets"] / total_pkts * 100).round(1)
 
-    fig = go.Figure(go.Bar(
-        x=agg["pct"],
-        y=agg["filter_name"],
-        orientation="h",
-        marker_color=LNTA_COLORS["accent"],
-        text=agg["pct"].astype(str) + "%",
-        textposition="outside",
-        hovertemplate="%{y}: %{x}% of total packets<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=agg["pct"],
+            y=agg["filter_name"],
+            orientation="h",
+            marker_color=LNTA_COLORS["accent"],
+            text=agg["pct"].astype(str) + "%",
+            textposition="outside",
+            hovertemplate="%{y}: %{x}% of total packets<extra></extra>",
+        )
+    )
     fig.update_layout(
         template="lnta_dark",
         height=250,
@@ -148,14 +151,16 @@ def render_sampling_card(df: pd.DataFrame) -> None:
         st.metric("Full Mean", f"{latest['full_mean_len']:.0f} B")
 
     # Error over time
-    fig = go.Figure(go.Scatter(
-        x=df["ts"],
-        y=df["err_pct"],
-        mode="lines+markers",
-        line={"color": LNTA_COLORS["warn"]},
-        fill="tozeroy",
-        hovertemplate="Error: %{y:.2f}%<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Scatter(
+            x=df["ts"],
+            y=df["err_pct"],
+            mode="lines+markers",
+            line={"color": LNTA_COLORS["warn"]},
+            fill="tozeroy",
+            hovertemplate="Error: %{y:.2f}%<extra></extra>",
+        )
+    )
     fig.update_layout(
         template="lnta_dark",
         height=200,
@@ -233,13 +238,15 @@ def render_counting_ones_card(df: pd.DataFrame) -> None:
     # Mini bit stream visualization (last 50 bits)
     st.caption("Recent predicate evaluations (1 = true, 0 = false)")
     # Note: Actual bit stream not stored, showing error trend instead
-    fig = go.Figure(go.Scatter(
-        x=df["ts"],
-        y=df["err_pct"],
-        mode="lines",
-        line={"color": LNTA_COLORS["proto_icmp"]},
-        hovertemplate="DGIM Error: %{y:.1f}%<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Scatter(
+            x=df["ts"],
+            y=df["err_pct"],
+            mode="lines",
+            line={"color": LNTA_COLORS["proto_icmp"]},
+            hovertemplate="DGIM Error: %{y:.1f}%<extra></extra>",
+        )
+    )
     fig.update_layout(
         template="lnta_dark",
         height=180,
@@ -293,8 +300,8 @@ def render_moments_card(df: pd.DataFrame) -> None:
     with c8:
         st.metric("AMS F₂", f"{latest['f2_ams']:,.0f}")
     with c9:
-        if latest['f2_exact'] > 0:
-            err = abs(latest['f2_ams'] - latest['f2_exact']) / latest['f2_exact'] * 100
+        if latest["f2_exact"] > 0:
+            err = abs(latest["f2_ams"] - latest["f2_exact"]) / latest["f2_exact"] * 100
             st.metric("Error", f"{err:.1f}%")
 
 
@@ -320,15 +327,17 @@ def render_decay_card(decay_df: pd.DataFrame, decay_keys_df: pd.DataFrame) -> No
         st.metric("Raw PPS", f"{latest['raw_pps']:.1f}")
 
     # Score over time
-    fig = go.Figure(go.Scatter(
-        x=decay_df["ts"],
-        y=decay_df["score"],
-        mode="lines",
-        line={"color": LNTA_COLORS["proto_udp"]},
-        fill="tozeroy",
-        fillcolor="rgba(167, 139, 250, 0.1)",
-        hovertemplate="Score: %{y:.2f}<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Scatter(
+            x=decay_df["ts"],
+            y=decay_df["score"],
+            mode="lines",
+            line={"color": LNTA_COLORS["proto_udp"]},
+            fill="tozeroy",
+            fillcolor="rgba(167, 139, 250, 0.1)",
+            hovertemplate="Score: %{y:.2f}<extra></extra>",
+        )
+    )
     fig.update_layout(
         template="lnta_dark",
         height=200,
@@ -375,19 +384,25 @@ def render_itemsets_card(df: pd.DataFrame) -> None:
         return
 
     latest_window = df["window_start"].max()
-    latest_df = df[df["window_start"] == latest_window].sort_values("support_ratio", ascending=False).head(15)
+    latest_df = (
+        df[df["window_start"] == latest_window]
+        .sort_values("support_ratio", ascending=False)
+        .head(15)
+    )
 
     # Support bar chart
-    fig = go.Figure(go.Bar(
-        x=latest_df["support_ratio"] * 100,
-        y=latest_df["itemset"],
-        orientation="h",
-        marker_color=LNTA_COLORS["accent_2"],
-        text=(latest_df["support_ratio"] * 100).round(1).astype(str) + "%",
-        textposition="outside",
-        hovertemplate="%{y}: %{x}% support (count: %{customdata})<extra></extra>",
-        customdata=latest_df["support_count"],
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=latest_df["support_ratio"] * 100,
+            y=latest_df["itemset"],
+            orientation="h",
+            marker_color=LNTA_COLORS["accent_2"],
+            text=(latest_df["support_ratio"] * 100).round(1).astype(str) + "%",
+            textposition="outside",
+            hovertemplate="%{y}: %{x}% support (count: %{customdata})<extra></extra>",
+            customdata=latest_df["support_count"],
+        )
+    )
     fig.update_layout(
         template="lnta_dark",
         height=350,
@@ -399,13 +414,15 @@ def render_itemsets_card(df: pd.DataFrame) -> None:
 
     # Table with details
     st.dataframe(
-        latest_df[["itemset", "size", "support_count", "support_ratio", "passes"]].rename(columns={
-            "itemset": "Itemset",
-            "size": "Size",
-            "support_count": "Count",
-            "support_ratio": "Support %",
-            "passes": "Passes",
-        }),
+        latest_df[["itemset", "size", "support_count", "support_ratio", "passes"]].rename(
+            columns={
+                "itemset": "Itemset",
+                "size": "Size",
+                "support_count": "Count",
+                "support_ratio": "Support %",
+                "passes": "Passes",
+            }
+        ),
         use_container_width=True,
         hide_index=True,
         column_config={

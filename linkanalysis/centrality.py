@@ -88,9 +88,7 @@ def betweenness_centrality(
         for u, v, d in G.edges(data=True):
             w = d.get(weight, 1)
             G_weighted.add_edge(u, v, weight=1.0 / max(w, 1))
-        return nx.betweenness_centrality(
-            G_weighted, k=k, normalized=normalized, weight="weight"
-        )
+        return nx.betweenness_centrality(G_weighted, k=k, normalized=normalized, weight="weight")
     else:
         return nx.betweenness_centrality(G, k=k, normalized=normalized)
 

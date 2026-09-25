@@ -3,6 +3,7 @@ dashboard/app.py — LNTA Streamlit Dashboard entry point.
 
 Streamlit app with 6 tabs, header/KPI strip, sidebar controls.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -10,19 +11,19 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-import streamlit as st
+import streamlit as st  # noqa: E402
 
 # Ensure repo root is on path (for imports when run as script)
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from dashboard.components.header import render_header
-from dashboard.components.history import render_history_tab
-from dashboard.components.live_overview import render_live_overview_tab
-from dashboard.components.pipeline import render_pipeline_tab
-from dashboard.data import check_db_health, get_db
-from dashboard.theme import register_lnta_theme
+from dashboard.components.header import render_header  # noqa: E402
+from dashboard.components.history import render_history_tab  # noqa: E402
+from dashboard.components.live_overview import render_live_overview_tab  # noqa: E402
+from dashboard.components.pipeline import render_pipeline_tab  # noqa: E402
+from dashboard.data import check_db_health, get_db  # noqa: E402
+from dashboard.theme import register_lnta_theme  # noqa: E402
 
 # Page config (must be first Streamlit command)
 st.set_page_config(
@@ -119,7 +120,7 @@ def main() -> None:
     # Tabs
     tabs = st.tabs([label for label, _ in _TAB_RENDERERS])
 
-    for tab, (_, renderer) in zip(tabs, _TAB_RENDERERS):
+    for tab, (_, renderer) in zip(tabs, _TAB_RENDERERS, strict=False):
         with tab:
             renderer(db, controls)
 

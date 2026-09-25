@@ -4,6 +4,7 @@ dashboard/components/pipeline.py — Pipeline tab for LNTA dashboard.
 Shows pipeline stage health, batch metrics, and end-to-end lag.
 Per DESIGN.md §114-117.
 """
+
 import sqlite3
 from typing import Any
 
@@ -155,14 +156,16 @@ def render_batch_duration_chart(df: pd.DataFrame) -> None:
     fig = go.Figure()
 
     # Batch duration
-    fig.add_trace(go.Scatter(
-        x=batch_df["ts"],
-        y=batch_df["value"],
-        mode="lines+markers",
-        name="Batch Duration (ms)",
-        line={"color": LNTA_COLORS["accent"], "width": 2},
-        hovertemplate="%{x}<br>Duration: %{y} ms<extra></extra>",
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=batch_df["ts"],
+            y=batch_df["value"],
+            mode="lines+markers",
+            name="Batch Duration (ms)",
+            line={"color": LNTA_COLORS["accent"], "width": 2},
+            hovertemplate="%{x}<br>Duration: %{y} ms<extra></extra>",
+        )
+    )
 
     # Trigger interval line (5 seconds = 5000 ms)
     fig.add_hline(
@@ -202,12 +205,14 @@ def render_input_rows_chart(df: pd.DataFrame) -> None:
 
     rows_df = rows_df.sort_values("ts")
 
-    fig = go.Figure(go.Bar(
-        x=rows_df["ts"],
-        y=rows_df["value"],
-        marker_color=LNTA_COLORS["proto_tcp"],
-        hovertemplate="%{x}<br>Rows: %{y:,}<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=rows_df["ts"],
+            y=rows_df["value"],
+            marker_color=LNTA_COLORS["proto_tcp"],
+            hovertemplate="%{x}<br>Rows: %{y:,}<extra></extra>",
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -237,15 +242,17 @@ def render_e2e_lag_chart(df: pd.DataFrame) -> None:
 
     lag_df = lag_df.sort_values("ts")
 
-    fig = go.Figure(go.Scatter(
-        x=lag_df["ts"],
-        y=lag_df["value"],
-        mode="lines",
-        line={"color": LNTA_COLORS["proto_udp"], "width": 2},
-        fill="tozeroy",
-        fillcolor="rgba(167, 139, 250, 0.1)",
-        hovertemplate="%{x}<br>E2E Lag: %{y} ms<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Scatter(
+            x=lag_df["ts"],
+            y=lag_df["value"],
+            mode="lines",
+            line={"color": LNTA_COLORS["proto_udp"], "width": 2},
+            fill="tozeroy",
+            fillcolor="rgba(167, 139, 250, 0.1)",
+            hovertemplate="%{x}<br>E2E Lag: %{y} ms<extra></extra>",
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -268,8 +275,12 @@ def render_counters(df: pd.DataFrame) -> None:
 
     with cols[0]:
         bad_count = int(bad_df["value"].sum()) if not bad_df.empty else 0
-        st.metric("Bad Records", f"{bad_count:,}", delta_color="inverse" if bad_count > 0 else "off")
+        st.metric(
+            "Bad Records", f"{bad_count:,}", delta_color="inverse" if bad_count > 0 else "off"
+        )
 
     with cols[1]:
         late_count = int(late_df["value"].sum()) if not late_df.empty else 0
-        st.metric("Late Records", f"{late_count:,}", delta_color="inverse" if late_count > 0 else "off")
+        st.metric(
+            "Late Records", f"{late_count:,}", delta_color="inverse" if late_count > 0 else "off"
+        )

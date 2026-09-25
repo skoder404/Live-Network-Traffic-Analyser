@@ -4,6 +4,7 @@ dashboard/components/alerts.py — Alerts tab for LNTA dashboard.
 Shows active alerts with explanations, timeline, and filters.
 Per DESIGN.md §103-108 and PRD §FR-ALR.
 """
+
 import sqlite3
 from typing import Any
 
@@ -57,8 +58,7 @@ def render_alerts_tab(db: ServingDB, controls: dict[str, Any]) -> None:
 
     # Apply filters
     filtered_df = alerts_df[
-        (alerts_df["severity"].isin(severity_filter)) &
-        (alerts_df["type"].isin(type_filter))
+        (alerts_df["severity"].isin(severity_filter)) & (alerts_df["type"].isin(type_filter))
     ].copy()
 
     # Time filter
@@ -97,7 +97,11 @@ def render_alert_card(alert: pd.Series) -> None:
 
     # Parse details JSON
     try:
-        details = eval(alert["details_json"]) if isinstance(alert["details_json"], str) else alert["details_json"]
+        details = (
+            eval(alert["details_json"])
+            if isinstance(alert["details_json"], str)
+            else alert["details_json"]
+        )
     except Exception:
         details = {}
 
@@ -114,33 +118,33 @@ def render_alert_card(alert: pd.Series) -> None:
             <div class="alert-card {severity.lower()}">
                 <div class="alert-header">
                     <span class="alert-severity {severity.lower()}">{severity_icon} {severity}</span>
-                    <span class="alert-type">{alert['type']}</span>
+                    <span class="alert-type">{alert["type"]}</span>
                 </div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: {LNTA_COLORS['text_secondary']};">
-                    Source: {alert['src_ip']}
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: {LNTA_COLORS["text_secondary"]};">
+                    Source: {alert["src_ip"]}
                 </div>
                 <div class="alert-metrics">
                     <div class="alert-metric">
                         <div class="alert-metric-label">Current</div>
-                        <div class="alert-metric-value">{alert['current_value']:.2f}</div>
+                        <div class="alert-metric-value">{alert["current_value"]:.2f}</div>
                     </div>
                     <div class="alert-metric">
                         <div class="alert-metric-label">Baseline</div>
-                        <div class="alert-metric-value">{alert['baseline_value']:.2f}</div>
+                        <div class="alert-metric-value">{alert["baseline_value"]:.2f}</div>
                     </div>
                     <div class="alert-metric">
                         <div class="alert-metric-label">Change</div>
-                        <div class="alert-metric-value" style="color: {'#EF4444' if alert['change_pct'] > 0 else '#22C55E'};">
-                            {alert['change_pct']:+.1f}%
+                        <div class="alert-metric-value" style="color: {"#EF4444" if alert["change_pct"] > 0 else "#22C55E"};">
+                            {alert["change_pct"]:+.1f}%
                         </div>
                     </div>
                     <div class="alert-metric">
                         <div class="alert-metric-label">Threshold</div>
-                        <div class="alert-metric-value">{alert['threshold']:.2f}</div>
+                        <div class="alert-metric-value">{alert["threshold"]:.2f}</div>
                     </div>
                 </div>
-                <div class="alert-reason">{alert['reason']}</div>
-                <div class="alert-timestamp">{ts_str} | Alert ID: {alert['alert_id'][:8]}...</div>
+                <div class="alert-reason">{alert["reason"]}</div>
+                <div class="alert-timestamp">{ts_str} | Alert ID: {alert["alert_id"][:8]}...</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -148,19 +152,21 @@ def render_alert_card(alert: pd.Series) -> None:
 
     # Expandable details
     with st.expander("🔍 View Details"):
-        st.json({
-            "alert_id": alert["alert_id"],
-            "type": alert["type"],
-            "severity": alert["severity"],
-            "src_ip": alert["src_ip"],
-            "metric": alert["metric"],
-            "current_value": alert["current_value"],
-            "baseline_value": alert["baseline_value"],
-            "change_pct": alert["change_pct"],
-            "threshold": alert["threshold"],
-            "reason": alert["reason"],
-            "details": details,
-        })
+        st.json(
+            {
+                "alert_id": alert["alert_id"],
+                "type": alert["type"],
+                "severity": alert["severity"],
+                "src_ip": alert["src_ip"],
+                "metric": alert["metric"],
+                "current_value": alert["current_value"],
+                "baseline_value": alert["baseline_value"],
+                "change_pct": alert["change_pct"],
+                "threshold": alert["threshold"],
+                "reason": alert["reason"],
+                "details": details,
+            }
+        )
 
 
 def render_alert_timeline(df: pd.DataFrame) -> None:
@@ -186,33 +192,38 @@ def render_alert_timeline(df: pd.DataFrame) -> None:
         if sev_df.empty:
             continue
         props = severity_map[severity]
-        fig.add_trace(go.Scatter(
-            x=sev_df["ts_parsed"],
-            y=sev_df["type"],
-            mode="markers",
-            marker={
-                "color": props["color"],
-                "symbol": props["symbol"],
-                "size": props["size"],
-                "line": {"width": 1, "color": "white"},
-            },
-            name=severity,
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "Time: %{x}<br>"
-                "Src IP: %{customdata[0]}<br>"
-                "Severity: %{customdata[1]}<br>"
-                "Change: %{customdata[2]:.1f}%<br>"
-                "Reason: %{customdata[3]}"
-                "<extra></extra>"
-            ),
-            customdata=list(zip(
-                sev_df["src_ip"],
-                sev_df["severity"],
-                sev_df["change_pct"],
-                sev_df["reason"],
-            )),
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=sev_df["ts_parsed"],
+                y=sev_df["type"],
+                mode="markers",
+                marker={
+                    "color": props["color"],
+                    "symbol": props["symbol"],
+                    "size": props["size"],
+                    "line": {"width": 1, "color": "white"},
+                },
+                name=severity,
+                hovertemplate=(
+                    "<b>%{y}</b><br>"
+                    "Time: %{x}<br>"
+                    "Src IP: %{customdata[0]}<br>"
+                    "Severity: %{customdata[1]}<br>"
+                    "Change: %{customdata[2]:.1f}%<br>"
+                    "Reason: %{customdata[3]}"
+                    "<extra></extra>"
+                ),
+                customdata=list(
+                    zip(
+                        sev_df["src_ip"],
+                        sev_df["severity"],
+                        sev_df["change_pct"],
+                        sev_df["reason"],
+                        strict=False,
+                    )
+                ),
+            )
+        )
 
     fig.update_layout(
         template="lnta_dark",
@@ -238,7 +249,9 @@ def render_alert_summary(df: pd.DataFrame) -> None:
 
     with col2:
         critical_count = len(df[df["severity"] == "CRITICAL"])
-        st.metric("Critical", critical_count, delta_color="inverse" if critical_count > 0 else "off")
+        st.metric(
+            "Critical", critical_count, delta_color="inverse" if critical_count > 0 else "off"
+        )
 
     with col3:
         warn_count = len(df[df["severity"] == "WARN"])

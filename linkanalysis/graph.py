@@ -3,6 +3,7 @@ linkanalysis/graph.py — Build directed weighted IP communication graph.
 
 Pure domain logic: no I/O, no framework dependencies.
 """
+
 import ipaddress
 from collections.abc import Iterable
 

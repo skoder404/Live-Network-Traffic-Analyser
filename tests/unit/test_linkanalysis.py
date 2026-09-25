@@ -1,6 +1,7 @@
 """
 tests/unit/test_linkanalysis.py — Unit tests for link analysis module.
 """
+
 import networkx as nx
 import pytest
 
@@ -50,7 +51,12 @@ def ip_edges_records():
         {"src_ip": "192.168.1.1", "dst_ip": "8.8.8.8", "packets": 100, "bytes": 10000},
         {"src_ip": "192.168.1.1", "dst_ip": "1.1.1.1", "packets": 50, "bytes": 5000},
         {"src_ip": "10.0.0.1", "dst_ip": "192.168.1.1", "packets": 30, "bytes": 3000},
-        {"src_ip": "192.168.1.1", "dst_ip": "8.8.8.8", "packets": 20, "bytes": 2000},  # duplicate edge
+        {
+            "src_ip": "192.168.1.1",
+            "dst_ip": "8.8.8.8",
+            "packets": 20,
+            "bytes": 2000,
+        },  # duplicate edge
     ]
 
 

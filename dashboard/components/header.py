@@ -1,6 +1,7 @@
 """
 dashboard/components/header.py — Header and KPI strip component for LNTA dashboard.
 """
+
 import streamlit as st
 
 # Constants
@@ -23,23 +24,33 @@ SOURCE_BADGE_MAP = {
 
 def render_header(db_health: dict, source_mode: str = "LIVE") -> None:
     """Render global header with logo, source badge, pulse, KPI strip."""
-    col_logo, col_badge, col_pulse, col_update, *col_kpis = st.columns([2, 2, 1, 2, 1, 1, 1, 1, 1, 1])
+    col_logo, col_badge, col_pulse, col_update, *col_kpis = st.columns(
+        [2, 2, 1, 2, 1, 1, 1, 1, 1, 1]
+    )
 
     with col_logo:
-        st.markdown("""
+        st.markdown(
+            """
         <div style="display:flex;align-items:center;gap:10px;height:100%;">
             <span style="font-size:28px;font-weight:700;color:#22D3EE;">LNTA</span>
             <span style="font-size:12px;color:#8496B0;text-transform:uppercase;">Live Network Traffic Analyser</span>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col_badge:
         badge_class = SOURCE_BADGE_MAP.get(source_mode, "live")
-        st.markdown(f'<span class="source-badge {badge_class}">{source_mode}</span>', unsafe_allow_html=True)
+        st.markdown(
+            f'<span class="source-badge {badge_class}">{source_mode}</span>', unsafe_allow_html=True
+        )
 
     with col_pulse:
         pulse_class = "fresh" if db_health.get("connected") else "down"
-        st.markdown(f'<div class="live-pulse {pulse_class}" title="Pipeline status"></div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="live-pulse {pulse_class}" title="Pipeline status"></div>',
+            unsafe_allow_html=True,
+        )
 
     with col_update:
         if db_health.get("connected"):
@@ -51,10 +62,13 @@ def render_header(db_health: dict, source_mode: str = "LIVE") -> None:
     # KPI cards - placeholder values, will be filled by components
     for i, label in enumerate(KPI_LABELS):
         with col_kpis[i]:
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="kpi-card">
                 <div class="kpi-value">—</div>
                 <div class="kpi-label">{label}</div>
                 <div class="kpi-delta"></div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )

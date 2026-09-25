@@ -8,6 +8,7 @@ Implements behavioral alerts per PRD §FR-ALR and TECH_RULES §3.7:
 
 All alerts include: current value, baseline, change %, threshold, human-readable reason.
 """
+
 import json
 import time
 import uuid
@@ -21,6 +22,7 @@ import yaml
 @dataclass
 class AlertRuleConfig:
     """Configuration for a single alert rule."""
+
     # Traffic spike
     ewma_alpha: float = 0.1
     warmup_windows: int = 30
@@ -42,6 +44,7 @@ class AlertRuleConfig:
 @dataclass
 class AlertState:
     """Persistent state for alert evaluation."""
+
     # EWMA baseline per metric (key: metric_name)
     ewma_baselines: dict[str, float] = field(default_factory=dict)
     ewma_counts: dict[str, int] = field(default_factory=lambda: defaultdict(int))
@@ -56,6 +59,7 @@ class AlertState:
 @dataclass
 class Alert:
     """Represents a generated alert."""
+
     alert_id: str
     ts: str  # ISO 8601 UTC
     type: str  # TRAFFIC_SPIKE, UNUSUAL_PORT_ACTIVITY, HIGH_FANOUT
@@ -89,7 +93,7 @@ class Alert:
 def load_alert_config(path: str = "config/alert_rules.yaml") -> AlertRuleConfig:
     """Load alert configuration from YAML file."""
     try:
-        with open(path, "r") as f:
+        with open(path) as f:
             data = yaml.safe_load(f) or {}
         return AlertRuleConfig(
             ewma_alpha=data.get("traffic_spike", {}).get("ewma_alpha", 0.1),
@@ -97,7 +101,9 @@ def load_alert_config(path: str = "config/alert_rules.yaml") -> AlertRuleConfig:
             warn_multiplier=data.get("traffic_spike", {}).get("warn_multiplier", 3.0),
             critical_multiplier=data.get("traffic_spike", {}).get("critical_multiplier", 6.0),
             min_pps=data.get("traffic_spike", {}).get("min_pps", 50),
-            max_distinct_dst_ports=data.get("unusual_port_activity", {}).get("max_distinct_dst_ports", 20),
+            max_distinct_dst_ports=data.get("unusual_port_activity", {}).get(
+                "max_distinct_dst_ports", 20
+            ),
             max_distinct_dst_ips=data.get("high_fanout", {}).get("max_distinct_dst_ips", 30),
             cooldown_seconds=data.get("cooldown_seconds", 60),
             min_window_packets=data.get("min_window_packets", 10),
@@ -244,11 +250,13 @@ class AlertEngine:
                 f"above EWMA baseline of {new_baseline:.1f} pps "
                 f"(threshold: {threshold:.1f} pps, {severity.lower()})"
             ),
-            details_json=json.dumps({
-                "ewma_alpha": alpha,
-                "warmup_windows": self.config.warmup_windows,
-                "window_count": count + 1,
-            }),
+            details_json=json.dumps(
+                {
+                    "ewma_alpha": alpha,
+                    "warmup_windows": self.config.warmup_windows,
+                    "window_count": count + 1,
+                }
+            ),
         )
         self._set_cooldown(cooldown_key)
         return alert
@@ -337,14 +345,13 @@ class AlertEngine:
         }
 
     @classmethod
-    def from_state_snapshot(cls, snapshot: dict[str, Any], config: AlertRuleConfig | None = None) -> "AlertEngine":
+    def from_state_snapshot(
+        cls, snapshot: dict[str, Any], config: AlertRuleConfig | None = None
+    ) -> "AlertEngine":
         """Restore engine from persisted state."""
         state = AlertState(
             ewma_baselines=snapshot.get("ewma_baselines", {}),
             ewma_counts=defaultdict(int, snapshot.get("ewma_counts", {})),
-            cooldowns={
-                tuple(k.split("|", 1)): v
-                for k, v in snapshot.get("cooldowns", {}).items()
-            },
+            cooldowns={tuple(k.split("|", 1)): v for k, v in snapshot.get("cooldowns", {}).items()},
         )
         return cls(config=config, state=state)

@@ -3,6 +3,7 @@ dashboard/components/link_analysis.py — Link Analysis tab for LNTA dashboard.
 
 Shows IP communication graph, PageRank rankings, Markov transitions, and centrality.
 """
+
 import sqlite3
 from typing import Any
 
@@ -127,6 +128,7 @@ def render_ip_graph(
 
         # Color by private/public
         from linkanalysis.graph import classify_ip
+
         ip_type = classify_ip(node)
         color = LNTA_COLORS["proto_tcp"] if ip_type == "private" else LNTA_COLORS["proto_udp"]
         node_color.append(color)
@@ -160,31 +162,37 @@ def render_ip_graph(
     fig = go.Figure()
 
     # Edges
-    fig.add_trace(go.Scatter(
-        x=edge_x, y=edge_y,
-        mode="lines",
-        line={"width": 0.5, "color": LNTA_COLORS["border"]},
-        hoverinfo="none",
-        showlegend=False,
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=edge_x,
+            y=edge_y,
+            mode="lines",
+            line={"width": 0.5, "color": LNTA_COLORS["border"]},
+            hoverinfo="none",
+            showlegend=False,
+        )
+    )
 
     # Nodes
-    fig.add_trace(go.Scatter(
-        x=node_x, y=node_y,
-        mode="markers+text",
-        marker={
-            "size": node_size,
-            "color": node_color,
-            "line": {"width": 1, "color": "white"},
-            "opacity": 0.9,
-        },
-        text=[n[:15] for n in G.nodes()],  # Truncate long IPs
-        textposition="top center",
-        textfont={"size": 8, "color": LNTA_COLORS["text_secondary"]},
-        hovertext=node_text,
-        hoverinfo="text",
-        showlegend=False,
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=node_x,
+            y=node_y,
+            mode="markers+text",
+            marker={
+                "size": node_size,
+                "color": node_color,
+                "line": {"width": 1, "color": "white"},
+                "opacity": 0.9,
+            },
+            text=[n[:15] for n in G.nodes()],  # Truncate long IPs
+            textposition="top center",
+            textfont={"size": 8, "color": LNTA_COLORS["text_secondary"]},
+            hovertext=node_text,
+            hoverinfo="text",
+            showlegend=False,
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -215,15 +223,18 @@ def render_pagerank_table(
         in_deg = centrality.get("in_degree", {}).get(ip, 0)
         out_deg = centrality.get("out_degree", {}).get(ip, 0)
         from linkanalysis.graph import classify_ip
+
         ip_type = classify_ip(ip)
-        data.append({
-            "Rank": rank,
-            "IP": ip,
-            "Type": ip_type,
-            "PageRank": f"{score:.4f}",
-            "In-Deg": f"{in_deg:.3f}",
-            "Out-Deg": f"{out_deg:.3f}",
-        })
+        data.append(
+            {
+                "Rank": rank,
+                "IP": ip,
+                "Type": ip_type,
+                "PageRank": f"{score:.4f}",
+                "In-Deg": f"{in_deg:.3f}",
+                "Out-Deg": f"{out_deg:.3f}",
+            }
+        )
 
     df = pd.DataFrame(data)
     st.dataframe(df, use_container_width=True, hide_index=True)
@@ -253,15 +264,17 @@ def render_markov_heatmap(G, top_k: int = 15) -> None:
         st.info("Not enough data for transition matrix")
         return
 
-    fig = go.Figure(data=go.Heatmap(
-        z=matrix,
-        x=nodes,
-        y=nodes,
-        colorscale="Blues",
-        showscale=True,
-        hoverongaps=False,
-        hovertemplate="From: %{y}<br>To: %{x}<br>Prob: %{z:.3f}<extra></extra>",
-    ))
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=matrix,
+            x=nodes,
+            y=nodes,
+            colorscale="Blues",
+            showscale=True,
+            hoverongaps=False,
+            hovertemplate="From: %{y}<br>To: %{x}<br>Prob: %{z:.3f}<extra></extra>",
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -279,20 +292,18 @@ def render_next_hop_selector(G, pr_scores: dict[str, float]) -> None:
     # Top 10 by PageRank for selector
     top_ips = sorted(pr_scores.items(), key=lambda x: x[1], reverse=True)[:10]
     ip_options = [f"{ip} (PR: {pr:.3f})" for ip, pr in top_ips]
-    ip_map = {opt: ip for opt, ip in zip(ip_options, [ip for ip, _ in top_ips])}
+    ip_map = {opt: ip for opt, ip in zip(ip_options, [ip for ip, _ in top_ips], strict=False)}
 
     selected = st.selectbox("Select source IP", ip_options, key="markov_src_select")
 
     if selected:
         src_ip = ip_map[selected]
         from linkanalysis.markov import markov_next_hop
+
         next_hops = markov_next_hop(G, src_ip, top_k=10)
 
         if next_hops:
-            data = [
-                {"Destination": dst, "Probability": f"{prob:.2%}"}
-                for dst, prob in next_hops
-            ]
+            data = [{"Destination": dst, "Probability": f"{prob:.2%}"} for dst, prob in next_hops]
             st.dataframe(pd.DataFrame(data), use_container_width=True, hide_index=True)
         else:
             st.info(f"No outbound connections from {src_ip}")
@@ -305,7 +316,7 @@ def render_centrality_bars(centrality: dict[str, dict[str, float]], top_n: int =
     measures = ["degree", "in_degree", "out_degree", "betweenness"]
     titles = ["Total Degree", "In-Degree", "Out-Degree", "Betweenness"]
 
-    for measure, title in zip(measures, titles):
+    for measure, title in zip(measures, titles, strict=False):
         scores = centrality.get(measure, {})
         if not scores:
             continue
@@ -314,15 +325,17 @@ def render_centrality_bars(centrality: dict[str, dict[str, float]], top_n: int =
         if not top:
             continue
 
-        ips, vals = zip(*top)
+        ips, vals = zip(*top, strict=False)
 
-        fig = go.Figure(go.Bar(
-            x=list(vals),
-            y=list(ips),
-            orientation="h",
-            marker_color=LNTA_COLORS["accent"],
-            hovertemplate="%{y}: %{x:.4f}<extra></extra>",
-        ))
+        fig = go.Figure(
+            go.Bar(
+                x=list(vals),
+                y=list(ips),
+                orientation="h",
+                marker_color=LNTA_COLORS["accent"],
+                hovertemplate="%{y}: %{x:.4f}<extra></extra>",
+            )
+        )
 
         fig.update_layout(
             template="lnta_dark",

@@ -4,6 +4,7 @@ dashboard/components/live_overview.py — Live Overview tab for LNTA dashboard.
 Shows traffic over time, protocol distribution, top ports, and decay score.
 Per DESIGN.md §73-79.
 """
+
 import sqlite3
 from typing import Any
 
@@ -97,25 +98,29 @@ def render_traffic_chart(df: pd.DataFrame) -> None:
     fig = go.Figure()
 
     # Packets/s (left axis)
-    fig.add_trace(go.Scatter(
-        x=df["window_start"],
-        y=df["pps"],
-        mode="lines",
-        name="Packets/s",
-        line={"color": LNTA_COLORS["proto_tcp"], "width": 2},
-        hovertemplate="%{x}<br>Packets/s: %{y:.1f}<extra></extra>",
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=df["window_start"],
+            y=df["pps"],
+            mode="lines",
+            name="Packets/s",
+            line={"color": LNTA_COLORS["proto_tcp"], "width": 2},
+            hovertemplate="%{x}<br>Packets/s: %{y:.1f}<extra></extra>",
+        )
+    )
 
     # Bytes/s (right axis)
-    fig.add_trace(go.Scatter(
-        x=df["window_start"],
-        y=df["bps"],
-        mode="lines",
-        name="Bytes/s",
-        line={"color": LNTA_COLORS["proto_udp"], "width": 2},
-        yaxis="y2",
-        hovertemplate="%{x}<br>Bytes/s: %{y:,.0f}<extra></extra>",
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=df["window_start"],
+            y=df["bps"],
+            mode="lines",
+            name="Bytes/s",
+            line={"color": LNTA_COLORS["proto_udp"], "width": 2},
+            yaxis="y2",
+            hovertemplate="%{x}<br>Bytes/s: %{y:,.0f}<extra></extra>",
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -123,7 +128,12 @@ def render_traffic_chart(df: pd.DataFrame) -> None:
         margin={"l": 60, "r": 60, "t": 40, "b": 40},
         xaxis={"title": "Time (UTC)"},
         yaxis={"title": "Packets/s", "side": "left", "color": LNTA_COLORS["proto_tcp"]},
-        yaxis2={"title": "Bytes/s", "side": "right", "overlaying": "y", "color": LNTA_COLORS["proto_udp"]},
+        yaxis2={
+            "title": "Bytes/s",
+            "side": "right",
+            "overlaying": "y",
+            "color": LNTA_COLORS["proto_udp"],
+        },
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
         hovermode="x unified",
     )
@@ -140,18 +150,20 @@ def render_protocol_donut(df: pd.DataFrame) -> None:
     # Aggregate across windows
     agg = df.groupby("protocol").agg({"packets": "sum"}).reset_index()
 
-    fig = go.Figure(go.Pie(
-        labels=agg["protocol"],
-        values=agg["packets"],
-        hole=0.5,
-        marker={
-            "colors": [get_protocol_color(p) for p in agg["protocol"]],
-            "line": {"color": LNTA_COLORS["bg_base"], "width": 2},
-        },
-        textinfo="label+percent",
-        textfont={"size": 12, "color": LNTA_COLORS["text_primary"]},
-        hovertemplate="%{label}: %{value:,} packets (%{percent})<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Pie(
+            labels=agg["protocol"],
+            values=agg["packets"],
+            hole=0.5,
+            marker={
+                "colors": [get_protocol_color(p) for p in agg["protocol"]],
+                "line": {"color": LNTA_COLORS["bg_base"], "width": 2},
+            },
+            textinfo="label+percent",
+            textfont={"size": 12, "color": LNTA_COLORS["text_primary"]},
+            hovertemplate="%{label}: %{value:,} packets (%{percent})<extra></extra>",
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -172,24 +184,35 @@ def render_top_ports(df: pd.DataFrame) -> None:
 
     # Service name mapping
     service_names = {
-        443: "HTTPS", 53: "DNS", 80: "HTTP", 22: "SSH",
-        25: "SMTP", 123: "NTP", 161: "SNMP", 389: "LDAP",
-        445: "SMB", 3389: "RDP", 5432: "PostgreSQL", 3306: "MySQL",
+        443: "HTTPS",
+        53: "DNS",
+        80: "HTTP",
+        22: "SSH",
+        25: "SMTP",
+        123: "NTP",
+        161: "SNMP",
+        389: "LDAP",
+        445: "SMB",
+        3389: "RDP",
+        5432: "PostgreSQL",
+        3306: "MySQL",
     }
 
     df = df.copy()
     df["service"] = df["port"].map(service_names).fillna("Other")
     df["label"] = df.apply(lambda r: f"{r['port']} ({r['service']})", axis=1)
 
-    fig = go.Figure(go.Bar(
-        x=df["total_packets"],
-        y=df["label"],
-        orientation="h",
-        marker_color=LNTA_COLORS["accent"],
-        text=df["total_packets"],
-        textposition="outside",
-        hovertemplate="%{y}: %{x:,} packets<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=df["total_packets"],
+            y=df["label"],
+            orientation="h",
+            marker_color=LNTA_COLORS["accent"],
+            text=df["total_packets"],
+            textposition="outside",
+            hovertemplate="%{y}: %{x:,} packets<extra></extra>",
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -210,15 +233,17 @@ def render_decay_score(df: pd.DataFrame) -> None:
 
     df = df.sort_values("ts")
 
-    fig = go.Figure(go.Scatter(
-        x=df["ts"],
-        y=df["score"],
-        mode="lines",
-        line={"color": LNTA_COLORS["proto_udp"], "width": 2},
-        fill="tozeroy",
-        fillcolor="rgba(167, 139, 250, 0.1)",
-        hovertemplate="%{x}<br>Decay Score: %{y:.2f}<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Scatter(
+            x=df["ts"],
+            y=df["score"],
+            mode="lines",
+            line={"color": LNTA_COLORS["proto_udp"], "width": 2},
+            fill="tozeroy",
+            fillcolor="rgba(167, 139, 250, 0.1)",
+            hovertemplate="%{x}<br>Decay Score: %{y:.2f}<extra></extra>",
+        )
+    )
 
     fig.update_layout(
         template="lnta_dark",
@@ -236,7 +261,13 @@ def render_decay_score(df: pd.DataFrame) -> None:
         last = df.iloc[-1]["score"]
         prev = df.iloc[-2]["score"]
         trend = "▲" if last > prev else "▼" if last < prev else "●"
-        color = LNTA_COLORS["ok"] if last > prev else LNTA_COLORS["critical"] if last < prev else LNTA_COLORS["text_muted"]
+        color = (
+            LNTA_COLORS["ok"]
+            if last > prev
+            else LNTA_COLORS["critical"]
+            if last < prev
+            else LNTA_COLORS["text_muted"]
+        )
         st.markdown(
             f'<div style="text-align:right; color:{color}; font-family:monospace;">Trend: {trend} {last:.2f}</div>',
             unsafe_allow_html=True,

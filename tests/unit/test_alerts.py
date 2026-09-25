@@ -48,7 +48,7 @@ class TestAlertEngine:
         """No alert during EWMA warmup period."""
         for i in range(4):  # warmup_windows=5, so 4 windows = still warming up
             alerts = engine.evaluate_window(
-                window_start=f"2026-09-23T12:00:{i*10:02d}Z",
+                window_start=f"2026-09-23T12:00:{i * 10:02d}Z",
                 window_len_s=10,
                 pps=100,
                 src_ip_port_counts={},
@@ -62,7 +62,7 @@ class TestAlertEngine:
         # Warmup: 5 windows at 100 pps -> baseline = 100
         for i in range(5):
             engine.evaluate_window(
-                window_start=f"2026-09-23T12:00:{i*10:02d}Z",
+                window_start=f"2026-09-23T12:00:{i * 10:02d}Z",
                 window_len_s=10,
                 pps=100,
                 src_ip_port_counts={},
@@ -93,7 +93,7 @@ class TestAlertEngine:
         """CRITICAL alert when pps > 6x baseline."""
         for i in range(5):
             engine.evaluate_window(
-                window_start=f"2026-09-23T12:00:{i*10:02d}Z",
+                window_start=f"2026-09-23T12:00:{i * 10:02d}Z",
                 window_len_s=10,
                 pps=100,
                 src_ip_port_counts={},
@@ -118,7 +118,7 @@ class TestAlertEngine:
         """Cooldown prevents duplicate alerts within cooldown period."""
         for i in range(5):
             engine.evaluate_window(
-                window_start=f"2026-09-23T12:00:{i*10:02d}Z",
+                window_start=f"2026-09-23T12:00:{i * 10:02d}Z",
                 window_len_s=10,
                 pps=100,
                 src_ip_port_counts={},
@@ -154,7 +154,7 @@ class TestAlertEngine:
 
         for i in range(5):
             engine.evaluate_window(
-                window_start=f"2026-09-23T12:00:{i*10:02d}Z",
+                window_start=f"2026-09-23T12:00:{i * 10:02d}Z",
                 window_len_s=10,
                 pps=100,
                 src_ip_port_counts={},
@@ -300,7 +300,7 @@ class TestAlertStatePersistence:
         # Generate some state
         for i in range(5):
             engine.evaluate_window(
-                window_start=f"2026-09-23T12:00:{i*10:02d}Z",
+                window_start=f"2026-09-23T12:00:{i * 10:02d}Z",
                 window_len_s=10,
                 pps=100,
                 src_ip_port_counts={},
@@ -340,7 +340,7 @@ class TestAlertFields:
         """Alert serializes to dict correctly."""
         for i in range(5):
             engine.evaluate_window(
-                window_start=f"2026-09-23T12:00:{i*10:02d}Z",
+                window_start=f"2026-09-23T12:00:{i * 10:02d}Z",
                 window_len_s=10,
                 pps=100,
                 src_ip_port_counts={},

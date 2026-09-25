@@ -3,6 +3,7 @@ dashboard/theme.py — Plotly dark theme and color tokens for LNTA.
 
 No side effects on import. Call register_lnta_theme() explicitly.
 """
+
 import plotly.graph_objects as go
 import plotly.io as pio
 
@@ -35,8 +36,18 @@ PROTOCOL_COLOR_MAP = {
 
 # 12 distinct colors (no duplicates)
 CATEGORICAL_PALETTE = [
-    "#22D3EE", "#A78BFA", "#FBBF24", "#34D399", "#F472B6", "#94A3B8",
-    "#60A5FA", "#F87171", "#4ADE80", "#FB923C", "#C084FC", "#14B8A6",
+    "#22D3EE",
+    "#A78BFA",
+    "#FBBF24",
+    "#34D399",
+    "#F472B6",
+    "#94A3B8",
+    "#60A5FA",
+    "#F87171",
+    "#4ADE80",
+    "#FB923C",
+    "#C084FC",
+    "#14B8A6",
 ]
 
 SEVERITY_COLORS = {
@@ -55,9 +66,7 @@ def get_lnta_dark_template() -> go.layout.Template:
                 "color": LNTA_COLORS["text_primary"],
                 "size": 12,
             },
-            title={
-                "font": {"size": 16, "color": LNTA_COLORS["text_primary"]}, "x": 0.02
-            },
+            title={"font": {"size": 16, "color": LNTA_COLORS["text_primary"]}, "x": 0.02},
             paper_bgcolor=LNTA_COLORS["bg_base"],
             plot_bgcolor=LNTA_COLORS["bg_panel"],
             xaxis={

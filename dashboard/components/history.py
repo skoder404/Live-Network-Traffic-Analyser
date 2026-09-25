@@ -4,6 +4,7 @@ dashboard/components/history.py — History tab for LNTA dashboard.
 Shows historical query results from Hive/Spark SQL over HDFS.
 Per DESIGN.md §109-112.
 """
+
 import sqlite3
 from typing import Any
 
@@ -45,7 +46,9 @@ def render_history_tab(db: ServingDB, controls: dict[str, Any]) -> None:
 
     # Parse JSON columns
     hist_df = hist_df.copy()
-    hist_df["columns"] = hist_df["columns_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
+    hist_df["columns"] = hist_df["columns_json"].apply(
+        lambda x: eval(x) if isinstance(x, str) else x
+    )
     hist_df["rows"] = hist_df["rows_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
 
     # Check for stale data
@@ -58,7 +61,9 @@ def render_history_tab(db: ServingDB, controls: dict[str, Any]) -> None:
         st.warning("⚠️ Historical data may be stale (last run > 24h ago)")
 
     # Parse JSON columns
-    hist_df["columns"] = hist_df["columns_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
+    hist_df["columns"] = hist_df["columns_json"].apply(
+        lambda x: eval(x) if isinstance(x, str) else x
+    )
     hist_df["rows"] = hist_df["rows_json"].apply(lambda x: eval(x) if isinstance(x, str) else x)
 
     # Query selector with accessible label
@@ -111,12 +116,14 @@ def render_history_chart(df: pd.DataFrame, columns: list) -> None:
     # Determine chart type
     if len(categorical_cols) > 0 and df[x_col].nunique() <= 20:
         # Bar chart for categorical
-        fig = go.Figure(go.Bar(
-            x=df[x_col],
-            y=df[y_col],
-            marker_color=LNTA_COLORS["accent"],
-            hovertemplate=f"{x_col}: %{{x}}<br>{y_col}: %{{y:,}}<extra></extra>",
-        ))
+        fig = go.Figure(
+            go.Bar(
+                x=df[x_col],
+                y=df[y_col],
+                marker_color=LNTA_COLORS["accent"],
+                hovertemplate=f"{x_col}: %{{x}}<br>{y_col}: %{{y:,}}<extra></extra>",
+            )
+        )
         fig.update_layout(
             template="lnta_dark",
             height=300,
@@ -126,13 +133,15 @@ def render_history_chart(df: pd.DataFrame, columns: list) -> None:
         )
     else:
         # Line chart for time series or continuous
-        fig = go.Figure(go.Scatter(
-            x=df[x_col],
-            y=df[y_col],
-            mode="lines+markers",
-            line={"color": LNTA_COLORS["accent"], "width": 2},
-            hovertemplate=f"{x_col}: %{{x}}<br>{y_col}: %{{y:,}}<extra></extra>",
-        ))
+        fig = go.Figure(
+            go.Scatter(
+                x=df[x_col],
+                y=df[y_col],
+                mode="lines+markers",
+                line={"color": LNTA_COLORS["accent"], "width": 2},
+                hovertemplate=f"{x_col}: %{{x}}<br>{y_col}: %{{y:,}}<extra></extra>",
+            )
+        )
         fig.update_layout(
             template="lnta_dark",
             height=300,

@@ -1,30 +1,7 @@
-<<<<<<< HEAD
-# Environment variables
-.env
-.env.local
-.env.*.local
-*.env
-
-# Local task tracking & scratchpads
-todo.md
-docs/todo.md
-
-# Python
-
-
-bda-env/
-__pycache__/
-*.pyc
-.env
-=======
 # Byte-compiled / optimized / DLL files
->>>>>>> origin/main
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-
-# C extensions
 *.so
 
 # Distribution / packaging
@@ -33,6 +10,7 @@ env/
 venv/
 .venv/
 ENV/
+bda-env/
 *.egg-info/
 dist/
 build/
@@ -41,8 +19,6 @@ build/
 .pytest_cache/
 .coverage
 htmlcov/
-<<<<<<< HEAD
-=======
 
 # Environment variables & secrets
 .env
@@ -74,4 +50,3 @@ scripts/keys/*.pub
 
 # Local assistant documentation & walkthroughs
 documentation/
->>>>>>> origin/main
