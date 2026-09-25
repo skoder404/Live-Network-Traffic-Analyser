@@ -110,7 +110,7 @@
 | ☑ | T4-005 | Protocol counts and port counts (Lane A) | Sep 23 | MUST | 60 min |
 | ☑ | T4-006 | Stream filtering (named filters + filtered sub-stream) | Sep 24 | MUST | 60 min |
 | ☑ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
-| ☐ | T4-008 | Count distinct — exact, HyperLogLog and Flajolet–Martin (Lane A + B) | Sep 25 | MUST | 90 min |
+| ☑ | T4-008 | Count distinct — exact, HyperLogLog and Flajolet–Martin (Lane A + B) | Sep 25 | MUST | 90 min |
 | ☐ | T4-009 | Counting ones — DGIM sliding-window estimator | Sep 26 | MUST | 90 min |
 | ☐ | T4-010 | Group A unit + streaming validation tests | Sep 27 | SHOULD | 75 min |
 
@@ -723,9 +723,9 @@ Implement streaming/analytics/sampling.py: ReservoirSampler (Algorithm R; k, see
 **Description:** Lane A `streaming/queries/distinct.py` computes per window `src_ips_exact`, `dst_ips_exact`, `ports_exact` using `size(collect_set(...))` and `src_ips_hll`, `dst_ips_hll`, `ports_hll` using `approx_count_distinct(col, 0.05)` → upsert into `distinct_counts`. Lane B `analytics/fm.py` implements Flajolet–Martin (multiple hash functions, groups → median of means) and updates the `src_ips_fm`, `dst_ips_fm` columns of the same rows (partial upsert).
 **Dependencies:** T4-004, T1-004
 **Acceptance Criteria:**
-- [ ] HLL within ±5% of exact on sample data; FM error is measured and reported (expected to be looser)
-- [ ] The two writers produce one merged row per window (no overwrites of each other's columns)
-- [ ] FM implementation unit-tested on known cardinalities (100, 1,000, 10,000) with tolerance
+- [x] HLL within ±5% of exact on sample data; FM error is measured and reported (expected to be looser)
+- [x] The two writers produce one merged row per window (no overwrites of each other's columns)
+- [x] FM implementation unit-tested on known cardinalities (100, 1,000, 10,000) with tolerance
 **Estimated Effort:** 90 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 25 (Fri) · **Priority:** 🔴 MUST

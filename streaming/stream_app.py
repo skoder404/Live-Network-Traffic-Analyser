@@ -26,11 +26,13 @@ from common.logging_setup import setup_logging
 from common.serving_db import connect, current_utc_iso, init_schema, upsert
 from streaming.analytics.base import BatchContext
 from streaming.analytics.decay import DecayAnalytic
+from streaming.analytics.fm import FMAnalytic
+from streaming.analytics.moments import MomentsAnalytic
 from streaming.analytics.sampling import SamplingAnalytic
 from streaming.common.cleaning import clean, split_valid
 from streaming.common.schema import read_stream
 from streaming.common.session import get_spark
-from streaming.queries import counts, filter_counts, window_metrics
+from streaming.queries import counts, distinct, filter_counts, window_metrics
 from streaming.registry import get_enabled, get_registered, register
 
 logger = logging.getLogger("StreamApp")
@@ -62,6 +64,10 @@ class StreamingApplication:
             register(DecayAnalytic())
         if get_registered("sampling") is None:
             register(SamplingAnalytic())
+        if get_registered("moments") is None:
+            register(MomentsAnalytic())
+        if get_registered("fm") is None:
+            register(FMAnalytic())
 
     def handle_shutdown(self, signum: int, _frame: Any) -> None:
         """Gracefully stops all running streaming queries on signal."""
@@ -219,6 +225,10 @@ class StreamingApplication:
             spark, valid_stream, self.cfg, window_len_s=10
         )
         self.queries.append(q_filters)
+
+        # Distinct counts (10s window)
+        q_distinct = distinct.start_distinct_counts(spark, valid_stream, self.cfg, window_len_s=10)
+        self.queries.append(q_distinct)
 
         # 2. Start Lane B Dispatcher query
         checkpoint_root = self.spark_cfg.get("checkpoint_root", "data/checkpoints")

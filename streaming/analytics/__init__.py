@@ -9,6 +9,10 @@ from streaming.analytics.filters import (
     parse_filters,
     validate_filters,
 )
+from streaming.analytics.fm import (
+    FlajoletMartin,
+    FMAnalytic,
+)
 from streaming.analytics.moments import (
     AMSF2,
     MomentsAnalytic,
@@ -36,4 +40,6 @@ __all__ = [
     "AMSF2",
     "exact_f2",
     "compute_iat_from_timestamps",
+    "FlajoletMartin",
+    "FMAnalytic",
 ]
