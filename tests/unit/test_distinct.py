@@ -276,6 +276,11 @@ def test_fm_analytic_snapshot_restore(spark) -> None:
 
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test_fm_snap.db"
+        from common.serving_db import connect, init_schema
+
+        conn = connect(db_path)
+        init_schema(conn)
+        conn.close()
 
         analytic = FMAnalytic(num_hashes=30, num_groups=5, seed=42, window_len_s=10)
         ctx = BatchContext(

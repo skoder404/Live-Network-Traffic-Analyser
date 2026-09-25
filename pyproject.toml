@@ -32,7 +32,7 @@ markers = [
 
 [tool.coverage.run]
 source = ["common", "contracts", "streaming", "linkanalysis", "capture", "ingestion"]
-omit = ["tests/*", "scripts/*"]
+omit = ["tests/*", "scripts/*", "dashboard/*"]
 
 [tool.coverage.report]
 show_missing = true
