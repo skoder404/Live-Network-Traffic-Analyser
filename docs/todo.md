@@ -112,7 +112,7 @@
 | ☑ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
 | ☑ | T4-008 | Count distinct — exact, HyperLogLog and Flajolet–Martin (Lane A + B) | Sep 25 | MUST | 90 min |
 | ☑ | T4-009 | Counting ones — DGIM sliding-window estimator | Sep 26 | MUST | 90 min |
-| ☐ | T4-010 | Group A unit + streaming validation tests | Sep 27 | SHOULD | 75 min |
+| ☑ | T4-010 | Group A unit + streaming validation tests | Sep 27 | SHOULD | 75 min |
 
 ### Yashwant Vadhan M — task checklist
 
@@ -753,9 +753,9 @@ Implement streaming/analytics/dgim.py: class DGIM(window_n) with update(bit: int
 **Description:** Make M A Sushil Kumar's modules verifiable: ensure unit tests exist for each pure algorithm, and add `tests/e2e/test_group_a.py` which replays `normal`, `dns_heavy`, `fanout` and asserts the serving tables against `truth.json`/pandas (packets, bytes, protocol counts, filters, distinct exact vs HLL, DGIM bound).
 **Dependencies:** T4-004 … T4-009, T2-006
 **Acceptance Criteria:**
-- [ ] `pytest -m "spark or e2e" tests -k group_a` passes locally
-- [ ] Coverage ≥ 90% on pure algorithm modules (`dgim`, `fm`, `sampling`, `filters`)
-- [ ] Discrepancies found are logged as issues with the responsible task ID
+- [x] `pytest -m "spark or e2e" tests -k group_a` passes locally
+- [x] Coverage ≥ 90% on pure algorithm modules (`dgim`, `fm`, `sampling`, `filters`)
+- [x] Discrepancies found are logged as issues with the responsible task ID
 **Estimated Effort:** 75 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 27 (Sun) · **Priority:** 🟡 SHOULD

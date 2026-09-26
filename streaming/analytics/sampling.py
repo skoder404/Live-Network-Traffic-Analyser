@@ -114,6 +114,8 @@ class SamplingAnalytic(Analytic):
         self.p = p
         self.seed = seed
         self.reservoir = ReservoirSampler(k=k, seed=seed)
+        self.cumulative_len_sum: int = 0
+        self.cumulative_len_count: int = 0
 
     def process_batch(self, batch_df: DataFrame, batch_id: int, ctx: BatchContext) -> None:
         """Processes micro-batch, collects packet lengths, and updates sampling statistics."""
@@ -124,6 +126,8 @@ class SamplingAnalytic(Analytic):
         if target_k != self.reservoir.k:
             self.reservoir = ReservoirSampler(k=target_k, seed=self.seed)
             self.k = target_k
+            self.cumulative_len_sum = 0
+            self.cumulative_len_count = 0
 
         # Project only packet_length to protect driver memory
         lengths_df = batch_df.select("packet_length").filter("packet_length IS NOT NULL")
@@ -143,7 +147,13 @@ class SamplingAnalytic(Analytic):
             rows = rows[:max_rows]
 
         packet_lengths = [int(r["packet_length"]) for r in rows]
-        full_mean_len = sum(packet_lengths) / len(packet_lengths)
+        batch_sum = sum(packet_lengths)
+        batch_count = len(packet_lengths)
+        batch_mean_len = batch_sum / batch_count
+
+        self.cumulative_len_sum += batch_sum
+        self.cumulative_len_count += batch_count
+        stream_mean_len = self.cumulative_len_sum / self.cumulative_len_count
 
         # 1. Update Reservoir Sampler
         for length in packet_lengths:
@@ -153,7 +163,9 @@ class SamplingAnalytic(Analytic):
         res_sample_n = len(res_sample)
         res_mean_len = (sum(res_sample) / res_sample_n) if res_sample_n > 0 else 0.0
         res_err_pct = (
-            abs(res_mean_len - full_mean_len) / full_mean_len * 100.0 if full_mean_len > 0 else 0.0
+            abs(res_mean_len - stream_mean_len) / stream_mean_len * 100.0
+            if stream_mean_len > 0
+            else 0.0
         )
 
         # 2. Compute Bernoulli Sample on current batch
@@ -161,7 +173,9 @@ class SamplingAnalytic(Analytic):
         bern_sample_n = len(bern_sample)
         bern_mean_len = (sum(bern_sample) / bern_sample_n) if bern_sample_n > 0 else 0.0
         bern_err_pct = (
-            abs(bern_mean_len - full_mean_len) / full_mean_len * 100.0 if full_mean_len > 0 else 0.0
+            abs(bern_mean_len - batch_mean_len) / batch_mean_len * 100.0
+            if batch_mean_len > 0
+            else 0.0
         )
 
         ts_iso = ctx.batch_time or current_utc_iso()
@@ -173,7 +187,7 @@ class SamplingAnalytic(Analytic):
                 "k": int(self.reservoir.k),
                 "sample_n": int(res_sample_n),
                 "sample_mean_len": round(float(res_mean_len), 2),
-                "full_mean_len": round(float(full_mean_len), 2),
+                "full_mean_len": round(float(stream_mean_len), 2),
                 "err_pct": round(float(res_err_pct), 2),
             },
             {
@@ -182,7 +196,7 @@ class SamplingAnalytic(Analytic):
                 "k": int(len(packet_lengths) * self.p),
                 "sample_n": int(bern_sample_n),
                 "sample_mean_len": round(float(bern_mean_len), 2),
-                "full_mean_len": round(float(full_mean_len), 2),
+                "full_mean_len": round(float(batch_mean_len), 2),
                 "err_pct": round(float(bern_err_pct), 2),
             },
         ]
@@ -199,9 +213,9 @@ class SamplingAnalytic(Analytic):
                 conn.close()
 
         logger.debug(
-            "Batch %d sampling comparison: full_mean=%.1f, res_mean=%.1f (err=%.1f%%), bern_mean=%.1f (err=%.1f%%)",
+            "Batch %d sampling comparison: stream_mean=%.1f, res_mean=%.1f (err=%.1f%%), bern_mean=%.1f (err=%.1f%%)",
             batch_id,
-            full_mean_len,
+            stream_mean_len,
             res_mean_len,
             res_err_pct,
             bern_mean_len,

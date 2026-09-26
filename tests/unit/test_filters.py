@@ -280,3 +280,66 @@ def test_build_filter_counts_window_aggregation_and_consistency(spark):
     assert w2_f["dport_443"]["packets"] == 1
     assert w2_f["size_gt_1000"]["packets"] == 1
     assert w2_f["udp_only"]["packets"] == 1
+
+
+def test_filterspec_validation_and_parse_edge_cases(spark):
+    """Tests FilterSpec constructor validation, direct object parsing, and error branches."""
+    # 1. Empty name / expr validation
+    with pytest.raises(ValueError, match="name must be a non-empty string"):
+        FilterSpec(name="", expr="protocol = 'TCP'")
+    with pytest.raises(ValueError, match="name must be a non-empty string"):
+        FilterSpec(name=None, expr="protocol = 'TCP'")  # type: ignore
+    with pytest.raises(ValueError, match="expr must be a non-empty string"):
+        FilterSpec(name="tcp", expr="")
+    with pytest.raises(ValueError, match="expr must be a non-empty string"):
+        FilterSpec(name="tcp", expr=None)  # type: ignore
+
+    # 2. Direct FilterSpec object in list
+    direct_spec = FilterSpec(name="custom_spec", expr="dst_port = 8080")
+    parsed = parse_filters([direct_spec])
+    assert len(parsed) == 1
+    assert parsed[0] is direct_spec
+
+    # 3. Invalid item type in filter list
+    with pytest.raises(TypeError, match="Invalid filter specification type"):
+        parse_filters([12345])
+
+    # 4. validate_filters with spark=None
+    validate_filters([direct_spec], spark=None)
+
+
+def test_apply_filter_edge_cases_and_errors(spark):
+    """Tests apply_filter with custom filter lists, missing filters, and invalid target types."""
+    data = [
+        (
+            "2026-09-24 12:00:01.000",
+            "192.168.1.10",
+            "8.8.8.8",
+            1001,
+            8080,
+            "TCP",
+            500,
+            None,
+            None,
+            None,
+            1.0,
+        ),
+    ]
+    raw_df = spark.createDataFrame(data, schema=to_spark_schema())
+    cleaned_df = clean(raw_df)
+
+    custom_specs = [
+        FilterSpec(name="alt_http", expr="dst_port = 8080"),
+    ]
+
+    # Apply by name from provided custom list
+    filtered_custom = apply_filter(cleaned_df, "alt_http", filters=custom_specs)
+    assert filtered_custom.count() == 1
+
+    # Apply by non-existent name raises KeyError
+    with pytest.raises(KeyError, match="not found in available filters"):
+        apply_filter(cleaned_df, "non_existent_filter_name", filters=custom_specs)
+
+    # Apply with invalid filter_target type raises TypeError
+    with pytest.raises(TypeError, match="Expected FilterSpec or str"):
+        apply_filter(cleaned_df, 999)  # type: ignore

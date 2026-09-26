@@ -286,3 +286,72 @@ def test_counting_ones_analytic_snapshot_restore(spark) -> None:
         assert analytic2.window_n == 200
         assert "is_tcp" in analytic2.dgim_map
         assert analytic2.dgim_map["is_tcp"].query() == analytic.dgim_map["is_tcp"].query()
+
+
+def test_parse_predicates_and_edge_branches(spark, tmp_path) -> None:
+    """Tests parse_predicates min_length/dst_port/fallback and CountingOnesAnalytic edge branches."""
+    from common.serving_db import connect, init_schema
+    from contracts.record_schema import to_spark_schema
+    from streaming.analytics.base import BatchContext
+
+    # 1. parse_predicates formats
+    cfg = {
+        "spark": {
+            "predicates": [
+                {"name": "p_min", "min_length": 1000},
+                {"name": "p_port", "dst_port": 53},
+                {"name": "p_other"},
+            ]
+        }
+    }
+    preds = parse_predicates(cfg)
+    assert len(preds) == 3
+    assert preds[0].expr == "packet_length >= 1000"
+    assert preds[1].expr == "dst_port = 53"
+    assert preds[2].expr == "1 = 1"
+
+    # 2. CountingOnesAnalytic with empty batch
+    db_path = str(tmp_path / "dgim_edge.db")
+    conn = connect(db_path)
+    init_schema(conn)
+
+    analytic = CountingOnesAnalytic(window_n=50)
+    empty_df = spark.createDataFrame([], schema=to_spark_schema())
+    ctx = BatchContext(cfg={"spark": {}}, db_path=db_path, conn=conn)
+    analytic.process_batch(empty_df, batch_id=0, ctx=ctx)
+
+    # 3. Missing event_time column
+    df_no_et = spark.createDataFrame([("TCP", 100)], ["protocol", "packet_length"])
+    analytic.process_batch(df_no_et, batch_id=1, ctx=ctx)
+
+    # 4. Dynamic predicate addition and row capping
+    data = [
+        (
+            "2026-09-24 12:00:00.000",
+            "192.168.1.1",
+            "10.0.0.1",
+            1000 + i,
+            80,
+            "TCP",
+            100 + i * 10,
+            None,
+            None,
+            None,
+            1.0,
+        )
+        for i in range(10)
+    ]
+    raw_df = spark.createDataFrame(data, schema=to_spark_schema())
+    ctx_dynamic = BatchContext(
+        cfg={
+            "spark": {
+                "max_rows_per_batch": 5,
+                "predicates": [{"name": "new_pred", "expr": "protocol = 'TCP'"}],
+            }
+        },
+        db_path=db_path,
+        conn=conn,
+    )
+    analytic.process_batch(raw_df, batch_id=2, ctx=ctx_dynamic)
+    assert "new_pred" in analytic.dgim_map
+    conn.close()

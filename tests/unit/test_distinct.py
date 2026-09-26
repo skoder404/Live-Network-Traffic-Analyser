@@ -333,3 +333,55 @@ def test_hll_within_5_pct_of_exact_fanout(spark) -> None:
     if exact_dst > 10:
         dst_err = abs(hll_dst - exact_dst) / exact_dst * 100
         assert dst_err <= 6.0, f"HLL dst_ip error {dst_err:.1f}% exceeds tolerance"
+
+
+def test_fm_analytic_edge_branches(spark, tmp_path) -> None:
+    """Tests FMAnalytic empty batches, row capping, missing timestamps, and ctx.conn."""
+    from common.serving_db import connect, init_schema
+    from contracts.record_schema import to_spark_schema
+    from streaming.analytics.base import BatchContext
+
+    db_path = str(tmp_path / "fm_edge.db")
+    conn = connect(db_path)
+    init_schema(conn)
+
+    analytic = FMAnalytic()
+
+    # 1. Empty batch
+    empty_df = spark.createDataFrame([], schema=to_spark_schema())
+    ctx = BatchContext(cfg={"spark": {}}, db_path=db_path, conn=conn)
+    analytic.process_batch(empty_df, batch_id=0, ctx=ctx)
+
+    # 2. Missing timestamp and event_time columns
+    bad_df = spark.createDataFrame([("192.168.1.1",)], ["src_ip"])
+    analytic.process_batch(bad_df, batch_id=1, ctx=ctx)
+
+    # 3. Raw DataFrame with timestamp (triggers internal clean()) and row capping
+    data = [
+        (
+            "2026-09-24 12:00:00.000",
+            f"192.168.1.{i}",
+            "10.0.0.1",
+            1000 + i,
+            80,
+            "TCP",
+            100,
+            None,
+            None,
+            None,
+            1.0,
+        )
+        for i in range(10)
+    ]
+    raw_df = spark.createDataFrame(data, schema=to_spark_schema())
+    ctx_cap = BatchContext(
+        cfg={"spark": {"max_rows_per_batch": 5, "window_len_s": 10}},
+        db_path=db_path,
+        conn=conn,
+    )
+    analytic.process_batch(raw_df, batch_id=2, ctx=ctx_cap)
+
+    # Verify rows written via ctx.conn
+    rows = conn.execute("SELECT * FROM distinct_counts").fetchall()
+    conn.close()
+    assert len(rows) > 0

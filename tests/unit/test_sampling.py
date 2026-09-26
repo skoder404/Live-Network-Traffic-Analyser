@@ -189,3 +189,82 @@ def test_sampling_analytic_process_batch(spark, tmp_path):
     assert rows[1][2] == 50  # sample_n (capped at k=50 since population=100)
     assert abs(rows[1][4] - 595.0) < 1e-3  # full mean length is 595.0
     assert rows[1][5] >= 0.0  # err_pct
+
+
+def test_reservoir_sampler_invalid_k_and_reset():
+    """Tests that non-positive k raises ValueError and reset clears state."""
+    with pytest.raises(ValueError, match="Reservoir size k must be positive"):
+        ReservoirSampler(k=0)
+    with pytest.raises(ValueError, match="Reservoir size k must be positive"):
+        ReservoirSampler(k=-5)
+
+    sampler = ReservoirSampler(k=10, seed=123)
+    for i in range(20):
+        sampler.add(i)
+    assert len(sampler.sample()) == 10
+    assert sampler.n_seen == 20
+
+    sampler.reset()
+    assert len(sampler.sample()) == 0
+    assert sampler.n_seen == 0
+
+
+def test_sampling_analytic_edge_cases_and_capping(spark, tmp_path):
+    """Tests SamplingAnalytic empty batches, row capping, dynamic k, and ctx.conn."""
+    db_path = str(tmp_path / "test_sampling_edges.db")
+    conn = connect(db_path)
+    init_schema(conn)
+
+    # 1. Empty batch
+    empty_df = spark.createDataFrame([], schema=to_spark_schema())
+    ctx = BatchContext(
+        cfg={"spark": {"max_rows_per_batch": 5}},
+        db_path=db_path,
+        conn=conn,
+        batch_time="2026-09-24T12:00:00.000Z",
+    )
+    plugin = SamplingAnalytic(k=10)
+    plugin.process_batch(empty_df, batch_id=0, ctx=ctx)
+
+    # 2. Batch with dynamic k and row capping (10 rows > max_rows=5)
+    records = []
+    for i in range(10):
+        records.append(
+            (
+                "2026-09-24 12:00:00.000",
+                "192.168.1.1",
+                "10.0.0.1",
+                1000 + i,
+                80,
+                "TCP",
+                100 + i * 10,
+                None,
+                None,
+                None,
+                1.0,
+            )
+        )
+    df = clean(spark.createDataFrame(records, schema=to_spark_schema()))
+
+    cfg_dynamic = {
+        "spark": {
+            "max_rows_per_batch": 5,
+            "sampling": {"k": 3},  # change k from 10 to 3
+        },
+        "serving": {"db_path": db_path},
+    }
+    ctx_dynamic = BatchContext(
+        cfg=cfg_dynamic,
+        db_path=db_path,
+        conn=conn,
+        batch_time="2026-09-24T12:00:01.000Z",
+    )
+    plugin.process_batch(df, batch_id=1, ctx=ctx_dynamic)
+    assert plugin.reservoir.k == 3
+
+    # Check sampling_compare rows
+    rows = conn.execute(
+        "SELECT method, k, sample_n FROM sampling_compare WHERE ts = '2026-09-24T12:00:01.000Z'"
+    ).fetchall()
+    conn.close()
+    assert len(rows) == 2

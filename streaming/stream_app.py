@@ -190,13 +190,16 @@ class StreamingApplication:
 
         return dispatch_micro_batch
 
-    def run(self, input_path: str | None = None) -> None:
-        """Starts all streaming queries and blocks until termination."""
+    def run(self, input_path: str | None = None, block: bool = True) -> list[StreamingQuery]:
+        """Starts all streaming queries and blocks until termination if block is True."""
         self.init_storage()
 
-        # Signal hooks
-        signal.signal(signal.SIGINT, self.handle_shutdown)
-        signal.signal(signal.SIGTERM, self.handle_shutdown)
+        # Signal hooks (main thread only)
+        try:
+            signal.signal(signal.SIGINT, self.handle_shutdown)
+            signal.signal(signal.SIGTERM, self.handle_shutdown)
+        except (ValueError, AttributeError):
+            pass
 
         spark: SparkSession = get_spark(app_name="LNTA-StreamingEngine", config=self.cfg)
         logger.info(
@@ -246,10 +249,13 @@ class StreamingApplication:
         )
         self.queries.append(q_lane_b)
 
-        logger.info("All streaming queries started successfully. Awaiting termination...")
+        logger.info("All streaming queries started successfully.")
 
-        for q in self.queries:
-            q.awaitTermination()
+        if block:
+            for q in self.queries:
+                q.awaitTermination()
+
+        return self.queries
 
 
 def main() -> None:
