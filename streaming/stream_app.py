@@ -26,6 +26,7 @@ from common.logging_setup import setup_logging
 from common.serving_db import connect, current_utc_iso, init_schema, upsert
 from streaming.analytics.base import BatchContext
 from streaming.analytics.decay import DecayAnalytic
+from streaming.analytics.dgim import CountingOnesAnalytic
 from streaming.analytics.fm import FMAnalytic
 from streaming.analytics.moments import MomentsAnalytic
 from streaming.analytics.sampling import SamplingAnalytic
@@ -68,6 +69,8 @@ class StreamingApplication:
             register(MomentsAnalytic())
         if get_registered("fm") is None:
             register(FMAnalytic())
+        if get_registered("counting_ones") is None:
+            register(CountingOnesAnalytic())
 
     def handle_shutdown(self, signum: int, _frame: Any) -> None:
         """Gracefully stops all running streaming queries on signal."""

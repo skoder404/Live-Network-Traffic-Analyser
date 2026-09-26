@@ -3,6 +3,12 @@ streaming.analytics package — Lane B micro-batch algorithm plugins (foreachBat
 """
 
 from streaming.analytics.decay import DecayAnalytic, DecayingCounter, DecayingKeyTable
+from streaming.analytics.dgim import (
+    DGIM,
+    CountingOnesAnalytic,
+    PredicateSpec,
+    parse_predicates,
+)
 from streaming.analytics.filters import (
     FilterSpec,
     apply_filter,
@@ -42,4 +48,8 @@ __all__ = [
     "compute_iat_from_timestamps",
     "FlajoletMartin",
     "FMAnalytic",
+    "DGIM",
+    "PredicateSpec",
+    "parse_predicates",
+    "CountingOnesAnalytic",
 ]

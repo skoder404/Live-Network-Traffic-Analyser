@@ -111,7 +111,7 @@
 | ☑ | T4-006 | Stream filtering (named filters + filtered sub-stream) | Sep 24 | MUST | 60 min |
 | ☑ | T4-007 | Sampling (Bernoulli and reservoir) with sample-vs-full comparison | Sep 24 | MUST | 75 min |
 | ☑ | T4-008 | Count distinct — exact, HyperLogLog and Flajolet–Martin (Lane A + B) | Sep 25 | MUST | 90 min |
-| ☐ | T4-009 | Counting ones — DGIM sliding-window estimator | Sep 26 | MUST | 90 min |
+| ☑ | T4-009 | Counting ones — DGIM sliding-window estimator | Sep 26 | MUST | 90 min |
 | ☐ | T4-010 | Group A unit + streaming validation tests | Sep 27 | SHOULD | 75 min |
 
 ### Yashwant Vadhan M — task checklist
@@ -738,9 +738,9 @@ Implement (a) streaming/queries/distinct.py: windowed aggregation producing src_
 **Description:** `streaming/analytics/dgim.py`: pure-Python `DGIM(window_n)` (buckets of power-of-two sizes, ≤ 2 per size, merge on overflow, expire by position, `query()` = sum of buckets minus half of the oldest). `CountingOnesAnalytic` converts configured predicates (e.g. `packet_length > 1000`, `dst_port = 443`, `protocol = 'UDP'`) into bit streams over the last `window_n` packets (ordered by `event_time`) and writes exact vs DGIM to `counting_ones`.
 **Dependencies:** T4-003, T1-004
 **Acceptance Criteria:**
-- [ ] DGIM estimate within the theoretical ≤ 50% bound on random bit streams and typically < 10% (test reports max/mean error)
-- [ ] Exact count uses a deque over the same last N bits
-- [ ] State survives restart via `snapshot()/restore()` JSON in the checkpoint area
+- [x] DGIM estimate within the theoretical ≤ 50% bound on random bit streams and typically < 10% (test reports max/mean error)
+- [x] Exact count uses a deque over the same last N bits
+- [x] State survives restart via `snapshot()/restore()` JSON in the checkpoint area
 **Estimated Effort:** 90 min
 **Assigned To:** M A Sushil Kumar (Spark core)
 **Due:** Sep 26 (Sat) · **Priority:** 🔴 MUST
