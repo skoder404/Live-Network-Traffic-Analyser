@@ -1,4 +1,4 @@
-/* dashboard/assets/theme.css — Cyberpunk/Neon Theme for LNTA Streamlit Dashboard */
+/* dashboard/assets/cyberpunk.css — Cyberpunk/Neon Design System Styles */
 
 /* =============================================================================
    CSS CUSTOM PROPERTIES — CYBERPUNK/NEON TOKEN BLOCK
@@ -938,7 +938,6 @@ h1, h2, h3, h4, h5, h6 {
   @keyframes neon-pulse { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 1; transform: scale(1); } }
   @keyframes neon-alert-enter { from { opacity: 1; transform: translateX(0); } to { opacity: 1; transform: translateX(0); } }
   @keyframes neon-alert-pulse { 0% { box-shadow: var(--shadow-md); } 100% { box-shadow: var(--shadow-md); } }
-  @keyframes neon-shimmer { 0% { background-position: 0 0; } 100% { background-position: 0 0; } }
 }
 
 /* =============================================================================
