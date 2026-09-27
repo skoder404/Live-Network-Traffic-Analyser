@@ -5,12 +5,19 @@ tests/unit/test_edges.py — Unit tests for Lane A IP edges and source stats que
 try:
     import pytest
 
+    from common.serving_db import connect, init_schema
     from contracts.record_schema import to_spark_schema
     from streaming.common.cleaning import clean
     from streaming.common.session import get_spark
-    from streaming.queries.edges import build_ip_edges, build_source_stats
+    from streaming.queries.edges import (
+        build_ip_edges,
+        build_source_stats,
+        start_edges,
+        start_source_stats,
+    )
 
     HAS_DEPS = True
+
 except (ImportError, ModuleNotFoundError):
     HAS_DEPS = False
 
@@ -187,3 +194,57 @@ def test_build_source_stats():
     assert s["bytes"] == 364
     assert s["unique_dst_ips"] == 2  # 8.8.8.8 and 1.1.1.1
     assert s["unique_dst_ports"] == 3  # 443, 80, 53 (None ignored)
+
+
+def test_start_edges_and_source_stats_streaming(tmp_path):
+    if not HAS_DEPS:
+        return
+    spark = get_spark("LNTA-TestEdges")
+
+    stream_dir = tmp_path / "stream_in"
+    stream_dir.mkdir(parents=True)
+    db_path = tmp_path / "edges_stream.db"
+    conn = connect(db_path)
+    init_schema(conn)
+    conn.close()
+
+    chunk_file = stream_dir / "chunk_0000.csv"
+    chunk_file.write_text(
+        "2026-09-23 12:00:01.000,192.168.1.10,8.8.8.8,1234,443,TCP,100,,,,1.0\n"
+        "2026-09-23 12:00:03.000,192.168.1.10,1.1.1.1,1234,53,UDP,200,,,,2.0\n",
+        encoding="utf-8",
+    )
+
+    cfg = {
+        "spark": {
+            "watermark_s": 30,
+            "trigger_s": 1,
+            "max_edges_per_window": 500,
+            "checkpoint_root": str(tmp_path / "checkpoints"),
+        },
+        "serving": {"db_path": str(db_path)},
+    }
+
+    raw_stream = spark.readStream.schema(to_spark_schema()).csv(str(stream_dir))
+    cleaned = clean(raw_stream)
+
+    q_edges = start_edges(spark, cleaned, cfg, window_len_s=10)
+    q_stats = start_source_stats(spark, cleaned, cfg, window_len_s=10)
+
+    try:
+        q_edges.processAllAvailable()
+        q_stats.processAllAvailable()
+    finally:
+        if q_edges.isActive:
+            q_edges.stop()
+        if q_stats.isActive:
+            q_stats.stop()
+
+    conn = connect(db_path)
+    edge_rows = conn.execute("SELECT * FROM ip_edges;").fetchall()
+    stat_rows = conn.execute("SELECT * FROM source_stats;").fetchall()
+    conn.close()
+
+    assert len(edge_rows) == 2
+    assert len(stat_rows) == 1
+    assert stat_rows[0]["src_ip"] == "192.168.1.10"

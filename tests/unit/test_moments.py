@@ -5,6 +5,9 @@ tests/unit/test_moments.py — Unit tests for AMS F2 second-moment estimator and
 import random
 import unittest
 from collections import Counter
+from datetime import datetime
+
+import pytest
 
 from streaming.analytics.moments import (
     AMSF2,
@@ -199,6 +202,42 @@ def test_moments_analytic_process_batch(tmp_path):
     plugin_restored = MomentsAnalytic(state_dir=state_dir)
     plugin_restored._ensure_initialized(cfg)
     assert len(plugin_restored.window_exact) > 0
+
+
+def test_ams_f2_validation_and_empty() -> None:
+    # Validation
+    with pytest.raises(ValueError):
+        AMSF2(num_estimators=0)
+
+    ams = AMSF2(num_estimators=10, num_groups=-1)
+
+    assert ams.num_groups >= 1
+
+    # Empty stream estimate
+    empty_ams = AMSF2()
+    assert empty_ams.estimate() == 0.0
+
+    # exact_f2 on empty or None
+    assert exact_f2({}) == 0.0
+
+
+def test_compute_iat_edge_cases() -> None:
+    dt1 = datetime(2026, 9, 24, 12, 0, 0)
+    dt2 = datetime(2026, 9, 24, 12, 0, 1)
+    iat = compute_iat_from_timestamps([dt1, dt2])
+    assert len(iat) == 1
+    assert iat[0] == 1000.0
+
+    # String without fractional seconds
+    ts_strings = ["2026-09-24 12:00:00", "2026-09-24 12:00:02"]
+    iat_str = compute_iat_from_timestamps(ts_strings)
+    assert len(iat_str) == 1
+    assert iat_str[0] == 2000.0
+
+    # Empty and invalid entries
+    assert compute_iat_from_timestamps([]) == []
+    assert compute_iat_from_timestamps(["invalid_date"]) == []
+    assert compute_iat_from_timestamps([None, ""]) == []
 
 
 if __name__ == "__main__":

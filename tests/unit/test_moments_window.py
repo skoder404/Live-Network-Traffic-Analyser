@@ -6,12 +6,14 @@ try:
     import pandas as pd
     import pytest
 
+    from common.serving_db import connect, init_schema
     from contracts.record_schema import to_spark_schema
     from streaming.common.cleaning import clean
     from streaming.common.session import get_spark
-    from streaming.queries.moments_window import build_moments_window
+    from streaming.queries.moments_window import build_moments_window, start
 
     HAS_DEPS = True
+
 except (ImportError, ModuleNotFoundError):
     HAS_DEPS = False
 
@@ -158,3 +160,47 @@ def test_moments_vs_pandas_comparison():
     assert abs(s_row["std_len"] - s_series.std(ddof=1)) < 1e-4
     assert abs(s_row["iat_mean_ms"] - iat_series.mean()) < 1e-4
     assert abs(s_row["iat_var_ms"] - iat_series.var(ddof=1)) < 1e-4
+
+
+def test_start_moments_window_streaming(tmp_path):
+    if not HAS_DEPS:
+        return
+    spark = get_spark("LNTA-TestMomentsWindow")
+
+    stream_dir = tmp_path / "stream_in"
+    stream_dir.mkdir(parents=True)
+    db_path = tmp_path / "moments_stream.db"
+    conn = connect(db_path)
+    init_schema(conn)
+    conn.close()
+
+    chunk_file = stream_dir / "chunk_0000.csv"
+    chunk_file.write_text(
+        "2026-09-23 12:00:01.000,192.168.1.1,8.8.8.8,1234,443,TCP,100,,,,1.0\n"
+        "2026-09-23 12:00:03.000,192.168.1.1,8.8.8.8,1234,443,TCP,200,,,,2.0\n",
+        encoding="utf-8",
+    )
+
+    cfg = {
+        "spark": {
+            "watermark_s": 30,
+            "trigger_s": 1,
+            "checkpoint_root": str(tmp_path / "checkpoints"),
+        },
+        "serving": {"db_path": str(db_path)},
+    }
+
+    raw_stream = spark.readStream.schema(to_spark_schema()).csv(str(stream_dir))
+    cleaned = clean(raw_stream)
+
+    query = start(spark, cleaned, cfg, window_len_s=10)
+    try:
+        query.processAllAvailable()
+    finally:
+        if query.isActive:
+            query.stop()
+
+    conn = connect(db_path)
+    rows = conn.execute("SELECT * FROM moments;").fetchall()
+    conn.close()
+    assert len(rows) >= 1
