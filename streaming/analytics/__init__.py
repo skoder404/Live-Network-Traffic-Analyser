@@ -19,6 +19,15 @@ from streaming.analytics.fm import (
     FlajoletMartin,
     FMAnalytic,
 )
+from streaming.analytics.itemsets import (
+    ItemsetsAnalytic,
+    RollingBasketBuffer,
+    apriori,
+    brute_force,
+    format_itemset,
+    make_baskets,
+    pcy,
+)
 from streaming.analytics.moments import (
     AMSF2,
     MomentsAnalytic,
@@ -52,4 +61,11 @@ __all__ = [
     "PredicateSpec",
     "parse_predicates",
     "CountingOnesAnalytic",
+    "ItemsetsAnalytic",
+    "RollingBasketBuffer",
+    "apriori",
+    "pcy",
+    "brute_force",
+    "format_itemset",
+    "make_baskets",
 ]

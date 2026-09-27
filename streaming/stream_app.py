@@ -28,12 +28,13 @@ from streaming.analytics.base import BatchContext
 from streaming.analytics.decay import DecayAnalytic
 from streaming.analytics.dgim import CountingOnesAnalytic
 from streaming.analytics.fm import FMAnalytic
+from streaming.analytics.itemsets import ItemsetsAnalytic
 from streaming.analytics.moments import MomentsAnalytic
 from streaming.analytics.sampling import SamplingAnalytic
 from streaming.common.cleaning import clean, split_valid
 from streaming.common.schema import read_stream
 from streaming.common.session import get_spark
-from streaming.queries import counts, distinct, filter_counts, window_metrics
+from streaming.queries import counts, distinct, edges, filter_counts, moments_window, window_metrics
 from streaming.registry import get_enabled, get_registered, register
 
 logger = logging.getLogger("StreamApp")
@@ -71,6 +72,8 @@ class StreamingApplication:
             register(FMAnalytic())
         if get_registered("counting_ones") is None:
             register(CountingOnesAnalytic())
+        if get_registered("itemsets") is None:
+            register(ItemsetsAnalytic())
 
     def handle_shutdown(self, signum: int, _frame: Any) -> None:
         """Gracefully stops all running streaming queries on signal."""
@@ -235,6 +238,16 @@ class StreamingApplication:
         # Distinct counts (10s window)
         q_distinct = distinct.start_distinct_counts(spark, valid_stream, self.cfg, window_len_s=10)
         self.queries.append(q_distinct)
+
+        # Moments window (10s window)
+        q_moments = moments_window.start(spark, valid_stream, self.cfg, window_len_s=10)
+        self.queries.append(q_moments)
+
+        # IP edges and source stats (10s window)
+        q_edges = edges.start_edges(spark, valid_stream, self.cfg, window_len_s=10)
+        self.queries.append(q_edges)
+        q_src_stats = edges.start_source_stats(spark, valid_stream, self.cfg, window_len_s=10)
+        self.queries.append(q_src_stats)
 
         # 2. Start Lane B Dispatcher query
         checkpoint_root = self.spark_cfg.get("checkpoint_root", "data/checkpoints")
