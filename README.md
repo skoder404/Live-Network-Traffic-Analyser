@@ -49,6 +49,7 @@ We continuously observe traffic on a Wi-Fi interface we are permitted to monitor
 | [`TECH_RULES.md`](docs/TECH_RULES.md) | Architecture, **data contract**, stack, standards, testing, Git rules |
 | [`ROADMAP.md`](docs/ROADMAP.md) | Milestones, per-member hand-offs, risks |
 | [`todo.md`](docs/todo.md) | Atomic tasks with acceptance criteria and **ready-to-paste AI-agent prompts** |
+| [`validation_report.md`](docs/validation_report.md) | End-to-end validation report (capture fidelity, ingestion integrity, cross-validation matrix) |
 
 > Read order for a new contributor: README → PRD → TECH_RULES (§5 Data Contract) → your section of `todo.md`.
 

@@ -78,7 +78,7 @@
 | ☑ | T2-004 | Capture runner (subprocess, queue, restart, stats) | Sep 23 | MUST | 90 min |
 | ☑ | T2-007 | Replay tool (paced, re-stamped) | Sep 23 | MUST | 45 min |
 | ☑ | T2-009 | Capture integration test and Wireshark validation | Sep 24 | SHOULD | 60 min |
-| ☐ | T8-003 | Wireshark/ingestion validation report | Sep 28 | SHOULD | 45 min |
+| ☑ | T8-003 | Wireshark/ingestion validation report | Sep 28 | SHOULD | 45 min |
 | ☐ | T9-002 | Final README, architecture visuals and screenshots | Sep 29 | MUST | 60 min |
 
 ### Rithika GV — task checklist
@@ -1208,9 +1208,9 @@ Write tests/e2e/test_scenarios.py (markers e2e, spark) that reuses the tests/e2e
 **Description:** Consolidate evidence that the data is right: capture-vs-Wireshark comparison (T2-009), ingestion loss/duplicate results (T3-006/T3-011) and cross-validation matrix (T5-010) into `docs/validation_report.md` with three screenshots.
 **Dependencies:** T2-009, T3-006, T5-010
 **Acceptance Criteria:**
-- [ ] Report has three sections with numbers and screenshots
-- [ ] Any mismatch above threshold is explained
-- [ ] Linked from README
+- [x] Report has three sections with numbers and screenshots
+- [x] Any mismatch above threshold is explained
+- [x] Linked from README
 **Estimated Effort:** 45 min
 **Assigned To:** Naveena MS (Capture)
 **Due:** Sep 28 (Mon) · **Priority:** 🟡 SHOULD
