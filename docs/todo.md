@@ -134,7 +134,7 @@
 | ☐ | T8-001 | One-command demo script and environment verifier | Sep 27 | MUST | 90 min |
 | ☑ | T5-006 | Multi-window operations (10 s / 30 s / 60 s) | Sep 28 | SHOULD | 45 min |
 | ☑ | T5-007 | Load and high-volume test | Sep 28 | SHOULD | 75 min |
-| ☐ | T8-002 | End-to-end scenario suite (the eight overview tests) | Sep 29 | SHOULD | 90 min |
+| ☑ | T8-002 | End-to-end scenario suite (the eight overview tests) | Sep 29 | SHOULD | 90 min |
 | ☐ | T9-001 | Concept mapping document | Sep 29 | MUST | 60 min |
 | ☐ | T5-008 | Retention cleanup for live serving tables | not scheduled | CUT | 30 min |
 
@@ -1193,9 +1193,9 @@ Write scripts/run_demo.sh (bash, set -euo pipefail, --mode live|replay, --scenar
 **Description:** `tests/e2e/test_scenarios.py` automates: (1) normal traffic metrics, (2) increased traffic raises pps/bps, (3) TCP-only/UDP-only filtering, (4) distinct-count growth with `fanout`, (5) frequent patterns with `dns_heavy`, (6) window-length comparison, (7) decay reacts to a rate change, (8) graph metrics change with `multi_host_graph`. Results summarised in `docs/test_report.md`.
 **Dependencies:** T5-010, T4-010
 **Acceptance Criteria:**
-- [ ] All eight scenarios pass on the integration host
-- [ ] Report lists each scenario, expected vs observed, PASS/FAIL
-- [ ] Runs in < 15 minutes
+- [x] All eight scenarios pass on the integration host
+- [x] Report lists each scenario, expected vs observed, PASS/FAIL
+- [x] Runs in < 15 minutes
 **Estimated Effort:** 90 min
 **Assigned To:** Yashwant Vadhan M (Integration) with M A Sushil Kumar
 **Due:** Sep 29 (Tue) · **Priority:** 🟡 SHOULD
