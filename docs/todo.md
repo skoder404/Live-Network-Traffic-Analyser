@@ -135,7 +135,7 @@
 | ☑ | T5-006 | Multi-window operations (10 s / 30 s / 60 s) | Sep 28 | SHOULD | 45 min |
 | ☑ | T5-007 | Load and high-volume test | Sep 28 | SHOULD | 75 min |
 | ☑ | T8-002 | End-to-end scenario suite (the eight overview tests) | Sep 29 | SHOULD | 90 min |
-| ☐ | T9-001 | Concept mapping document | Sep 29 | MUST | 60 min |
+| ☑ | T9-001 | Concept mapping document | Sep 29 | MUST | 60 min |
 | ☐ | T5-008 | Retention cleanup for live serving tables | not scheduled | CUT | 30 min |
 
 ### Priyan S — task checklist
@@ -1243,9 +1243,9 @@ Write docs/RUNBOOK.md with a table Symptom | Likely cause | Command to fix | Tim
 **Description:** `docs/CONCEPT_MAPPING.md`: for every syllabus topic — stream data model, sampling, filtering, count distinct, counting ones, estimating moments, decaying windows, link analysis, PageRank, market-basket model, limited-pass frequent itemsets — give a plain-English definition, where it lives in code, which dashboard card shows it, and a screenshot. Use recruiter-friendly names (no unit numbers).
 **Dependencies:** T7-005, T7-006
 **Acceptance Criteria:**
-- [ ] All topics covered with file path + dashboard location + screenshot
-- [ ] Each entry states the exact-vs-approximate comparison where applicable
-- [ ] No syllabus unit-number wording anywhere in the repo (`grep -ri "unit[ -]\?\(iv\|4\)"` returns nothing)
+- [x] All topics covered with file path + dashboard location + screenshot
+- [x] Each entry states the exact-vs-approximate comparison where applicable
+- [x] No syllabus unit-number wording anywhere in the repo (`grep -ri "unit[ -]\?\(iv\|4\)"` returns nothing)
 **Estimated Effort:** 60 min
 **Assigned To:** Yashwant Vadhan M (Integration) — M A Sushil Kumar and Priyan S supply their screenshots
 **Due:** Sep 29 (Tue) · **Priority:** 🔴 MUST
