@@ -128,11 +128,11 @@
 | ☑ | T5-001 | Windowed moments — mean, variance, std, inter-arrival (Lane A) | Sep 23 | MUST | 60 min |
 | ☑ | T5-005 | Edge and per-source aggregation (feeds Link Analysis and Alerts) | Sep 23 | MUST | 60 min |
 | ☑ | T5-002 | AMS second-moment (F2) estimator and iat fallback | Sep 24 | MUST | 75 min |
-| ☑ | T5-004 | Market-basket model and limited-pass frequent itemsets (A-Priori + PCY) | Sep 26 | MUST | 90 min |
-| ☑ | T5-009 | Group B unit and integration tests | Sep 27 | SHOULD | 60 min |
-| ☑ | T5-010 | Cross-validation with M A Sushil Kumar's results | Sep 27 | SHOULD | 45 min |
-| ☑ | T8-001 | One-command demo script and environment verifier | Sep 27 | MUST | 90 min |
-| ☐ | T5-006 | Multi-window operations (10 s / 30 s / 60 s) | Sep 28 | SHOULD | 45 min |
+| ☐ | T5-004 | Market-basket model and limited-pass frequent itemsets (A-Priori + PCY) | Sep 26 | MUST | 90 min |
+| ☐ | T5-009 | Group B unit and integration tests | Sep 27 | SHOULD | 60 min |
+| ☐ | T5-010 | Cross-validation with M A Sushil Kumar's results | Sep 27 | SHOULD | 45 min |
+| ☐ | T8-001 | One-command demo script and environment verifier | Sep 27 | MUST | 90 min |
+| ☑ | T5-006 | Multi-window operations (10 s / 30 s / 60 s) | Sep 28 | SHOULD | 45 min |
 | ☐ | T5-007 | Load and high-volume test | Sep 28 | SHOULD | 75 min |
 | ☐ | T8-002 | End-to-end scenario suite (the eight overview tests) | Sep 29 | SHOULD | 90 min |
 | ☐ | T9-001 | Concept mapping document | Sep 29 | MUST | 60 min |
@@ -818,9 +818,9 @@ Implement streaming/analytics/decay.py. Pure classes: DecayingCounter(half_life_
 **Description:** `streaming/analytics/itemsets.py`. **Baskets:** for each source IP and each 1-second slice, the *set of services* it used, written `PROTO:port` (e.g. `{UDP:53, TCP:443}`); a rolling buffer keeps the last `window_s` (default 60) seconds, capped at 20,000 baskets. Every `every_s` (default 10) run two limited-pass algorithms on the buffer: **A-Priori** (pass 1 counts single items; pass 2 counts only pairs whose members are both frequent) and **PCY** (pass 1 also hashes every pair into a bucket table and builds a bitmap of frequent buckets; pass 2 counts only pairs that are frequent items *and* hit a frequent bucket). Report `passes` and candidate-pair counts to show PCY's memory saving. Frequent singletons such as `TCP:443` are the protocol+port patterns from the project overview. *Stretch:* SON (local A-Priori per micro-batch with a lowered threshold + one verification pass).
 **Dependencies:** T4-003, T1-004
 **Acceptance Criteria:**
-- [x] A-Priori, PCY and a brute-force counter return identical frequent itemsets/supports on fixed test baskets
-- [x] PCY counts ≤ as many candidate pairs as A-Priori on the test data (numbers shown in the test output)
-- [x] On `normal.csv`, `TCP:443` and `UDP:53` are frequent items and `{UDP:53, TCP:443}` appears as a frequent pair; writes rows for both algorithms into `frequent_itemsets`
+- [ ] A-Priori, PCY and a brute-force counter return identical frequent itemsets/supports on fixed test baskets
+- [ ] PCY counts ≤ as many candidate pairs as A-Priori on the test data (numbers shown in the test output)
+- [ ] On `normal.csv`, `TCP:443` and `UDP:53` are frequent items and `{UDP:53, TCP:443}` appears as a frequent pair; writes rows for both algorithms into `frequent_itemsets`
 **Estimated Effort:** 90 min
 **Assigned To:** Yashwant Vadhan M (Spark advanced)
 **Due:** Sep 26 (Sat) · **Priority:** 🔴 MUST
@@ -848,9 +848,9 @@ Implement streaming/queries/edges.py: start_edges(spark, stream_df, cfg, window_
 **Description:** Make all Lane A queries instantiate once per configured window length (`spark.windows_s`), with checkpoint names including the length, so the dashboard can compare windows. Add a sliding-window option (`slide_s`) for `window_metrics` only. Validate Test 6 (window behaviour) from the overview.
 **Dependencies:** T4-004, T4-005, T5-001, T5-005
 **Acceptance Criteria:**
-- [ ] With `windows_s: [10,30,60]` all tables contain rows for all three lengths
-- [ ] Sum of the three 10 s windows equals the 30 s window totals (test)
-- [ ] Memory/CPU stays within the load-test budget (see T5-007)
+- [x] With `windows_s: [10,30,60]` all tables contain rows for all three lengths
+- [x] Sum of the three 10 s windows equals the 30 s window totals (test)
+- [x] Memory/CPU stays within the load-test budget (see T5-007)
 **Estimated Effort:** 45 min
 **Assigned To:** Yashwant Vadhan M (Spark advanced)
 **Due:** Sep 28 (Mon) · **Priority:** 🟡 SHOULD
@@ -1178,9 +1178,9 @@ Write tests/unit/test_dashboard_smoke.py using streamlit.testing.v1.AppTest to l
 **Description:** `scripts/run_demo.sh --mode live|replay` starts HDFS → Flume → data source → Spark → alerts worker → dashboard in order, health-checking each step (waits for HDFS out of safe mode, Flume alive, first `stream_in` file, first `window_metrics` row) and `scripts/stop_demo.sh` stops everything. Extend `scripts/verify_env.py` to check Java, Hadoop, Flume, Spark, Python packages, TShark, permissions.
 **Dependencies:** T3-005, T4-003, T6-005, T7-001
 **Acceptance Criteria:**
-- [x] `run_demo.sh --mode replay` brings the full system up from cold in < 3 minutes on the integration host
-- [x] A failed step aborts with a clear message and the fix hint
-- [x] `stop_demo.sh` leaves no orphan processes
+- [ ] `run_demo.sh --mode replay` brings the full system up from cold in < 3 minutes on the integration host
+- [ ] A failed step aborts with a clear message and the fix hint
+- [ ] `stop_demo.sh` leaves no orphan processes
 **Estimated Effort:** 90 min
 **Assigned To:** Yashwant Vadhan M (Integration)
 **Due:** Sep 27 (Sun) · **Priority:** 🔴 MUST
