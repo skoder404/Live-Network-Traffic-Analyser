@@ -133,7 +133,7 @@
 | ☐ | T5-010 | Cross-validation with M A Sushil Kumar's results | Sep 27 | SHOULD | 45 min |
 | ☐ | T8-001 | One-command demo script and environment verifier | Sep 27 | MUST | 90 min |
 | ☑ | T5-006 | Multi-window operations (10 s / 30 s / 60 s) | Sep 28 | SHOULD | 45 min |
-| ☐ | T5-007 | Load and high-volume test | Sep 28 | SHOULD | 75 min |
+| ☑ | T5-007 | Load and high-volume test | Sep 28 | SHOULD | 75 min |
 | ☐ | T8-002 | End-to-end scenario suite (the eight overview tests) | Sep 29 | SHOULD | 90 min |
 | ☐ | T9-001 | Concept mapping document | Sep 29 | MUST | 60 min |
 | ☐ | T5-008 | Retention cleanup for live serving tables | not scheduled | CUT | 30 min |
@@ -863,9 +863,9 @@ Refactor streaming/stream_app.py so each Lane A module's start(...) is invoked o
 **Description:** `scripts/load_test.py` replays a sample at 1,000 / 2,000 / 5,000 pkts/s for 3 minutes each while sampling `pipeline_health` (batch duration vs trigger, input rows, lag) and system CPU/RAM; produces `docs/load_test_report.md` with pass/fail against the targets (2,000 must, 5,000 target) and tuning notes.
 **Dependencies:** T5-006, T2-007
 **Acceptance Criteria:**
-- [ ] Report contains a table per rate: median/p95 batch duration, lag, dropped/late rows, CPU, RAM
-- [ ] Bottleneck identified (capture, Flume, Spark or SQLite) with a recommendation
-- [ ] Documented tuning applied (e.g. `maxFilesPerTrigger`, trigger, driver-row cap)
+- [x] Report contains a table per rate: median/p95 batch duration, lag, dropped/late rows, CPU, RAM
+- [x] Bottleneck identified (capture, Flume, Spark or SQLite) with a recommendation
+- [x] Documented tuning applied (e.g. `maxFilesPerTrigger`, trigger, driver-row cap)
 **Estimated Effort:** 75 min
 **Assigned To:** Yashwant Vadhan M (Spark advanced)
 **Due:** Sep 28 (Mon) · **Priority:** 🟡 SHOULD
