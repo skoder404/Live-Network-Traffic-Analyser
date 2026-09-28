@@ -1,0 +1,245 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0b0f19; }
+      .title { fill: #f3f4f6; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 26px; }
+      .subtitle { fill: #9ca3af; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 14px; }
+      .box { rx: 10px; stroke-width: 2px; }
+      .box-capture { fill: #131d33; stroke: #3b82f6; }
+      .box-ingest { fill: #1a1b35; stroke: #8b5cf6; }
+      .box-spark { fill: #291823; stroke: #ec4899; }
+      .box-link { fill: #1e261d; stroke: #10b981; }
+      .box-serving { fill: #262118; stroke: #f59e0b; }
+      .box-header { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.5px; }
+      .box-owner { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 500; font-size: 11px; }
+      .text-cap { fill: #60a5fa; }
+      .text-ing { fill: #a78bfa; }
+      .text-spk { fill: #f472b6; }
+      .text-lnk { fill: #34d399; }
+      .text-srv { fill: #fbbf24; }
+      .item-bg { fill: rgba(255, 255, 255, 0.04); rx: 6px; }
+      .item-text { fill: #e5e7eb; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 12px; }
+      .arrow { stroke: #6b7280; stroke-width: 2px; fill: none; stroke-dasharray: 4,4; }
+      .arrow-solid { stroke: #38bdf8; stroke-width: 2.5px; fill: none; }
+      .badge { fill: #1f2937; stroke: #374151; stroke-width: 1px; rx: 4px; }
+      .badge-text { fill: #9ca3af; font-family: monospace; font-size: 10px; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#38bdf8" />
+    </marker>
+    <marker id="arrowhead-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="680" class="bg" />
+
+  <!-- Header Section -->
+  <g transform="translate(50, 45)">
+    <text x="0" y="0" class="title">Live Network Traffic Analyser (LNTA)</text>
+    <text x="0" y="24" class="subtitle">End-to-End Distributed Architecture: Real-Time Stream Analytics, Graph Link Analysis &amp; Visualization</text>
+  </g>
+
+  <!-- Stage 1: Capture Layer (Naveena MS) -->
+  <g transform="translate(50, 100)">
+    <rect width="210" height="420" class="box box-capture" />
+    <text x="18" y="32" class="box-header text-cap">1. CAPTURE LAYER</text>
+    <text x="18" y="50" class="box-owner text-cap">Lead: Naveena MS</text>
+
+    <g transform="translate(14, 70)">
+      <rect width="182" height="65" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Live Traffic Observation</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">Wi-Fi (wlan0) / Npcap</text>
+    </g>
+
+    <g transform="translate(14, 150)">
+      <rect width="182" height="75" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">TShark CLI Supervisor</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">16 raw fields extraction</text>
+      <text x="12" y="62" class="item-text" fill="#9ca3af">Auto-restart &amp; backoff</text>
+    </g>
+
+    <g transform="translate(14, 240)">
+      <rect width="182" height="75" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Data Contract Normaliser</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">11-field CSV validation</text>
+      <text x="12" y="62" class="item-text" fill="#9ca3af">capture/parser.py (v1)</text>
+    </g>
+
+    <g transform="translate(14, 330)">
+      <rect width="182" height="75" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Emitters &amp; Sinks</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">Rotating CSV (size/time)</text>
+      <text x="12" y="62" class="item-text" fill="#9ca3af">TCP Stream / Stdout</text>
+    </g>
+  </g>
+
+  <!-- Stage 2: Ingestion & Storage (Rithika GV) -->
+  <g transform="translate(290, 100)">
+    <rect width="200" height="420" class="box box-ingest" />
+    <text x="18" y="32" class="box-header text-ing">2. INGESTION &amp; HDFS</text>
+    <text x="18" y="50" class="box-owner text-ing">Lead: Rithika GV</text>
+
+    <g transform="translate(14, 70)">
+      <rect width="172" height="85" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Apache Flume Agent</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">TAILDIR / Netcat source</text>
+      <text x="12" y="62" class="item-text" fill="#9ca3af">Memory channels</text>
+      <text x="12" y="76" class="item-text" fill="#9ca3af">Replicating selector</text>
+    </g>
+
+    <g transform="translate(14, 170)">
+      <rect width="172" height="110" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Hadoop HDFS Storage</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">/traffic/raw/ (Permanent)</text>
+      <text x="12" y="64" class="item-text" fill="#9ca3af">/traffic/stream_in/ (Active)</text>
+      <text x="12" y="84" class="item-text" fill="#9ca3af">Hidden in-flight sync</text>
+      <text x="12" y="100" class="item-text" fill="#9ca3af">Atomic batch roll</text>
+    </g>
+
+    <g transform="translate(14, 295)">
+      <rect width="172" height="110" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Historical &amp; Audit</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">Hive External Metastore</text>
+      <text x="12" y="64" class="item-text" fill="#9ca3af">ingestion/verification.py</text>
+      <text x="12" y="84" class="item-text" fill="#9ca3af">Zero-loss / dup tracker</text>
+      <text x="12" y="100" class="item-text" fill="#9ca3af">Historical SQL pack</text>
+    </g>
+  </g>
+
+  <!-- Stage 3: Streaming Engine (Sushil Kumar & Yashwant Vadhan M) -->
+  <g transform="translate(520, 100)">
+    <rect width="250" height="420" class="box box-spark" />
+    <text x="18" y="32" class="box-header text-spk">3. SPARK STREAMING</text>
+    <text x="18" y="50" class="box-owner text-spk">Sushil Kumar &amp; Yashwant Vadhan</text>
+
+    <!-- Lane A -->
+    <g transform="translate(14, 70)">
+      <rect width="222" height="165" class="item-bg" />
+      <text x="12" y="22" class="item-text" font-weight="600" fill="#f472b6">Lane A: Tumbling Queries</text>
+      <text x="12" y="42" class="item-text" fill="#e5e7eb">• Window Metrics (pkts, bytes/s)</text>
+      <text x="12" y="62" class="item-text" fill="#e5e7eb">• Top-N Ports &amp; Protocol Counts</text>
+      <text x="12" y="82" class="item-text" fill="#e5e7eb">• Stream Filters (TCP/UDP/Private)</text>
+      <text x="12" y="102" class="item-text" fill="#e5e7eb">• Reservoir Sampling (k=1000)</text>
+      <text x="12" y="122" class="item-text" fill="#e5e7eb">• Count Distinct (Exact/HLL/FM)</text>
+      <text x="12" y="142" class="item-text" fill="#e5e7eb">• DGIM Sliding Bit-Stream Ones</text>
+      <text x="12" y="157" class="item-text" font-size="10px" fill="#9ca3af">10s &amp; 60s windows · 30s watermark</text>
+    </g>
+
+    <!-- Lane B -->
+    <g transform="translate(14, 250)">
+      <rect width="222" height="155" class="item-bg" />
+      <text x="12" y="22" class="item-text" font-weight="600" fill="#f472b6">Lane B: foreachBatch Analytics</text>
+      <text x="12" y="42" class="item-text" fill="#e5e7eb">• AMS 2nd Moment F2 Estimator</text>
+      <text x="12" y="62" class="item-text" fill="#e5e7eb">• Decaying Windows (Half-life=30s)</text>
+      <text x="12" y="82" class="item-text" fill="#e5e7eb">• IP Edges &amp; Source Out-Degree</text>
+      <text x="12" y="102" class="item-text" fill="#e5e7eb">• Market-Basket (A-Priori / PCY)</text>
+      <text x="12" y="122" class="item-text" fill="#e5e7eb">• Frequent Port-Service Itemsets</text>
+      <text x="12" y="142" class="item-text" font-size="10px" fill="#9ca3af">1s micro-batches · Dynamic registry</text>
+    </g>
+  </g>
+
+  <!-- Stage 4: Link Analysis & Alerts (Priyan S) -->
+  <g transform="translate(800, 100)">
+    <rect width="180" height="420" class="box box-link" />
+    <text x="18" y="32" class="box-header text-lnk">4. LINK ANALYSIS</text>
+    <text x="18" y="50" class="box-owner text-lnk">Lead: Priyan S</text>
+
+    <g transform="translate(14, 70)">
+      <rect width="152" height="95" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">IP Interaction Graph</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">NetworkX DiGraph</text>
+      <text x="12" y="64" class="item-text" fill="#9ca3af">Sliding 60s window</text>
+      <text x="12" y="84" class="item-text" fill="#9ca3af">In/out degree metrics</text>
+    </g>
+
+    <g transform="translate(14, 180)">
+      <rect width="152" height="110" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Structural Scoring</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">Power Iteration PageRank</text>
+      <text x="12" y="64" class="item-text" fill="#9ca3af">Degree &amp; In-Degree Centrality</text>
+      <text x="12" y="84" class="item-text" fill="#9ca3af">1st-Order Markov Walk</text>
+      <text x="12" y="100" class="item-text" fill="#9ca3af">Anomalous transitions</text>
+    </g>
+
+    <g transform="translate(14, 305)">
+      <rect width="152" height="100" class="item-bg" />
+      <text x="12" y="24" class="item-text" font-weight="600">Alert Engine</text>
+      <text x="12" y="44" class="item-text" fill="#9ca3af">Rule-based triggers</text>
+      <text x="12" y="64" class="item-text" fill="#9ca3af">Port-scan detection</text>
+      <text x="12" y="84" class="item-text" fill="#9ca3af">Traffic spike &amp; fanout</text>
+    </g>
+  </g>
+
+  <!-- Stage 5: Serving & UI Dashboard -->
+  <g transform="translate(1010, 100)">
+    <rect width="140" height="420" class="box box-serving" />
+    <text x="14" y="32" class="box-header text-srv">5. SERVING</text>
+    <text x="14" y="50" class="box-owner text-srv">Store &amp; UI</text>
+
+    <g transform="translate(10, 70)">
+      <rect width="120" height="150" class="item-bg" />
+      <text x="10" y="24" class="item-text" font-weight="600">SQLite Store</text>
+      <text x="10" y="44" class="item-text" fill="#9ca3af">WAL Journal Mode</text>
+      <text x="10" y="64" class="item-text" fill="#9ca3af">12 core tables</text>
+      <text x="10" y="84" class="item-text" fill="#9ca3af">Indexed windows</text>
+      <text x="10" y="104" class="item-text" fill="#9ca3af">Fast upsert API</text>
+      <text x="10" y="124" class="item-text" fill="#9ca3af">Snapshot support</text>
+      <text x="10" y="140" class="item-text" font-size="10px" fill="#fbbf24">serving_db.py</text>
+    </g>
+
+    <g transform="translate(10, 240)">
+      <rect width="120" height="165" class="item-bg" />
+      <text x="10" y="24" class="item-text" font-weight="600">Streamlit UI</text>
+      <text x="10" y="44" class="item-text" fill="#9ca3af">6 Tab Dashboard</text>
+      <text x="10" y="64" class="item-text" fill="#9ca3af">• Live Overview</text>
+      <text x="10" y="84" class="item-text" fill="#9ca3af">• Link Analysis</text>
+      <text x="10" y="104" class="item-text" fill="#9ca3af">• Stream Stats</text>
+      <text x="10" y="124" class="item-text" fill="#9ca3af">• Live Alerts</text>
+      <text x="10" y="144" class="item-text" fill="#9ca3af">• History &amp; Pipeline</text>
+      <text x="10" y="159" class="item-text" font-size="10px" fill="#fbbf24">Plotly charts</text>
+    </g>
+  </g>
+
+  <!-- Connective Dataflow Arrows -->
+  <path d="M 260 210 L 290 210" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <path d="M 490 230 L 520 230" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <path d="M 770 230 L 800 230" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <path d="M 770 340 L 1010 340" class="arrow-solid" marker-end="url(#arrowhead)" />
+  <path d="M 980 230 L 1010 230" class="arrow-solid" marker-end="url(#arrowhead)" />
+
+  <!-- Direct / Bypass Paths -->
+  <!-- Hive / Historical connection -->
+  <path d="M 440 405 C 440 560, 1070 560, 1070 420" class="arrow" marker-end="url(#arrowhead-gray)" />
+  <text x="730" y="580" fill="#6b7280" font-family="'Segoe UI', sans-serif" font-size="11px" text-anchor="middle">Historical Hive Query Exporter &amp; Offline Fallback</text>
+
+  <!-- Footer Badges -->
+  <g transform="translate(50, 630)">
+    <rect x="0" y="0" width="70" height="22" class="badge" />
+    <text x="10" y="15" class="badge-text">Python 3.11</text>
+
+    <rect x="80" y="0" width="75" height="22" class="badge" />
+    <text x="90" y="15" class="badge-text">PySpark 3.5</text>
+
+    <rect x="165" y="0" width="80" height="22" class="badge" />
+    <text x="175" y="15" class="badge-text">Hadoop 3.3</text>
+
+    <rect x="255" y="0" width="75" height="22" class="badge" />
+    <text x="265" y="15" class="badge-text">Flume 1.11</text>
+
+    <rect x="340" y="0" width="80" height="22" class="badge" />
+    <text x="350" y="15" class="badge-text">Streamlit 1.30</text>
+
+    <rect x="430" y="0" width="80" height="22" class="badge" />
+    <text x="440" y="15" class="badge-text">NetworkX 3.2</text>
+
+    <rect x="520" y="0" width="75" height="22" class="badge" />
+    <text x="530" y="15" class="badge-text">TShark 4.x</text>
+
+    <rect x="605" y="0" width="70" height="22" class="badge" />
+    <text x="615" y="15" class="badge-text">SQLite WAL</text>
+
+    <text x="1090" y="15" fill="#4b5563" font-family="'Segoe UI', sans-serif" font-size="11px" text-anchor="end">Academic Big Data Analytics Project · Fall 2026</text>
+  </g>
+</svg>

@@ -79,7 +79,7 @@
 | ☑ | T2-007 | Replay tool (paced, re-stamped) | Sep 23 | MUST | 45 min |
 | ☑ | T2-009 | Capture integration test and Wireshark validation | Sep 24 | SHOULD | 60 min |
 | ☑ | T8-003 | Wireshark/ingestion validation report | Sep 28 | SHOULD | 45 min |
-| ☐ | T9-002 | Final README, architecture visuals and screenshots | Sep 29 | MUST | 60 min |
+| ☑ | T9-002 | Final README, architecture visuals and screenshots | Sep 29 | MUST | 60 min |
 
 ### Rithika GV — task checklist
 
@@ -1258,9 +1258,9 @@ Write docs/CONCEPT_MAPPING.md as a table plus short sections: Concept | Plain-En
 **Description:** Polish `README.md` for recruiters: one-paragraph pitch, animated/annotated dashboard screenshots, architecture diagram (SVG/PNG in `docs/img/`), tech-stack badges, results (throughput, accuracy numbers from reports), how to run, team & roles, ethics note.
 **Dependencies:** T7-009, T8-002
 **Acceptance Criteria:**
-- [ ] First screen of README explains what it is and shows a screenshot
-- [ ] Numbers quoted match the reports (no invented metrics)
-- [ ] Links to all docs work
+- [x] First screen of README explains what it is and shows a screenshot
+- [x] Numbers quoted match the reports (no invented metrics)
+- [x] Links to all docs work
 **Estimated Effort:** 60 min
 **Assigned To:** Naveena MS (Capture)
 **Due:** Sep 29 (Tue) · **Priority:** 🔴 MUST
