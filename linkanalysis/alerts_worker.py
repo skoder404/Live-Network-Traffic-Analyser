@@ -1,136 +1,87 @@
-"""
-linkanalysis/alerts_worker.py — Background worker evaluating alert rules and persisting alerts.
-"""
-
+import argparse
 import logging
-import os
-import sqlite3
 import time
 
-from common.config import load_config
-from common.serving_db import get_connection
-from linkanalysis.alerts import Alert, AlertEngine, AlertRuleConfig
+from common.serving_db import connect
+from linkanalysis.alerts import AlertEngine, load_alert_config
 
-logger = logging.getLogger("lnta.alerts_worker")
+logger = logging.getLogger(__name__)
 
+def evaluate_window(engine, window, db_conn):
+    cur = db_conn.cursor()
+    window_start = window['window_start']
+    pps = window['pps']
 
-def evaluate_and_persist(conn: sqlite3.Connection, engine: AlertEngine) -> list[Alert]:
-    """Run alert checks against recent database records and insert generated alerts."""
-    alerts: list[Alert] = []
+    cur.execute('''
+        SELECT src_ip, packets, unique_dst_ports, unique_dst_ips
+        FROM source_stats
+        WHERE window_start = ?
+    ''', (window_start,))
+    
+    rows = cur.fetchall()
+    src_ip_packet_counts = {r['src_ip']: r['packets'] for r in rows}
+    src_ip_port_counts = {r['src_ip']: r['unique_dst_ports'] for r in rows}
+    src_ip_dst_ip_counts = {r['src_ip']: r['unique_dst_ips'] for r in rows}
 
-    # 1. Traffic spike check
-    try:
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT window_start, packets, bytes
-            FROM window_metrics
-            WHERE window_len_s = 10
-            ORDER BY window_start DESC
-            LIMIT 10
-            """
-        )
-        rows = cur.fetchall()
-        for row in reversed(rows):
-            ws = row["window_start"]
-            pkts = row["packets"] or 0
-            alert = engine.check_traffic_spike(window_start=ws, packet_count=pkts)
-            if alert:
-                alerts.append(alert)
-    except Exception as e:
-        logger.debug(f"Error querying window_metrics: {e}")
-
-    # 2. Per-source checks (unusual ports & fanout)
-    try:
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT window_start, src_ip, unique_dst_ips, unique_dst_ports
-            FROM source_stats
-            WHERE window_len_s = 10
-            ORDER BY window_start DESC
-            LIMIT 50
-            """
-        )
-        rows = cur.fetchall()
-        for row in rows:
-            ws = row["window_start"]
-            src = row["src_ip"]
-            dst_ips = row["unique_dst_ips"] or 0
-            dst_ports = row["unique_dst_ports"] or 0
-
-            port_alert = engine.check_unusual_ports(
-                window_start=ws, src_ip=src, distinct_port_count=dst_ports
-            )
-            if port_alert:
-                alerts.append(port_alert)
-
-            fanout_alert = engine.check_high_fanout(
-                window_start=ws, src_ip=src, distinct_ip_count=dst_ips
-            )
-            if fanout_alert:
-                alerts.append(fanout_alert)
-    except Exception as e:
-        logger.debug(f"Error querying source_stats: {e}")
-
-    # Persist alerts to DB
-    if alerts:
-        cur = conn.cursor()
-        for a in alerts:
-            cur.execute(
-                """
-                INSERT OR IGNORE INTO alerts (
-                    alert_id, ts, type, severity, src_ip, metric,
-                    current_value, baseline_value, change_pct, threshold,
-                    reason, details_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    a.alert_id,
-                    a.ts,
-                    a.type,
-                    a.severity,
-                    a.src_ip,
-                    a.metric,
-                    a.current_value,
-                    a.baseline_value,
-                    a.change_pct,
-                    a.threshold,
-                    a.reason,
-                    a.details_json,
-                ),
-            )
-        conn.commit()
-        logger.info(f"Persisted {len(alerts)} alerts.")
-
-    return alerts
-
-
-def run_worker(db_path: str, poll_interval_s: float = 5.0, once: bool = False) -> None:
-    """Run alert worker loop."""
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    alerts = engine.evaluate_window(
+        window_start=window_start,
+        pps=pps,
+        src_ip_packet_counts=src_ip_packet_counts,
+        src_ip_port_counts=src_ip_port_counts,
+        src_ip_dst_ip_counts=src_ip_dst_ip_counts
     )
-    logger.info(f"Starting alert worker on DB: {db_path}")
 
-    config = AlertRuleConfig()
-    engine = AlertEngine(config=config)
+    if alerts:
+        logger.info(f"Generated {len(alerts)} alerts for window {window_start}")
+        for alert in alerts:
+            cur.execute('''
+                INSERT INTO alerts (alert_id, ts, type, severity, src_ip, metric, current_value, baseline_value, change_pct, threshold, reason, details_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                alert.alert_id, alert.ts, alert.type, alert.severity, alert.src_ip, alert.metric, alert.current_value, alert.baseline_value, alert.change_pct, alert.threshold, alert.reason, alert.details_json
+            ))
+        db_conn.commit()
+
+def run_worker(db_path: str, poll_interval: float = 1.0):
+    conn = connect(db_path)
+    engine = AlertEngine(config=load_alert_config())
+    last_window_start = None
 
     while True:
         try:
-            if os.path.exists(db_path):
-                conn = get_connection(db_path, read_only=False)
-                evaluate_and_persist(conn, engine)
-                conn.close()
+            cur = conn.cursor()
+            cur.execute('''
+                SELECT window_start, pps, bps
+                FROM window_metrics
+                ORDER BY window_start DESC
+                LIMIT 1
+            ''')
+            row = cur.fetchone()
+            
+            if row:
+                current_window_start = row['window_start']
+                if current_window_start != last_window_start:
+                    logger.info(f"Processing new window: {current_window_start}")
+                    
+                    window = {
+                        'window_start': row['window_start'],
+                        'pps': row['pps'] or 0.0,
+                    }
+                    evaluate_window(engine, window, conn)
+                    
+                    last_window_start = current_window_start
+            
+            time.sleep(poll_interval)
         except Exception as e:
-            logger.warning(f"Error in alert worker tick: {e}")
-
-        if once:
-            break
-        time.sleep(poll_interval_s)
-
+            logger.error(f"Error in alerts worker: {e}")
+            time.sleep(poll_interval)
 
 if __name__ == "__main__":
-    cfg = load_config()
-    db_file = cfg.get("serving", {}).get("db_path", "serving/analytics.db")
-    run_worker(db_file, poll_interval_s=5.0)
+    logging.basicConfig(level=logging.INFO)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--db", required=True, help="Path to serving SQLite DB")
+    parser.add_argument("--interval", type=float, default=2.0, help="Poll interval")
+    args = parser.parse_args()
+    
+    logger.info(f"Starting alerts worker polling {args.db} every {args.interval}s")
+    run_worker(args.db, args.interval)
