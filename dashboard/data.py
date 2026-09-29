@@ -5,7 +5,7 @@ MOCK = os.getenv("LNTA_MOCK", "true").lower() == "true"
 DB_PATH = os.getenv("LNTA_DB", "serving/lnta.db")
 PROTOS = ["TCP", "UDP", "DNS", "HTTPS", "HTTP", "ICMP"]
 SCANNER = "192.168.1.44"
-PUB = ["142.250.183.14", "151.101.1.69", "104.16.132.229", "13.107.42.14", "52.94.236.248", "93.184.216.34"]
+PUB = ["198.51.100.14", "198.51.100.69", "203.0.113.229", "203.0.113.14", "198.51.100.248", "203.0.113.34"]
 HOSTS = [f"10.0.0.{i}" for i in (1, 2, 5, 8, 12, 15, 21, 23, 30, 34, 42, 55)] + [f"192.168.1.{i}" for i in (10, 11, 20, 33, 44)] + PUB
 _R = np.random.default_rng(7); BASE = []
 for s in HOSTS:
