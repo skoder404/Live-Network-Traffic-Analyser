@@ -1,32 +1,30 @@
 #!/usr/bin/env bash
-# scripts/offline_snapshot.sh
+set -euo pipefail
 
-set -e
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DB_PATH="${1:-$ROOT_DIR/serving/lnta.db}"
+OUTPUT="${2:-$ROOT_DIR/data/sample/offline_snapshot.json}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
 
-DB_PATH="serving/lnta.db"
+mkdir -p "$(dirname "$DB_PATH")" "$(dirname "$OUTPUT")"
+"$PYTHON_BIN" "$ROOT_DIR/scripts/seed_mock_db.py" --db "$DB_PATH" --reset
+"$PYTHON_BIN" - "$DB_PATH" "$OUTPUT" <<'PY'
+import json
+import sqlite3
+import sys
+from pathlib import Path
 
-echo "1. Seeding mock DB..."
-source .venv/bin/activate
-python scripts/seed_mock_db.py --db "$DB_PATH" --reset
-
-echo "2. Taking snapshot of all serving tables to a JSON file..."
-python -c '
-import sqlite3, json, sys
-conn = sqlite3.connect(sys.argv[1])
-conn.row_factory = sqlite3.Row
-cur = conn.cursor()
-cur.execute("SELECT name FROM sqlite_master WHERE type=\"table\";")
-tables = [row[0] for row in cur.fetchall()]
-snapshot = {}
-for t in tables:
-    cur.execute(f"SELECT * FROM {t}")
-    snapshot[t] = [dict(r) for r in cur.fetchall()]
-with open("offline_snapshot.json", "w") as f:
-    json.dump(snapshot, f)
-print("Snapshot saved to offline_snapshot.json")
-' "$DB_PATH"
-
-echo "3. Starting dashboard in mock mode..."
-export LNTA_MOCK=true
-export LNTA_DB="$DB_PATH"
-streamlit run dashboard/app.py
+db_path, output_path = sys.argv[1:]
+with sqlite3.connect(db_path) as connection:
+    connection.row_factory = sqlite3.Row
+    tables = connection.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' "
+        "ORDER BY name"
+    ).fetchall()
+    snapshot = {
+        row[0]: [dict(item) for item in connection.execute(f'SELECT * FROM "{row[0]}"')]
+        for row in tables
+    }
+Path(output_path).write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+print(f"Snapshot saved to {output_path} ({len(snapshot)} tables)")
+PY

@@ -113,6 +113,9 @@ Bug fixes only. Afternoon: E2E scenario suite, runbook + offline snapshot, conce
   - [ ] Replay-mode demo works with Wi-Fi off; snapshot fallback works
   - [ ] `scripts/pre_submit_audit.sh` passes (no real captures, no secrets, no syllabus unit numbers in the repo)
 
+Ingestion fault-test procedures and current results are recorded in
+[`ingestion_report.md`](ingestion_report.md).
+
 ### Oct 1 — Demo & Submission
 Arrive early → `python scripts/verify_env.py` → one dry run → present per `docs/DEMO_SCRIPT.md` → submit.
 

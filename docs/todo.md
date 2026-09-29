@@ -1,4 +1,4 @@
-# todo.md — Live Network Traffic Analyser (LNTA)
+S# todo.md — Live Network Traffic Analyser (LNTA)
 > Generated from: PRD.md · DESIGN.md · TECH_RULES.md · ROADMAP.md
 > **Deadline: submission + live demo on Thursday 1 October 2026** · **Work starts Monday 21 September 2026** (11 days incl. demo day)
 > Repository: https://github.com/skoder404/Live-Network-Traffic-Analyser
@@ -94,10 +94,10 @@
 | ☑ | T3-010 | Spark ↔ HDFS connection helper (secondary duty) | Sep 23 | MUST | 45 min |
 | ☑ | T3-008 | Hive metastore and external tables | Sep 25 | SHOULD | 90 min |
 | ☑ | T3-009 | Historical query pack and exporter to the serving store | Sep 26 | SHOULD | 75 min |
-| ☐ | T3-011 | Failure and restart tests for ingestion | Sep 27 | SHOULD | 45 min |
-| ☐ | T8-004 | Runbook and offline fallback snapshot | Sep 29 | MUST | 45 min |
+| ☑ | T3-011 | Failure and restart tests for ingestion | Sep 27 | SHOULD | 45 min |
+| ☑ | T8-004 | Runbook and offline fallback snapshot | Sep 29 | MUST | 45 min |
 | ☐ | T9-003 | Repository sanitisation audit and release tag | Sep 30 | MUST | 30 min |
-| ☐ | T3-007 | Raw compaction and stream_in retention | not scheduled | CUT | 60 min |
+| ☑ | T3-007 | Raw compaction and stream_in retention | not scheduled | CUT | 60 min |
 
 ### M A Sushil Kumar — task checklist
 

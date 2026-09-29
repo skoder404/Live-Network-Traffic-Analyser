@@ -41,11 +41,42 @@ range when available.
 ## Offline fallback
 
 ```bash
-python -m ingestion.scripts.ingestion_ctl init --local --root data/traffic
-python -m ingestion.scripts.ingestion_ctl verify --local --root data/traffic
+python3 -m ingestion.scripts.ingestion_ctl init --local --root data/traffic
+python3 -m ingestion.scripts.ingestion_ctl verify --local --root data/traffic
+./scripts/offline_snapshot.sh
+LNTA_MOCK=true LNTA_DB=serving/lnta.db streamlit run dashboard/app.py
 ```
 
-This supports replay and demo work without Hadoop or Flume.
+The snapshot command seeds deterministic serving data and writes
+`data/sample/offline_snapshot.json`; it does not start a server. This supports
+replay and demo work without Hadoop or Flume. Set `PYTHON_BIN` when the project
+virtual environment uses a non-default Python executable.
+
+## Fault tests
+
+The reproducible procedures and recorded outcomes are in
+`docs/ingestion_report.md`. The capture-pause test is safe to run locally:
+
+```bash
+./scripts/fault_tests/ingestion_faults.sh capture_pause
+```
+
+All three scenarios run deterministic local simulations by default. To run the
+Flume restart or NameNode outage against shared services, set
+`LNTA_FAULT_LIVE=1` on the dedicated integration host.
+
+## Closed-hour compaction and retention
+
+Compact only a closed UTC hour; rerunning the command overwrites that partition
+idempotently and verifies the row count:
+
+```bash
+python3 ingestion/scripts/compact_raw.py --dt 2026-09-28 --hr 23
+python3 ingestion/scripts/cleanup_stream_in.py --retention-hours 24 --dry-run
+python3 ingestion/scripts/cleanup_stream_in.py --retention-hours 24
+```
+
+Cleanup ignores hidden and `.tmp` files. Use `--dry-run` before deleting files.
 
 ## Release audit
 
