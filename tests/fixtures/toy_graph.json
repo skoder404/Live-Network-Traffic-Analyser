@@ -1,0 +1,17 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {"id": "A"},
+    {"id": "B"},
+    {"id": "C"},
+    {"id": "D"}
+  ],
+  "links": [
+    {"source": "A", "target": "B", "packets": 10, "bytes": 1000},
+    {"source": "A", "target": "C", "packets": 5, "bytes": 500},
+    {"source": "C", "target": "B", "packets": 3, "bytes": 300},
+    {"source": "D", "target": "B", "packets": 7, "bytes": 700}
+  ]
+}
