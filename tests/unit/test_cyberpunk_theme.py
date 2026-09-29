@@ -3,7 +3,6 @@ tests/unit/test_cyberpunk_theme.py — Unit tests for Cyberpunk/Neon theme token
 """
 
 
-
 def test_cyberpunk_tokens_exist():
     """Verify all cyberpunk tokens are defined."""
     from dashboard.theme_cyberpunk import CYBERPUNK_TOKENS

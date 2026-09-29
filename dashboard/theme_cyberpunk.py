@@ -1,127 +1,127 @@
-"""Cyberpunk/Neon design tokens (single source of truth, mirrored in cyberpunk.css)."""
+"""
+dashboard/theme_cyberpunk.py — Cyberpunk/Neon design tokens and Plotly template.
+"""
 
-TOKENS = {
-    "bg": "#07060f",
-    "panel": "#120f24",
-    "text": "#e8e6ff",
-    "muted": "#9d98c9",
-    "pink": "#ff2e88",
-    "cyan": "#22e6ff",
-    "lime": "#b6ff3c",
-    "amber": "#ffb020",
-    "red": "#ff4d5e",
-}
+import plotly.graph_objects as go
+import plotly.io as pio
 
-FONTS = {"display": "Rajdhani", "mono": "JetBrains Mono"}
-SEVERITY = {"WARN": TOKENS["amber"], "CRITICAL": TOKENS["red"]}
-
-# Alias and extended dictionary for test compatibility
 CYBERPUNK_TOKENS = {
     "void-base": "#050816",
-    "void-elevated": "#0a0f24",
-    "void-panel": "#120f24",
-    "void-glass": "rgba(18, 15, 36, 0.7)",
+    "void-elevated": "#0d1428",
+    "void-panel": "#121b35",
+    "void-glass": "rgba(13, 20, 40, 0.75)",
     "neon-cyan": "#00ffff",
     "neon-magenta": "#ff00ff",
     "neon-green": "#39ff14",
     "neon-amber": "#ffcc00",
     "neon-red": "#ff1744",
     "neon-blue": "#00b4d8",
-    "neon-cyan-glow": "0 0 10px rgba(0,255,255,0.5)",
-    "neon-magenta-glow": "0 0 10px rgba(255,0,255,0.5)",
-    "neon-green-glow": "0 0 10px rgba(57,255,20,0.5)",
-    "neon-amber-glow": "0 0 10px rgba(255,204,0,0.5)",
-    "neon-red-glow": "0 0 10px rgba(255,23,68,0.5)",
-    "glass-bg": "rgba(18, 15, 36, 0.7)",
-    "glass-border": "rgba(34, 230, 255, 0.2)",
-    "glass-highlight": "rgba(255, 255, 255, 0.1)",
-    "glass-shadow": "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
-    "ink-primary": "#e8e6ff",
-    "ink-secondary": "#9d98c9",
-    "ink-muted": "#6b6699",
-    "ink-inverse": "#07060f",
-    "scanline-color": "rgba(34, 230, 255, 0.04)",
+    "neon-cyan-glow": "rgba(0, 255, 255, 0.4)",
+    "neon-magenta-glow": "rgba(255, 0, 255, 0.4)",
+    "neon-green-glow": "rgba(57, 255, 20, 0.4)",
+    "neon-amber-glow": "rgba(255, 204, 0, 0.4)",
+    "neon-red-glow": "rgba(255, 23, 68, 0.4)",
+    "glass-bg": "rgba(13, 20, 40, 0.65)",
+    "glass-border": "rgba(0, 255, 255, 0.25)",
+    "glass-highlight": "rgba(255, 255, 255, 0.08)",
+    "glass-shadow": "0 8px 32px 0 rgba(0, 0, 0, 0.5)",
+    "ink-primary": "#f0f4fc",
+    "ink-secondary": "#a0aec0",
+    "ink-muted": "#64748b",
+    "ink-inverse": "#050816",
+    "scanline-color": "rgba(0, 255, 255, 0.03)",
     "scanline-gap": "4px",
-    "scanline-speed": "8s",
-    "scanline-opacity": "0.04",
-    "font-display": "Orbitron, Rajdhani, sans-serif",
-    "font-mono": "JetBrains Mono, monospace",
-    "text-display": "2.5rem",
+    "font-display": "'Orbitron', 'Rajdhani', sans-serif",
+    "font-mono": "'JetBrains Mono', monospace",
+    "text-display": "2.25rem",
     "text-xl": "1.5rem",
     "text-lg": "1.25rem",
     "text-base": "1rem",
     "text-sm": "0.875rem",
     "text-xs": "0.75rem",
+    "space-1": "0.25rem",
+    "space-2": "0.5rem",
+    "space-3": "0.75rem",
+    "space-4": "1rem",
+    "space-6": "1.5rem",
+    "space-8": "3rem",
     "radius-sm": "4px",
     "radius-md": "8px",
     "radius-lg": "12px",
     "radius-xl": "16px",
     "radius-full": "9999px",
     "radius-sharp": "0px",
-    "glow-sm": "0 0 5px",
-    "glow-md": "0 0 10px",
-    "glow-lg": "0 0 20px",
-    "glow-xl": "0 0 30px",
-    "shadow-sm": "0 1px 2px rgba(0,0,0,0.5)",
-    "shadow-md": "0 4px 6px rgba(0,0,0,0.5)",
-    "shadow-lg": "0 10px 15px rgba(0,0,0,0.5)",
-    "shadow-glow": "0 0 15px rgba(34, 230, 255, 0.3)",
+    "glow-sm": "0 0 8px rgba(0, 255, 255, 0.3)",
+    "glow-md": "0 0 16px rgba(0, 255, 255, 0.4)",
+    "glow-lg": "0 0 24px rgba(0, 255, 255, 0.5)",
+    "glow-xl": "0 0 32px rgba(0, 255, 255, 0.6)",
+    "shadow-sm": "0 1px 2px rgba(0, 0, 0, 0.4)",
+    "shadow-md": "0 4px 6px rgba(0, 0, 0, 0.4)",
+    "shadow-lg": "0 10px 15px rgba(0, 0, 0, 0.4)",
+    "shadow-glow": "0 0 20px rgba(0, 255, 255, 0.3)",
     "duration-instant": "50ms",
     "duration-fast": "150ms",
-    "duration-base": "300ms",
-    "duration-slow": "500ms",
+    "duration-base": "250ms",
+    "duration-slow": "400ms",
     "duration-scan": "8s",
     "duration-pulse": "2s",
-    "ease-out": "cubic-bezier(0.0, 0.0, 0.2, 1)",
-    "ease-spring": "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-    "ease-smooth": "cubic-bezier(0.4, 0.0, 0.2, 1)",
-    "cursor-trail-length": "20",
-    "cursor-glow-size": "360px",
-    "cursor-glow-color": "rgba(34, 230, 255, 0.13)",
-    "space-1": "0.25rem",
-    "space-4": "1rem",
-    "space-8": "3rem",
+    "ease-out": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "ease-spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+    "ease-smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
+    "scanline-speed": "8s",
+    "scanline-opacity": "0.04",
+    "cursor-trail-length": "12",
+    "cursor-glow-size": "24px",
+    "cursor-glow-color": "rgba(0, 255, 255, 0.3)",
 }
 
+TOKENS = CYBERPUNK_TOKENS
+FONTS = {"display": CYBERPUNK_TOKENS["font-display"], "mono": CYBERPUNK_TOKENS["font-mono"]}
+SEVERITY = {"WARN": CYBERPUNK_TOKENS["neon-amber"], "CRITICAL": CYBERPUNK_TOKENS["neon-red"]}
 
-def get_cyberpunk_template():
-    """Return a Plotly layout template configured with cyberpunk colors."""
-    import plotly.graph_objects as go
 
-    layout = go.Layout(
-        paper_bgcolor="#050816",
-        plot_bgcolor="#0d1428",
-        font=dict(color="#e8e6ff", family="JetBrains Mono"),
-        colorway=["#00ffff", "#ff00ff", "#39ff14", "#ffcc00", "#ff1744", "#00b4d8"],
+def get_cyberpunk_template() -> go.layout.Template:
+    """Create a Plotly layout template styled with cyberpunk neon tokens."""
+    template = go.layout.Template()
+    template.layout.paper_bgcolor = CYBERPUNK_TOKENS["void-base"]
+    template.layout.plot_bgcolor = CYBERPUNK_TOKENS["void-elevated"]
+    template.layout.font = dict(
+        color=CYBERPUNK_TOKENS["ink-primary"],
+        family=CYBERPUNK_TOKENS["font-mono"],
     )
-    return go.layout.Template(layout=layout)
+    template.layout.colorway = [
+        CYBERPUNK_TOKENS["neon-cyan"],
+        CYBERPUNK_TOKENS["neon-magenta"],
+        CYBERPUNK_TOKENS["neon-green"],
+        CYBERPUNK_TOKENS["neon-amber"],
+        CYBERPUNK_TOKENS["neon-blue"],
+        CYBERPUNK_TOKENS["neon-red"],
+    ]
+    return template
 
 
-def register_cyberpunk_theme():
-    """Register 'cyberpunk' theme with Plotly io."""
-    import plotly.io as pio
-
-    template = get_cyberpunk_template()
-    pio.templates["cyberpunk"] = template
+def register_cyberpunk_theme() -> None:
+    """Register 'cyberpunk' Plotly template in pio.templates."""
+    pio.templates["cyberpunk"] = get_cyberpunk_template()
     pio.templates.default = "cyberpunk"
 
 
-def get_protocol_color_cyberpunk(protocol: str) -> str:
-    """Return neon color for a network protocol."""
-    proto_map = {
-        "TCP": "#00ffff",
-        "UDP": "#ff00ff",
-        "ICMP": "#39ff14",
-        "OTHER": "#00b4d8",
+def get_protocol_color_cyberpunk(proto: str) -> str:
+    """Return neon color for protocol name."""
+    mapping = {
+        "TCP": CYBERPUNK_TOKENS["neon-cyan"],
+        "UDP": CYBERPUNK_TOKENS["neon-magenta"],
+        "ICMP": CYBERPUNK_TOKENS["neon-green"],
+        "OTHER": CYBERPUNK_TOKENS["neon-blue"],
     }
-    return proto_map.get(protocol.upper(), "#00b4d8")
+    return mapping.get(proto.upper(), CYBERPUNK_TOKENS["neon-blue"])
 
 
-def get_severity_color_cyberpunk(severity: str) -> str:
-    """Return neon color for alert severity."""
-    sev_map = {
-        "INFO": "#00ffff",
-        "WARN": "#ffcc00",
-        "CRITICAL": "#ff1744",
+def get_severity_color_cyberpunk(sev: str) -> str:
+    """Return neon color for severity level."""
+    mapping = {
+        "INFO": CYBERPUNK_TOKENS["neon-cyan"],
+        "WARN": CYBERPUNK_TOKENS["neon-amber"],
+        "CRITICAL": CYBERPUNK_TOKENS["neon-red"],
     }
-    return sev_map.get(severity.upper(), "#00ffff")
+    return mapping.get(sev.upper(), CYBERPUNK_TOKENS["neon-cyan"])

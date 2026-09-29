@@ -23,9 +23,7 @@ def parse_listing_line(line: str) -> tuple[datetime, str] | None:
     return modified, fields[-1]
 
 
-def eligible_files(
-    listing: str, cutoff: datetime, root: str = "/traffic/stream_in"
-) -> list[str]:
+def eligible_files(listing: str, cutoff: datetime, root: str = "/traffic/stream_in") -> list[str]:
     """Return only stable files below root older than cutoff."""
     root_prefix = root.rstrip("/") + "/"
     paths: list[str] = []
@@ -35,7 +33,12 @@ def eligible_files(
             continue
         modified, path = parsed
         name = path.rsplit("/", 1)[-1]
-        if path.startswith(root_prefix) and modified < cutoff and not name.startswith(".") and not name.endswith(".tmp"):
+        if (
+            path.startswith(root_prefix)
+            and modified < cutoff
+            and not name.startswith(".")
+            and not name.endswith(".tmp")
+        ):
             paths.append(path)
     return paths
 

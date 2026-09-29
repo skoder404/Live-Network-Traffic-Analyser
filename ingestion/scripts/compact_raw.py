@@ -54,7 +54,9 @@ def compact_hour(
     )
     try:
         rows = (
-            spark.read.schema(to_spark_schema()).option("header", "false").csv(input_path)
+            spark.read.schema(to_spark_schema())
+            .option("header", "false")
+            .csv(input_path)
             .withColumn("timestamp", F.to_timestamp("timestamp", "yyyy-MM-dd HH:mm:ss.SSS"))
             .withColumn("dt", F.lit(date_value))
             .withColumn("hr", F.lit(hour_value))

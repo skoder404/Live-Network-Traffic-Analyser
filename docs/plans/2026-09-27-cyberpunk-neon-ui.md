@@ -244,24 +244,58 @@ dashboard/
 import pytest
 from dashboard.theme_cyberpunk import CYBERPUNK_TOKENS, get_cyberpunk_template
 
+
 def test_cyberpunk_tokens_exist():
     """Verify all cyberpunk tokens are defined."""
     required_tokens = [
-        'void-base', 'void-elevated', 'void-panel', 'void-glass',
-        'neon-cyan', 'neon-magenta', 'neon-green', 'neon-amber', 'neon-red',
-        'neon-blue', 'neon-cyan-glow', 'neon-magenta-glow',
-        'glass-bg', 'glass-border', 'glass-shadow',
-        'neon-cyan', 'neon-magenta', 'neon-green', 'neon-amber', 'neon-red',
-        'scanline-color', 'scanline-gap',
-        'font-display', 'font-mono', 'text-display', 'text-xl', 'text-base',
-        'radius-sm', 'radius-md', 'radius-lg', 'radius-xl',
-        'glow-sm', 'glow-md', 'glow-lg', 'glow-xl',
-        'duration-fast', 'duration-base', 'duration-slow', 'duration-scan',
-        'ease-spring', 'ease-smooth', 'scanline-speed', 'scanline-opacity',
+        "void-base",
+        "void-elevated",
+        "void-panel",
+        "void-glass",
+        "neon-cyan",
+        "neon-magenta",
+        "neon-green",
+        "neon-amber",
+        "neon-red",
+        "neon-blue",
+        "neon-cyan-glow",
+        "neon-magenta-glow",
+        "glass-bg",
+        "glass-border",
+        "glass-shadow",
+        "neon-cyan",
+        "neon-magenta",
+        "neon-green",
+        "neon-amber",
+        "neon-red",
+        "scanline-color",
+        "scanline-gap",
+        "font-display",
+        "font-mono",
+        "text-display",
+        "text-xl",
+        "text-base",
+        "radius-sm",
+        "radius-md",
+        "radius-lg",
+        "radius-xl",
+        "glow-sm",
+        "glow-md",
+        "glow-lg",
+        "glow-xl",
+        "duration-fast",
+        "duration-base",
+        "duration-slow",
+        "duration-scan",
+        "ease-spring",
+        "ease-smooth",
+        "scanline-speed",
+        "scanline-opacity",
     ]
-    
+
     for token in required_tokens:
         assert token in CYBERPUNK_TOKENS, f"Missing token: {token}"
+
 
 def test_cyberpunk_template_creation():
     """Verify Plotly template can be created."""
@@ -271,12 +305,14 @@ def test_cyberpunk_template_creation():
     assert template.layout.plot_bgcolor == "#0d1428"
     assert template.layout.colorway[0] == "#00ffff"
 
+
 def test_scanline_css_variables():
     """Verify scanline CSS variables are defined."""
     from dashboard.theme_cyberpunk import CYBERPUNK_TOKENS
-    assert CYBERPUNK_TOKENS['scanline-speed'] == '8s'
-    assert CYBERPUNK_TOKENS['scanline-opacity'] == '0.04'
-    assert CYBERPUNK_TOKENS['scanline-gap'] == '4px'
+
+    assert CYBERPUNK_TOKENS["scanline-speed"] == "8s"
+    assert CYBERPUNK_TOKENS["scanline-opacity"] == "0.04"
+    assert CYBERPUNK_TOKENS["scanline-gap"] == "4px"
 ```
 
 ### Step 2: Run Test to Verify Failure
@@ -318,9 +354,11 @@ PROTOCOL_COLOR_MAP = {...}
 SEVERITY_COLORS = {...}
 CATEGORICAL_PALETTE = [...]
 
+
 def get_lnta_dark_template():
     """Alias for cyberpunk template."""
     return get_cyberpunk_template()
+
 
 def register_lnta_theme():
     register_cyberpunk_theme()
@@ -385,41 +423,47 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import pandas as pd
 
+
 def test_cyberpunk_header_renders_neon_kpi():
     """Header renders neon KPI cards with glow effects."""
     from dashboard.components.header import render_header
-    
+
     db_health = {"connected": True, "table_status": {"window_metrics": "2026-09-27T12:00:00Z"}}
-    
+
     mock_col = MagicMock()
     mock_col.__enter__ = Mock(return_value=mock_col)
     mock_col.__exit__ = Mock(return_value=False)
-    
-    with patch("streamlit.columns") as mock_columns, \
-         patch("streamlit.markdown") as mock_markdown, \
-         patch("streamlit.caption"):
-        
+
+    with (
+        patch("streamlit.columns") as mock_columns,
+        patch("streamlit.markdown") as mock_markdown,
+        patch("streamlit.caption"),
+    ):
         mock_columns.return_value = [Mock() for _ in range(10)]
-        
+
         from dashboard.components.header import render_header
+
         render_header(db_health, "LIVE")
-        
+
         # Verify neon KPI cards rendered
         md_calls = [str(c) for c in mock_markdown.call_args_list]
         assert any("neon-kpi" in str(c) or "kpi-card" in str(c) for c in md_calls)
 
+
 def test_cyberpunk_live_overview_neon_charts():
     """Live Overview renders with neon scanline charts."""
     from dashboard.components.live_overview import render_live_overview_tab
-    
+
     mock_db = Mock()
-    mock_db.get_latest_window_metrics.return_value = pd.DataFrame({
-        "window_start": pd.date_range("2026-09-27", periods=5, freq="10s"),
-        "pps": [100, 120, 110, 130, 125],
-        "bps": [10000, 12000, 11000, 13000, 12500],
-    })
+    mock_db.get_latest_window_metrics.return_value = pd.DataFrame(
+        {
+            "window_start": pd.date_range("2026-09-27", periods=5, freq="10s"),
+            "pps": [100, 120, 110, 130, 125],
+            "bps": [10000, 12000, 11000, 13000, 12500],
+        }
+    )
     # ... mock other methods
-    
+
     with patch("streamlit.plotly_chart") as mock_plotly:
         render_live_overview_tab(mock_db, controls)
         # Verify neon chart styling
@@ -530,7 +574,8 @@ import streamlit as st
 from dashboard.theme import register_cyberpunk_theme
 
 # Inject cyberpunk CSS and scanlines
-st.markdown("""
+st.markdown(
+    """
 <div class="scanlines" id="scanlines"></div>
 <div class="cursor-glow-trail" id="cursor-glow"></div>
 <script>
@@ -540,7 +585,9 @@ st.markdown("""
     trail.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
   });
 </script>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Register cyberpunk theme
 register_cyberpunk_theme()
@@ -579,20 +626,22 @@ with st.sidebar:
 def test_cyberpunk_accessibility():
     """Verify WCAG 2.1 AA compliance."""
     from dashboard.components.header import render_header
-    
+
     with patch("streamlit.markdown") as mock_md:
         render_header(db_health, "LIVE")
         html = str(mock_md.call_args_list)
-        
+
         # Check for focus-visible
         assert "focus-visible" in str(mock_markdown.call_args_list)
-        
+
         # Check for ARIA labels
-        assert "aria-label" in str(mock_markdown.call_args_list) or "aria-labelledby" in str(mock_markdown.call_args_list)
-        
+        assert "aria-label" in str(mock_markdown.call_args_list) or "aria-labelledby" in str(
+            mock_markdown.call_args_list
+        )
+
         # Check for focus-visible CSS
         assert "focus-visible" in open("dashboard/assets/cyberpunk.css").read()
-        
+
         # Check reduced motion
         assert "prefers-reduced-motion" in open("dashboard/assets/cyberpunk.css").read()
 ```
@@ -694,6 +743,7 @@ def test_cyberpunk_auto_refresh():
     # Check for fragment elements
     assert len(at.fragment) > 0
 
+
 def test_cyberpunk_multi_window():
     """Test multi-window toggle."""
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
@@ -708,6 +758,7 @@ def test_cyberpunk_multi_window():
 # dashboard/app.py
 @st.fragment(run_every=cfg.get("refresh_interval", 3))
 def render_live_overview_tab(db, controls): ...
+
 
 @st.fragment(run_every=cfg.get("refresh_interval", 3))
 def render_stream_analytics_tab(db, controls): ...
@@ -739,19 +790,23 @@ window_len = st.select_slider("⏱ WINDOW", [10, 30, 60], value=10, format_func=
 def test_cyberpunk_app_loads():
     at = AppTest.from_file(str(APP_PATH)).run(timeout=15)
     assert not at.exception
-    
+
     # Check cyberpunk elements
     markdown = " ".join([m.value for m in at.markdown])
     assert "CYBERPUNK" in markdown.upper() or "NEON" in markdown.upper()
 
+
 def test_cyberpunk_sidebar_controls():
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
     assert not at.exception
-    
+
     # Check sidebar widgets
-    widget_labels = [w.label for w in at.sidebar.selectbox + at.sidebar.slider + at.sidebar.multiselect]
+    widget_labels = [
+        w.label for w in at.sidebar.selectbox + at.sidebar.slider + at.sidebar.multiselect
+    ]
     assert any("WINDOW" in l.upper() for l in widget_labels)
     assert any("REFRESH" in l.upper() for l in widget_labels)
+
 
 def test_cyberpunk_mock_mode():
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
@@ -759,10 +814,18 @@ def test_cyberpunk_mock_mode():
     markdown = " ".join([m.value for m in at.markdown])
     assert "DEMO" in markdown or "MOCK" in markdown or "NEON" in markdown
 
+
 def test_cyberpunk_all_tabs_render():
     at = AppTest.from_file(str(APP_PATH)).run(timeout=15)
     tab_labels = [tab.label for tab in at.tabs]
-    expected = ["LIVE OVERVIEW", "STREAM ANALYTICS", "LINK ANALYSIS", "ALERTS", "HISTORY", "PIPELINE"]
+    expected = [
+        "LIVE OVERVIEW",
+        "STREAM ANALYTICS",
+        "LINK ANALYSIS",
+        "ALERTS",
+        "HISTORY",
+        "PIPELINE",
+    ]
     for label in expected:
         assert any(label in t.upper() for t in tab_labels)
 ```

@@ -127,59 +127,50 @@ class AlertEngine:
     def evaluate_window(
         self,
         window_start: str,
-        window_len_s: int | float = 10,
-        pps: float | dict[str, int] = 0.0,
+        window_len_s: int | float | dict = 10.0,
+        pps: float | dict = 0.0,
         src_ip_port_counts: dict[str, int] | None = None,
         src_ip_dst_ip_counts: dict[str, int] | None = None,
         src_ip_packet_counts: dict[str, int] | None = None,
     ) -> list[Alert]:
-        """
-        Evaluate all alert rules for a single window.
-        Supports both 5-arg and 6-arg calling conventions (positional or keyword).
-        """
         if isinstance(pps, dict):
-            # 5-arg legacy convention: (window_start, pps, src_ip_port_counts, src_ip_dst_ip_counts, src_ip_packet_counts)
-            actual_pps = float(window_len_s)
-            _actual_window_len_s = 10
-            actual_port_counts = pps
-            actual_dst_ip_counts = src_ip_port_counts if isinstance(src_ip_port_counts, dict) else {}
-            actual_packet_counts = src_ip_dst_ip_counts if isinstance(src_ip_dst_ip_counts, dict) else {}
+            src_ip_packet_counts = pps
+            src_ip_port_counts = src_ip_port_counts or {}
+            src_ip_dst_ip_counts = src_ip_dst_ip_counts or {}
+            pps_val = float(window_len_s) if isinstance(window_len_s, (int, float)) else 0.0
+            window_len_s = 10.0
         else:
-            _actual_window_len_s = int(window_len_s)
-            actual_pps = float(pps)
-            actual_port_counts = src_ip_port_counts or {}
-            actual_dst_ip_counts = src_ip_dst_ip_counts or {}
-            actual_packet_counts = src_ip_packet_counts or {}
+            pps_val = float(pps) if isinstance(pps, (int, float)) else 0.0
+
+        src_ip_port_counts = src_ip_port_counts or {}
+        src_ip_dst_ip_counts = src_ip_dst_ip_counts or {}
+        src_ip_packet_counts = src_ip_packet_counts or {}
+        pps = pps_val
 
         alerts = []
 
         # 1. Traffic spike alert (global, no src_ip)
-        spike_alert = self._check_traffic_spike(window_start, actual_pps)
+        spike_alert = self._check_traffic_spike(window_start, pps)
         if spike_alert:
             alerts.append(spike_alert)
 
         # 2. Per-source alerts
-        all_src_ips = set(actual_packet_counts.keys()) | set(actual_port_counts.keys()) | set(actual_dst_ip_counts.keys())
+        all_src_ips = (
+            set(src_ip_packet_counts.keys())
+            | set(src_ip_port_counts.keys())
+            | set(src_ip_dst_ip_counts.keys())
+        )
         for src_ip in all_src_ips:
-            pkt_count = actual_packet_counts.get(src_ip)
-            if pkt_count is None:
-                pkt_count = self.config.min_window_packets + 10
+            pkt_count = src_ip_packet_counts.get(src_ip, self.config.min_window_packets + 1)
             if pkt_count < self.config.min_window_packets:
                 continue
 
             # Unusual port activity
             port_alert = self._check_unusual_port_activity(
-                window_start, src_ip, actual_port_counts.get(src_ip, 0)
+                window_start, src_ip, src_ip_port_counts.get(src_ip, 0)
             )
             if port_alert:
                 alerts.append(port_alert)
-
-            # High fanout
-            fanout_alert = self._check_high_fanout(
-                window_start, src_ip, actual_dst_ip_counts.get(src_ip, 0)
-            )
-            if fanout_alert:
-                alerts.append(fanout_alert)
 
             # High fan-out
             fanout_alert = self._check_high_fanout(

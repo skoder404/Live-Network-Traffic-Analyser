@@ -16,7 +16,7 @@ ignore = [
     "E701",  # multiple statements on one line (colon)
     "E702",  # multiple statements on one line (semicolon)
     "E402",  # module level import not at top of file
-    "F841",  # local variable assigned to but never used
+    "F841",  # local variable is assigned to but never used
 ]
 
 [tool.pytest.ini_options]

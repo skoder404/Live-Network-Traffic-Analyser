@@ -337,8 +337,6 @@ class ItemsetsAnalytic(Analytic):
 
         self.buffer = RollingBasketBuffer(window_s=self.window_s, max_baskets=20000)
         self._restore_state()
-        if self.every_s == 0:
-            self.last_run_time = None
         self._initialized = True
 
     def _save_state(self) -> None:

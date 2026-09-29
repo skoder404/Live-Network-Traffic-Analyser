@@ -56,24 +56,28 @@ def test_live_overview_shows_loading_state():
 
     register_lnta_theme()
     mock_db = Mock()
+
     def slow_query(*args, **kwargs):
         time.sleep(0.1)
         return pd.DataFrame()
+
     mock_db.get_latest_window_metrics.side_effect = slow_query
     # ... mock other methods returning empty DataFrames
-    
+
     controls = {"window_len_s": 10}
     mock_col = MagicMock()
     mock_col.__enter__ = Mock(return_value=mock_col)
     mock_col.__exit__ = Mock(return_value=False)
-    
-    with patch("streamlit.spinner") as mock_spinner, \
-         patch("streamlit.columns") as mock_columns, \
-         patch("streamlit.plotly_chart"):
+
+    with (
+        patch("streamlit.spinner") as mock_spinner,
+        patch("streamlit.columns") as mock_columns,
+        patch("streamlit.plotly_chart"),
+    ):
         mock_columns.return_value = [mock_col, mock_col]
         mock_spinner.return_value.__enter__ = Mock(return_value=None)
         mock_spinner.return_value.__exit__ = Mock(return_value=False)
-        
+
         render_live_overview_tab(mock_db, controls)
         mock_spinner.assert_called()  # Loading state triggered
 ```
@@ -176,14 +180,19 @@ def test_render_header_shows_real_kpi_with_delta():
     """Header shows real KPI values with delta and sparkline."""
     from dashboard.components.header import render_header
     from dashboard.data import get_latest_window_metrics
-    
+
     mock_db = Mock()
     # Mock real data with previous window for delta calculation
-    mock_db.get_latest_window_metrics.return_value = pd.DataFrame({
-        "window_start": pd.date_range("2026-09-24", periods=2, freq="10s"),
-        "pps": [100, 120], "bps": [10000, 12000], "packets": [100, 120], "bytes": [10000, 12000],
-    })
-    
+    mock_db.get_latest_window_metrics.return_value = pd.DataFrame(
+        {
+            "window_start": pd.date_range("2026-09-24", periods=2, freq="10s"),
+            "pps": [100, 120],
+            "bps": [10000, 12000],
+            "packets": [100, 120],
+            "bytes": [10000, 12000],
+        }
+    )
+
     with patch("streamlit.columns"), patch("streamlit.markdown") as mock_md:
         render_header({"connected": True, "table_status": {}}, "LIVE")
         # Verify KPI cards render with values and deltas
@@ -203,8 +212,11 @@ Run: `pytest tests/unit/test_components.py::test_render_header_shows_real_kpi_wi
 def get_kpi_sparkline(db: ServingDB, metric: str, window_len_s: int = 10, limit: int = 60) -> list:
     """Get last N values for sparkline."""
     query = _build_query(
-        "window_metrics", f"window_start, {metric}",
-        where="window_len_s = ?", order_by="window_start DESC", limit=limit
+        "window_metrics",
+        f"window_start, {metric}",
+        where="window_len_s = ?",
+        order_by="window_start DESC",
+        limit=limit,
     )
     df = db.query_cached_df(query, (window_len_s,))
     return df[metric].tolist()[::-1]  # Reverse for chronological
@@ -272,15 +284,19 @@ Run: `pytest tests/unit/test_dashboard.py::test_app_auto_refresh_works -v`
 # In dashboard/app.py main()
 from streamlit import fragment
 
+
 # Wrap each tab renderer with @fragment
 @st.fragment(run_every=cfg.get("refresh_interval", 3))
 def render_live_overview_tab(db, controls): ...
 
+
 @st.fragment(run_every=cfg.get("refresh_interval", 3))
 def render_stream_analytics_tab(db, controls): ...
 
+
 @st.fragment(run_every=cfg.get("refresh_interval", 3))
 def render_link_analysis_tab(db, controls): ...
+
 
 # ... similarly for alerts, history, pipeline
 ```
@@ -324,17 +340,19 @@ git commit -m "feat(dashboard): add auto-refresh via st.fragment
 def test_multi_window_toggle_works():
     """Sidebar window length selector changes query window."""
     from dashboard.components.live_overview import render_live_overview_tab
-    
+
     mock_db = Mock()
-    mock_db.get_latest_window_metrics.return_value = pd.DataFrame({
-        "window_start": pd.date_range("2026-09-24", periods=5, freq="30s"),
-        "pps": [100, 120, 110], "bps": [10000, 12000, 11000],
-    })
-    
+    mock_db.get_latest_window_metrics.return_value = pd.DataFrame(
+        {
+            "window_start": pd.date_range("2026-09-24", periods=5, freq="30s"),
+            "pps": [100, 120, 110],
+            "bps": [10000, 12000, 11000],
+        }
+    )
+
     controls = {"window_len_s": 30, "protocol_filter": ["TCP", "UDP"]}
-    
-    with patch("streamlit.plotly_chart") as mock_plotly, \
-         patch("streamlit.columns"):
+
+    with patch("streamlit.plotly_chart") as mock_plotly, patch("streamlit.columns"):
         render_live_overview_tab(mock_db, controls)
         # Verify query called with window_len_s=30
         # (mock_db.get_latest_window_metrics called with window_len_s=30)
@@ -383,53 +401,64 @@ def test_stream_analytics_tab_renders_7_cards():
     """Stream Analytics renders all 7 concept cards."""
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
     assert not at.exception
-    
+
     # Click Stream Analytics tab
     at.tabs[1].click().run()
     assert not at.exception
-    
+
     # Verify 7 concept cards rendered
     markdown_text = " ".join([m.value for m in at.markdown])
-    concepts = ["FILTERING", "SAMPLING", "COUNT DISTINCT", "COUNTING ONES", 
-                "MOMENTS", "DECAY", "ITEMSETS"]
+    concepts = [
+        "FILTERING",
+        "SAMPLING",
+        "COUNT DISTINCT",
+        "COUNTING ONES",
+        "MOMENTS",
+        "DECAY",
+        "ITEMSETS",
+    ]
     for concept in concepts:
         assert concept in markdown_text
+
 
 def test_link_analysis_tab_renders_graph_and_pagerank():
     """Link Analysis renders graph + PageRank table."""
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
     at.tabs[2].click().run()
     assert not at.exception
-    
+
     # Check for Plotly chart (graph) and table
     assert len(at.plotly_chart) >= 1
     assert len(at.dataframe) >= 1
+
 
 def test_alerts_tab_shows_cards_and_timeline():
     """Alerts tab shows active alerts with timeline."""
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
     at.tabs[3].click().run()
     assert not at.exception
-    
+
     # Check for alert cards
     markdown_text = " ".join([m.value for m in at.markdown])
     assert "TRAFFIC_SPIKE" in markdown_text or "WARN" in markdown_text
+
 
 def test_history_tab_shows_query_selector():
     """History tab has query selector and results."""
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
     at.tabs[4].click().run()
     assert not at.exception
-    
+
     # Check for selectbox and dataframe
     assert len(at.sidebar.selectbox) >= 1
+
 
 def test_pipeline_tab_shows_stage_tiles():
     """Pipeline tab shows 5 stage tiles."""
     at = AppTest.from_file(str(APP_PATH)).run(timeout=10)
     at.tabs[5].click().run()
     assert not at.exception
-    
+
     # Check for 5 columns (stage tiles)
     # Check for batch duration chart
     assert len(at.plotly_chart) >= 1
