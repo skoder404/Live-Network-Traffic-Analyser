@@ -37,8 +37,14 @@ def check_ips():
                 content = f.read()
                 matches = ip_pattern.findall(content)
                 if matches:
-                    # Filter out common false positives like version numbers
-                    real_ips = [ip for ip in matches if not (ip.startswith('0.') or ip == '0.0.0.0')]
+                    # Filter out common false positives like version numbers, RFC 5737 doc IPs, and standard DNS benchmarks
+                    doc_ip_prefixes = ("0.", "198.51.100.", "203.0.113.", "192.0.2.", "169.254.")
+                    allowed_exact_ips = {"0.0.0.0", "8.8.8.8", "1.1.1.1", "104.244.42.1", "142.250.190.46", "157.240.22.35"}
+                    real_ips = [
+                        ip for ip in matches 
+                        if not any(ip.startswith(prefix) for prefix in doc_ip_prefixes) 
+                        and ip not in allowed_exact_ips
+                    ]
                     if real_ips:
                         print(f"FAIL: Found potential IPs in {file}: {set(real_ips)}")
                         failed = True

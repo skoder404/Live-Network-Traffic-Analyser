@@ -43,13 +43,15 @@ def make_baskets(rows: list[dict[str, Any]]) -> dict[tuple[str, int], frozenset[
 
         raw_time = r.get("event_time") or r.get("timestamp")
         if isinstance(raw_time, datetime):
+            if raw_time.tzinfo is None:
+                raw_time = raw_time.replace(tzinfo=timezone.utc)
             slice_s = int(raw_time.timestamp())
         elif isinstance(raw_time, (int, float)):
             slice_s = int(raw_time)
         elif isinstance(raw_time, str):
             try:
-                # Handle ISO timestamps like 2026-09-21T12:00:00.000Z
-                dt = datetime.fromisoformat(raw_time.replace("Z", "+00:00"))
+                clean_ts = raw_time.strip().replace(" ", "T").replace("Z", "+00:00")
+                dt = datetime.fromisoformat(clean_ts)
                 slice_s = int(dt.timestamp())
             except Exception:
                 slice_s = int(time.time())
@@ -337,6 +339,8 @@ class ItemsetsAnalytic(Analytic):
 
         self.buffer = RollingBasketBuffer(window_s=self.window_s, max_baskets=20000)
         self._restore_state()
+        if self.every_s == 0:
+            self.last_run_time = None
         self._initialized = True
 
     def _save_state(self) -> None:
@@ -379,12 +383,9 @@ class ItemsetsAnalytic(Analytic):
         if row_count == 0:
             return
 
-        current_t = float(ctx.clock if isinstance(ctx.clock, (int, float)) else time.time())
-
-        # Collect only required columns with batch row cap
         max_rows = int(ctx.cfg.get("spark", {}).get("max_rows_per_batch", 50000))
         needed_cols = [
-            c for c in ["event_time", "src_ip", "protocol", "dst_port"] if c in batch_df.columns
+            c for c in ["event_time", "timestamp", "src_ip", "protocol", "dst_port"] if c in batch_df.columns
         ]
 
         if not needed_cols or "src_ip" not in needed_cols:
@@ -396,6 +397,10 @@ class ItemsetsAnalytic(Analytic):
         # Convert to baskets and update buffer
         batch_baskets = make_baskets(rows)
         self.buffer.add_baskets(batch_baskets)
+
+        max_data_ts = max((k[1] for k in batch_baskets), default=None)
+        current_t = float(max_data_ts) if max_data_ts is not None else float(ctx.clock if isinstance(ctx.clock, (int, float)) else time.time())
+
         self.buffer.evict(int(current_t))
 
         # Check periodic execution condition
@@ -456,6 +461,8 @@ class ItemsetsAnalytic(Analytic):
                     finally:
                         if not ctx.conn:
                             conn.close()
+
+                self.last_run_time = current_t
 
             self.last_run_time = current_t
             self._save_state()
