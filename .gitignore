@@ -49,4 +49,5 @@ serving/*
 scripts/keys/*.pub
 
 # Local assistant documentation & walkthroughs
-documentation/
+documentation/*
+!documentation/walkthrough_*.md
