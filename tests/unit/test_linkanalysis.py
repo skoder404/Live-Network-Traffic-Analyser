@@ -246,13 +246,13 @@ class TestAlerts:
     def test_alert_engine_ports(self):
         from linkanalysis.alerts import AlertEngine, AlertRuleConfig
         engine = AlertEngine(config=AlertRuleConfig(min_window_packets=10, max_distinct_dst_ports=50))
-        alerts = engine.evaluate_window("2026-01-01T00:00:00Z", 100.0, {"10.0.0.1": 20}, {"10.0.0.1": 100}, {})
+        alerts = engine.evaluate_window("2026-01-01T00:00:00Z", 100.0, {"10.0.0.1": 100}, {}, {"10.0.0.1": 100})
         assert len(alerts) == 1
         assert alerts[0].type == "UNUSUAL_PORT_ACTIVITY"
 
     def test_alert_engine_fanout(self):
         from linkanalysis.alerts import AlertEngine, AlertRuleConfig
         engine = AlertEngine(config=AlertRuleConfig(min_window_packets=10, max_distinct_dst_ips=50))
-        alerts = engine.evaluate_window("2026-01-01T00:00:00Z", 100.0, {"10.0.0.1": 20}, {}, {"10.0.0.1": 100})
+        alerts = engine.evaluate_window("2026-01-01T00:00:00Z", 100.0, {}, {"10.0.0.1": 100}, {"10.0.0.1": 100})
         assert len(alerts) == 1
         assert alerts[0].type == "HIGH_FANOUT"
