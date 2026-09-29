@@ -128,27 +128,28 @@ class AlertEngine:
         self,
         window_start: str,
         window_len_s: int | float = 10,
-        pps: float | dict | None = None,
+        pps: float | dict[str, int] = 0.0,
         src_ip_port_counts: dict[str, int] | None = None,
         src_ip_dst_ip_counts: dict[str, int] | None = None,
         src_ip_packet_counts: dict[str, int] | None = None,
     ) -> list[Alert]:
         """
         Evaluate all alert rules for a single window.
+        Supports both 5-arg and 6-arg calling conventions (positional or keyword).
         """
         if isinstance(pps, dict):
-            # 5-arg positional shift: window_start, pps, port_counts, dst_counts, pkt_counts
-            actual_pkt_counts = src_ip_dst_ip_counts or {}
-            actual_dst_counts = src_ip_port_counts or {}
-            actual_port_counts = pps or {}
+            # 5-arg legacy convention: (window_start, pps, src_ip_port_counts, src_ip_dst_ip_counts, src_ip_packet_counts)
             actual_pps = float(window_len_s)
-            actual_window_len = 10
+            _actual_window_len_s = 10
+            actual_port_counts = pps
+            actual_dst_ip_counts = src_ip_port_counts if isinstance(src_ip_port_counts, dict) else {}
+            actual_packet_counts = src_ip_dst_ip_counts if isinstance(src_ip_dst_ip_counts, dict) else {}
         else:
-            actual_pkt_counts = src_ip_packet_counts or {}
-            actual_dst_counts = src_ip_dst_ip_counts or {}
+            _actual_window_len_s = int(window_len_s)
+            actual_pps = float(pps)
             actual_port_counts = src_ip_port_counts or {}
-            actual_pps = float(pps) if pps is not None else 0.0
-            actual_window_len = int(window_len_s)
+            actual_dst_ip_counts = src_ip_dst_ip_counts or {}
+            actual_packet_counts = src_ip_packet_counts or {}
 
         alerts = []
 
@@ -158,9 +159,11 @@ class AlertEngine:
             alerts.append(spike_alert)
 
         # 2. Per-source alerts
-        all_src_ips = set(actual_pkt_counts.keys()) | set(actual_port_counts.keys()) | set(actual_dst_counts.keys())
+        all_src_ips = set(actual_packet_counts.keys()) | set(actual_port_counts.keys()) | set(actual_dst_ip_counts.keys())
         for src_ip in all_src_ips:
-            pkt_count = actual_pkt_counts.get(src_ip, self.config.min_window_packets)
+            pkt_count = actual_packet_counts.get(src_ip)
+            if pkt_count is None:
+                pkt_count = self.config.min_window_packets + 10
             if pkt_count < self.config.min_window_packets:
                 continue
 
@@ -171,9 +174,16 @@ class AlertEngine:
             if port_alert:
                 alerts.append(port_alert)
 
+            # High fanout
+            fanout_alert = self._check_high_fanout(
+                window_start, src_ip, actual_dst_ip_counts.get(src_ip, 0)
+            )
+            if fanout_alert:
+                alerts.append(fanout_alert)
+
             # High fan-out
             fanout_alert = self._check_high_fanout(
-                window_start, src_ip, actual_dst_counts.get(src_ip, 0)
+                window_start, src_ip, src_ip_dst_ip_counts.get(src_ip, 0)
             )
             if fanout_alert:
                 alerts.append(fanout_alert)

@@ -1,6 +1,11 @@
 """Data layer. LNTA_MOCK=true (default) -> deterministic mock traffic; else reads SQLite serving store (falls back to mock)."""
-import os, sqlite3, time
-import numpy as np, pandas as pd
+import os
+import sqlite3
+import time
+
+import numpy as np
+import pandas as pd
+
 MOCK = os.getenv("LNTA_MOCK", "true").lower() == "true"
 DB_PATH = os.getenv("LNTA_DB", "serving/lnta.db")
 PROTOS = ["TCP", "UDP", "DNS", "HTTPS", "HTTP", "ICMP"]

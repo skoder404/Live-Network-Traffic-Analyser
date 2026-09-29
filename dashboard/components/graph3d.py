@@ -1,7 +1,9 @@
 """Rotating 3D IP graph: drag to rotate, hover for details, click a node to isolate its links. Pure canvas, no CDN."""
 import json
-from dashboard.theme import html_embed
+
 from dashboard.analytics import kind
+from dashboard.theme import html_embed
+
 JS = r"""<style>body{margin:0;background:transparent;font:13px 'Rajdhani',sans-serif;color:#e8e6ff}#w{position:relative;height:100vh;border:1px solid rgba(34,230,255,.3);border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#160f30,#07060f)}
 canvas{width:100%;height:100%;display:block;cursor:grab}#t{position:absolute;pointer-events:none;padding:6px 10px;border-radius:8px;background:rgba(7,6,15,.92);border:1px solid #ff2e88;display:none;font:12px monospace}
 #l{position:absolute;left:12px;bottom:10px;color:#9d98c9}#l b{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 10px}</style>

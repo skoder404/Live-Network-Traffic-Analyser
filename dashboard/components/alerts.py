@@ -1,13 +1,26 @@
 import streamlit as st
+
 from ._ui import state
-def render_alerts(s, window, ctx):
+
+
+def render_alerts(s, window=10, ctx=None):
     log = st.session_state.get("alert_log", [])
-    sev = st.multiselect("Severity", ["WARN", "CRITICAL"], default=["WARN", "CRITICAL"]); typ = sorted({a["type"] for a in log})
+    sev = st.multiselect("Severity", ["WARN", "CRITICAL"], default=["WARN", "CRITICAL"])
+    typ = sorted({a["type"] for a in log if isinstance(a, dict) and "type" in a})
     kinds = st.multiselect("Type", typ, default=typ) if typ else []
-    rows = [a for a in log if a["severity"] in sev and a["type"] in kinds]
-    if st.button("Clear alerts"): st.session_state.alert_log = []; rows = []
-    if not rows: return state("empty", "All quiet. Alerts explain themselves here when a rule fires.")
+    rows = [a for a in log if isinstance(a, dict) and a.get("severity") in sev and a.get("type") in kinds]
+    if st.button("Clear alerts"):
+        st.session_state.alert_log = []
+        rows = []
+    if not rows:
+        return state("empty", "All quiet. Alerts explain themselves here when a rule fires.")
     for a in rows[:20]:
-        who = f' from <b>{a["src_ip"]}</b>' if a["src_ip"] else ""
-        st.markdown(f'<div class="glass alert {a["severity"]}"><span class="badge sev-{a["severity"]}">{a["severity"]}</span> <b>{a["type"].replace("_", " ").title()}</b>{who}<div>{a["reason"]}</div>'
-                    f'<div class="mono kpi-label">now {a["current_value"]:.0f} · baseline {a["baseline_value"]:.0f} · {a["change_pct"]:+.0f}% · threshold {a["threshold"]:.0f} · {a["ts"][11:19]} UTC</div></div>', unsafe_allow_html=True)
+        who = f' from <b>{a.get("src_ip")}</b>' if a.get("src_ip") else ""
+        st.markdown(
+            f'<div class="glass alert {a.get("severity", "INFO")}"><span class="badge sev-{a.get("severity", "INFO")}">{a.get("severity", "INFO")}</span> <b>{str(a.get("type", "")).replace("_", " ").title()}</b>{who}<div>{a.get("reason", "")}</div>'
+            f'<div class="mono kpi-label">now {a.get("current_value", 0):.0f} · baseline {a.get("baseline_value", 0):.0f} · {a.get("change_pct", 0):+.0f}% · threshold {a.get("threshold", 0):.0f} · {str(a.get("ts", ""))[11:19]} UTC</div></div>',
+            unsafe_allow_html=True,
+        )
+
+
+render_alerts_tab = render_alerts

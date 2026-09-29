@@ -2,6 +2,8 @@ from dashboard.analytics import analyze, markov_top
 from dashboard.components._ui import human, spark
 from dashboard.components.graph3d import graph_html
 from dashboard.data import MockServingDB
+
+
 def test_snapshot_keys():
     s = MockServingDB().snapshot(30)
     assert {"pps", "edges", "history", "port_counts", "bucket"} <= set(s) and len(s["history"]) == 40

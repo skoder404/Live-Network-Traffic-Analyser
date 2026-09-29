@@ -1,7 +1,16 @@
 """Bridge to linkanalysis (Priyan's package): graph -> PageRank -> centrality -> Markov."""
-import networkx as nx
-from linkanalysis import (build_graph_from_edges, prune_graph_top_n, pagerank_power_iteration, pagerank_networkx,
-                          degree_centrality, betweenness_centrality, build_markov_matrix, classify_ip)
+from linkanalysis import (
+    betweenness_centrality,
+    build_graph_from_edges,
+    build_markov_matrix,
+    classify_ip,
+    degree_centrality,
+    pagerank_networkx,
+    pagerank_power_iteration,
+    prune_graph_top_n,
+)
+
+
 def analyze(edges, top_n=30, weight="packets"):
     G = prune_graph_top_n(build_graph_from_edges(edges), top_n, weight)
     if G.number_of_nodes() == 0: return {"G": G, "pr": {}, "deg": {}, "bet": {}, "agree": 0.0}

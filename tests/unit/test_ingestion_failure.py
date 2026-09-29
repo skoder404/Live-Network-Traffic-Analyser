@@ -1,10 +1,11 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from datetime import datetime, timezone
-from pathlib import Path
-from ingestion.verification import verify_files, verify_directory
+
 from ingestion.layout import StorageLayout, create_hdfs_zones, create_local_zones, hdfs_available
 from ingestion.spark_hdfs import streaming_paths
+from ingestion.verification import verify_files
+
 
 def test_flume_restart_duplicate_recovery(tmp_path):
     """Test verification handles duplicate records caused by Flume restart (at-least-once delivery)."""

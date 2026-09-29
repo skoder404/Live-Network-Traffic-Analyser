@@ -1,12 +1,15 @@
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
 ROOT = Path(__file__).resolve().parent.parent; sys.path.insert(0, str(ROOT))
 import streamlit as st
-from dashboard.theme import apply_theme
-from dashboard.data import get_db
+
 from dashboard import components as C
+from dashboard.data import get_db
+from dashboard.theme import apply_theme
 from linkanalysis import AlertEngine, load_alert_config
+
 st.set_page_config(page_title="LNTA · Priyan S", page_icon="📡", layout="wide")
 apply_theme()
 db = st.cache_resource(get_db)()
@@ -28,7 +31,7 @@ def body():
     C.render_header(s, window, len(st.session_state.alert_log)); st.write("")
     names = ["Live", "Stream concepts", "Link analysis", "Alerts", "History", "Pipeline"]
     fns = [C.render_live_overview, C.render_stream_analytics, C.render_link_analysis, C.render_alerts, C.render_history, C.render_pipeline]
-    for tab, fn in zip(st.tabs(names), fns):
+    for tab, fn in zip(st.tabs(names), fns, strict=False):
         with tab:
             try: fn(s, window, ctx)
             except Exception as e: st.markdown(f'<div class="state error" role="alert">Could not load this view: {e}</div>', unsafe_allow_html=True)

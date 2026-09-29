@@ -4,50 +4,112 @@ tests/unit/test_components_cyberpunk.py - Unit tests for cyberpunk dashboard com
 from unittest.mock import MagicMock, Mock, patch
 
 import pandas as pd
-from dashboard.data import MockServingDB
+import pytest
 
 
-def test_cyberpunk_header_renders():
+def test_cyberpunk_header_renders_neon_kpi():
     from dashboard.components.header import render_header
-
-    db = MockServingDB()
-    snapshot = db.snapshot(30)
-
+    
+    
     mock_col = MagicMock()
     mock_col.__enter__ = Mock(return_value=mock_col)
     mock_col.__exit__ = Mock(return_value=False)
+    
+    with patch("streamlit.columns") as mock_columns, \
+         patch("streamlit.markdown") as mock_markdown, \
+         patch("streamlit.caption"):
+    
+        mock_columns.return_value = [mock_col for _ in range(10)]
+        
+        from dashboard.components.header import render_header
+        render_header({"connected": True, "table_status": {"window_metrics": "2026-09-24T12:00:00Z"}}, "LIVE")
+        
+        logo_calls = [c for c in mock_markdown.call_args_list if "LNTA" in str(c)]
+        assert len(logo_calls) > 0
+        
+        badge_calls = [c for c in mock_markdown.call_args_list if "neon-badge" in str(c)]
+        assert len(badge_calls) > 0
 
-    with patch("streamlit.columns") as mock_columns, patch(
-        "streamlit.markdown"
-    ) as mock_markdown:
-        mock_columns.return_value = [mock_col for _ in range(4)]
 
-        render_header(snapshot, 30, 0)
-
-        header_calls = [c for c in mock_markdown.call_args_list if "LNTA" in str(c)]
-        assert len(header_calls) > 0
-
-
-def test_cyberpunk_live_overview_renders():
-    from dashboard.components.live_overview import render_live_overview
-    from dashboard.theme import apply_theme
-
-    with patch("streamlit.markdown"), patch("streamlit.components.v1.html"):
-        apply_theme()
-
-    db = MockServingDB()
-    snapshot = db.snapshot(30)
-    ctx = {"db": db}
-
-    with patch("streamlit.columns") as mock_columns, patch(
-        "streamlit.area_chart"
-    ), patch("streamlit.bar_chart"), patch("streamlit.dataframe"):
-        mock_col = MagicMock()
-        mock_col.__enter__ = Mock(return_value=mock_col)
-        mock_col.__exit__ = Mock(return_value=False)
+def test_cyberpunk_live_overview_renders_neon_charts():
+    from dashboard.theme import register_lnta_theme
+    register_lnta_theme()
+    
+    from dashboard.components.live_overview import render_live_overview_tab
+    
+    mock_db = Mock()
+    mock_db.get_latest_window_metrics.return_value = pd.DataFrame({
+        "window_start": pd.date_range("2026-09-24", periods=5, freq="10s"),
+        "pps": [100, 120, 110, 130, 125],
+        "bps": [10000, 12000, 11000, 13000, 12500],
+    })
+    mock_db.get_protocol_counts.return_value = pd.DataFrame({
+        "protocol": ["TCP", "UDP", "ICMP"],
+        "packets": [100, 30, 10],
+    })
+    mock_db.get_port_counts.return_value = pd.DataFrame({
+        "port": [443, 53, 80],
+        "total_packets": [80, 25, 15],
+    })
+    mock_db.get_decay_traffic.return_value = pd.DataFrame({
+        "ts": pd.date_range("2026-09-24", periods=5, freq="10s"),
+        "score": [0.5, 0.6, 0.55, 0.65, 0.6],
+    })
+    
+    controls = {"window_len_s": 10, "protocol_filter": ["TCP", "UDP", "ICMP", "OTHER"]}
+    
+    mock_col = MagicMock()
+    mock_col.__enter__ = Mock(return_value=mock_col)
+    mock_col.__exit__ = Mock(return_value=False)
+    
+    with patch("streamlit.markdown"), \
+         patch("streamlit.plotly_chart") as mock_plotly, \
+         patch("streamlit.columns") as mock_columns, \
+         patch("streamlit.spinner"), \
+         patch("streamlit.warning"), \
+         patch("streamlit.info"):
+    
         mock_columns.return_value = [mock_col, mock_col]
+        
+        with patch("dashboard.components.live_overview.get_latest_window_metrics") as mock_metrics, \
+             patch("dashboard.components.live_overview.get_protocol_counts") as mock_proto, \
+             patch("dashboard.components.live_overview.get_port_counts") as mock_ports, \
+             patch("dashboard.components.live_overview.get_decay_traffic") as mock_decay:
+            
+            mock_metrics.return_value = pd.DataFrame({
+                "window_start": pd.date_range("2026-09-24", periods=5, freq="10s"),
+                "pps": [100, 120, 110, 130, 125],
+                "bps": [10000, 12000, 11000, 13000, 12500],
+            })
+            mock_proto.return_value = pd.DataFrame({
+                "protocol": ["TCP", "UDP", "ICMP"],
+                "packets": [100, 30, 10],
+            })
+            mock_ports.return_value = pd.DataFrame({
+                "port": [443, 53, 80],
+                "total_packets": [80, 25, 15],
+            })
+            mock_decay.return_value = pd.DataFrame({
+                "ts": pd.date_range("2026-09-24", periods=5, freq="10s"),
+                "score": [0.5, 0.6, 0.55, 0.65, 0.6],
+            })
+            
+            controls = {"window_len_s": 10, "protocol_filter": ["TCP", "UDP", "ICMP", "OTHER"]}
+            
+            mock_col = MagicMock()
+            mock_col.__enter__ = Mock(return_value=mock_col)
+            mock_col.__exit__ = Mock(return_value=False)
+            mock_columns.return_value = [mock_col, mock_col]
+            
+            from dashboard.components.live_overview import render_live_overview_tab
+            mock_db = Mock()
+            render_live_overview_tab(mock_db, controls)
+            
+            assert mock_plotly.call_count >= 3
 
-        render_live_overview(snapshot, 30, ctx)
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
 
 
 def test_other_tabs_render():
@@ -56,40 +118,19 @@ def test_other_tabs_render():
     from dashboard.components.link_analysis import render_link_analysis
     from dashboard.components.pipeline import render_pipeline
     from dashboard.components.stream_analytics import render_stream_analytics
+    from dashboard.theme import register_lnta_theme
 
-    db = MockServingDB()
-    snapshot = db.snapshot(30)
-    ctx = {"db": db}
-
-    mock_col = MagicMock()
-    mock_col.__enter__ = Mock(return_value=mock_col)
-    mock_col.__exit__ = Mock(return_value=False)
-    mock_col.radio.return_value = "packets"
-    mock_col.slider.return_value = 30
-
-    with patch("streamlit.markdown"), patch("streamlit.columns", return_value=[mock_col, mock_col]), patch(
-        "streamlit.dataframe"
-    ), patch("streamlit.selectbox", return_value="Question"), patch(
-        "streamlit.multiselect", return_value=["WARN", "CRITICAL"]
-    ), patch(
-        "streamlit.button", return_value=False
-    ), patch(
-        "streamlit.download_button"
-    ), patch(
-        "streamlit.bar_chart"
-    ), patch(
-        "streamlit.plotly_chart"
-    ), patch(
-        "streamlit.subheader"
-    ), patch(
-        "streamlit.caption"
-    ), patch(
-        "streamlit.slider", return_value=30
-    ), patch(
-        "streamlit.radio", return_value="packets"
-    ):
-        render_stream_analytics(snapshot, 30, ctx)
-        render_link_analysis(snapshot, 30, ctx)
-        render_alerts(snapshot, 30, ctx)
-        render_history(snapshot, 30, ctx)
-        render_pipeline(snapshot, 30, ctx)
+    register_lnta_theme()
+    
+    mock_db = Mock()
+    mock_db.get_alerts.return_value = pd.DataFrame()
+    mock_db.get_recent_windows.return_value = []
+    
+    controls = {"window_len_s": 10, "protocol_filter": ["TCP", "UDP"]}
+    
+    with patch("streamlit.markdown"), patch("streamlit.columns"), patch("streamlit.plotly_chart"), patch("streamlit.dataframe"), patch("streamlit.text_input"), patch("streamlit.selectbox"):
+        render_stream_analytics(mock_db, controls)
+        render_link_analysis(mock_db, controls)
+        render_alerts(mock_db, controls)
+        render_history(mock_db, controls)
+        render_pipeline(mock_db, controls)

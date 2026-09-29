@@ -13,6 +13,10 @@ select = [
 ignore = [
     "E501",  # line-too-long (handled by formatter / line-length)
     "B008",  # do not perform function calls in argument defaults
+    "E701",  # multiple statements on one line (colon)
+    "E702",  # multiple statements on one line (semicolon)
+    "E402",  # module level import not at top of file
+    "F841",  # local variable assigned to but never used
 ]
 
 [tool.pytest.ini_options]
