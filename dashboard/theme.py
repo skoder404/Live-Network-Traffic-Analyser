@@ -1,42 +1,16 @@
-"""
-dashboard/theme.py — Cyberpunk/Neon Plotly theme and color tokens for LNTA.
+from pathlib import Path
+import streamlit as st
+import streamlit.components.v1 as components
 
-No side effects on import. Call register_lnta_theme() explicitly.
-"""
-
-from .theme_cyberpunk import (
-    CATEGORICAL_PALETTE_CYBERPUNK,
-    CYBERPUNK_TOKENS,
-    PROTOCOL_COLOR_MAP_CYBERPUNK,
-    SEVERITY_COLORS_CYBERPUNK,
-    get_cyberpunk_template,
-    get_protocol_color_cyberpunk,
-    get_severity_color_cyberpunk,
-    register_cyberpunk_theme,
-)
-
-# Re-export for backwards compatibility
-LNTA_COLORS = CYBERPUNK_TOKENS
-PROTOCOL_COLOR_MAP = PROTOCOL_COLOR_MAP_CYBERPUNK
-SEVERITY_COLORS = SEVERITY_COLORS_CYBERPUNK
-CATEGORICAL_PALETTE = CATEGORICAL_PALETTE_CYBERPUNK
-
-
-def get_lnta_dark_template():
-    """Alias for cyberpunk template (backwards compatibility)."""
-    return get_cyberpunk_template()
-
-
-def register_lnta_theme() -> None:
-    """Register and set the LNTA cyberpunk theme as default. Call explicitly at app startup."""
-    register_cyberpunk_theme()
-
-
-def get_protocol_color(protocol: str) -> str:
-    """Get color for a protocol (backwards compatibility)."""
-    return get_protocol_color_cyberpunk(protocol)
-
-
-def get_severity_color(severity: str) -> str:
-    """Get color for alert severity (backwards compatibility)."""
-    return get_severity_color_cyberpunk(severity)
+def html_embed(html, height):
+    """st.iframe on new Streamlit (components.html is deprecated), components.html on older."""
+    if hasattr(st, "iframe"): return st.iframe(html, height=max(height, 1))
+    return components.html(html, height=height)
+from dashboard.theme_cyberpunk import TOKENS, FONTS, SEVERITY  # noqa: F401
+CSS = Path(__file__).parent / "assets" / "cyberpunk.css"
+GLOW = """<script>try{const d=window.parent.document;if(!d.getElementById('cg')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+const g=d.createElement('div');g.id='cg';g.setAttribute('aria-hidden','true');g.style.cssText='position:fixed;width:360px;height:360px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,rgba(34,230,255,.13),transparent 65%);transform:translate(-50%,-50%);left:-999px;top:0';
+d.body.appendChild(g);d.addEventListener('mousemove',e=>{g.style.left=e.clientX+'px';g.style.top=e.clientY+'px'})}}catch(e){}</script>"""
+def apply_theme():
+    st.markdown(f"<style>{CSS.read_text()}</style><div class='scanlines' aria-hidden='true'></div>", unsafe_allow_html=True)
+    html_embed(GLOW, 1)

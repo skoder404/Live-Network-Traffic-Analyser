@@ -1,129 +1,35 @@
-"""
-dashboard/app.py — LNTA Streamlit Dashboard entry point.
-
-Streamlit app with 6 tabs, header/KPI strip, sidebar controls.
-"""
-
-import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
-
-import streamlit as st  # noqa: E402
-
-# Ensure repo root is on path (for imports when run as script)
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
-
-from dashboard.components.header import render_header  # noqa: E402
-from dashboard.components.history import render_history_tab  # noqa: E402
-from dashboard.components.live_overview import render_live_overview_tab  # noqa: E402
-from dashboard.components.pipeline import render_pipeline_tab  # noqa: E402
-from dashboard.data import check_db_health, get_db  # noqa: E402
-from dashboard.theme import register_lnta_theme  # noqa: E402
-
-# Page config (must be first Streamlit command)
-st.set_page_config(
-    page_title="LNTA — Live Network Traffic Analyser",
-    page_icon="📡",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-# Register Plotly theme
-register_lnta_theme()
-
-# Inject custom CSS
-_css_path = os.path.join(os.path.dirname(__file__), "assets", "theme.css")
-with open(_css_path, encoding="utf-8") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-
-def render_sidebar() -> dict:
-    """Render sidebar controls and return control values."""
-    with st.sidebar:
-        st.markdown("### ⚙️ Controls")
-        window_len = st.selectbox(
-            "Window Length", [10, 30, 60], index=0, format_func=lambda x: f"{x}s"
-        )
-        refresh_interval = st.slider("Refresh Interval (s)", 1, 10, 3)
-        protocol_filter = st.multiselect(
-            "Protocol Filter",
-            ["TCP", "UDP", "ICMP", "OTHER"],
-            default=["TCP", "UDP", "ICMP", "OTHER"],
-        )
-        top_n = st.slider("Top-N Nodes (Graph)", 10, 200, 50, step=10)
-        st.divider()
-        st.caption("LNTA v0.1.0 — Big Data Analytics Project")
-        return {
-            "window_len_s": window_len,
-            "refresh_interval": refresh_interval,
-            "protocol_filter": protocol_filter,
-            "top_n": top_n,
-        }
-
-
-# Tab renderers (M2 implementation)
-def render_stream_analytics_tab(db, controls) -> None:
-    """Tab 2: Stream Analytics."""
-    st.markdown("## 🔬 Stream Analytics")
-    st.info(
-        "Stream Analytics tab — Filtering, Sampling, Count Distinct, "
-        "Counting Ones, Moments, Decay, Frequent Itemsets"
-    )
-
-
-def render_link_analysis_tab(db, controls) -> None:
-    """Tab 3: Link Analysis."""
-    st.markdown("## 🕸️ Link Analysis")
-    st.info("Link Analysis tab — IP Graph, PageRank, Markov Transitions, Centrality")
-
-
-def render_alerts_tab(db, controls) -> None:
-    """Tab 4: Alerts."""
-    st.markdown("## 🚨 Alerts")
-    st.info("Alerts tab — Active alerts with explanations, timeline, filters")
-
-
-_TAB_RENDERERS = [
-    ("📊 Live Overview", render_live_overview_tab),
-    ("🔬 Stream Analytics", render_stream_analytics_tab),
-    ("🕸️ Link Analysis", render_link_analysis_tab),
-    ("🚨 Alerts", render_alerts_tab),
-    ("📜 History", render_history_tab),
-    ("🔧 Pipeline", render_pipeline_tab),
-]
-
-
-def main() -> None:
-    """Main entry point for Streamlit."""
-    # Get DB path from environment (set by launch script) or default
-    db_path = os.environ.get("LNTA_SERVING_DB", "serving/analytics.db")
-    mock_mode = os.environ.get("LNTA_MOCK", "false").lower() == "true"
-
-    db = get_db(db_path)
-    db_health = check_db_health(db)
-
-    source_mode = "DEMO DATA" if mock_mode else "LIVE"
-    if not db_health.get("connected"):
-        source_mode = "STALE"
-
-    # Header + KPI strip
-    render_header(db_health, source_mode)
-
-    # Sidebar
-    controls = render_sidebar()
-
-    # Tabs
-    tabs = st.tabs([label for label, _ in _TAB_RENDERERS])
-
-    for tab, (_, renderer) in zip(tabs, _TAB_RENDERERS, strict=False):
+ROOT = Path(__file__).resolve().parent.parent; sys.path.insert(0, str(ROOT))
+import streamlit as st
+from dashboard.theme import apply_theme
+from dashboard.data import get_db
+from dashboard import components as C
+from linkanalysis import AlertEngine, load_alert_config
+st.set_page_config(page_title="LNTA · Priyan S", page_icon="📡", layout="wide")
+apply_theme()
+db = st.cache_resource(get_db)()
+with st.sidebar:
+    st.header("Controls")
+    window = int(st.radio("Window", ["10s", "30s", "60s"], index=1, horizontal=True)[:-1])
+    auto = st.toggle("Auto-refresh (5s)", True)
+    st.caption("Mock mode: LNTA_MOCK=true. Set false to read the SQLite serving store.")
+def tick(s):
+    """Run the AlertEngine once per new 5s bucket, so widget reruns never double-count."""
+    ss = st.session_state
+    ss.setdefault("engine", AlertEngine(load_alert_config(str(ROOT / "config" / "alert_rules.yaml")))); ss.setdefault("alert_log", [])
+    if ss.get("last_bucket") == s["bucket"]: return
+    ss.last_bucket = s["bucket"]
+    new = ss.engine.evaluate_window(datetime.now(timezone.utc).isoformat(), window, s["pps"], s["port_counts"], s["dst_counts"], s["pkt_counts"])
+    ss.alert_log[:0] = [a.to_dict() for a in new]; del ss.alert_log[200:]
+def body():
+    s = db.snapshot(window); tick(s); ctx = {"db": db}
+    C.render_header(s, window, len(st.session_state.alert_log)); st.write("")
+    names = ["Live", "Stream concepts", "Link analysis", "Alerts", "History", "Pipeline"]
+    fns = [C.render_live_overview, C.render_stream_analytics, C.render_link_analysis, C.render_alerts, C.render_history, C.render_pipeline]
+    for tab, fn in zip(st.tabs(names), fns):
         with tab:
-            renderer(db, controls)
-
-
-if __name__ == "__main__":
-    main()
+            try: fn(s, window, ctx)
+            except Exception as e: st.markdown(f'<div class="state error" role="alert">Could not load this view: {e}</div>', unsafe_allow_html=True)
+(st.fragment(run_every=5)(body) if auto else body)()

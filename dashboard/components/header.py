@@ -1,74 +1,10 @@
-"""
-dashboard/components/header.py — Header and KPI strip component for LNTA dashboard.
-"""
-
 import streamlit as st
-
-# Constants
-KPI_LABELS = [
-    "Packets/s",
-    "Bytes/s",
-    "Unique IPs",
-    "Active Ports",
-    "Decay Score",
-    "Alerts",
-]
-
-SOURCE_BADGE_MAP = {
-    "LIVE": "live",
-    "REPLAY": "replay",
-    "DEMO": "demo",
-    "STALE": "stale",
-}
-
-
-def render_header(db_health: dict, source_mode: str = "LIVE") -> None:
-    """Render global header with logo, source badge, pulse, KPI strip."""
-    col_logo, col_badge, col_pulse, col_update, *col_kpis = st.columns(
-        [2, 2, 1, 2, 1, 1, 1, 1, 1, 1]
-    )
-
-    with col_logo:
-        st.markdown(
-            """
-        <div style="display:flex;align-items:center;gap:10px;height:100%;">
-            <span style="font-size:28px;font-weight:700;color:#22D3EE;">LNTA</span>
-            <span style="font-size:12px;color:#8496B0;text-transform:uppercase;">Live Network Traffic Analyser</span>
-        </div>
-        """,
-            unsafe_allow_html=True,
-        )
-
-    with col_badge:
-        badge_class = SOURCE_BADGE_MAP.get(source_mode, "live")
-        st.markdown(
-            f'<span class="source-badge {badge_class}">{source_mode}</span>', unsafe_allow_html=True
-        )
-
-    with col_pulse:
-        pulse_class = "fresh" if db_health.get("connected") else "down"
-        st.markdown(
-            f'<div class="live-pulse {pulse_class}" title="Pipeline status"></div>',
-            unsafe_allow_html=True,
-        )
-
-    with col_update:
-        if db_health.get("connected"):
-            latest = db_health.get("table_status", {}).get("window_metrics")
-            st.caption(f"Updated: {latest}" if latest else "Waiting for data...")
-        else:
-            st.caption("⚠️ Database disconnected")
-
-    # KPI cards - placeholder values, will be filled by components
-    for i, label in enumerate(KPI_LABELS):
-        with col_kpis[i]:
-            st.markdown(
-                f"""
-            <div class="kpi-card">
-                <div class="kpi-value">—</div>
-                <div class="kpi-label">{label}</div>
-                <div class="kpi-delta"></div>
-            </div>
-            """,
-                unsafe_allow_html=True,
-            )
+from ._ui import card, spark, human
+def render_header(s, window, alert_count):
+    stale = s["pps"] <= 0
+    st.markdown(f'<div class="top"><div class="scene" aria-hidden="true"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><div class="hero">LNTA · Live Network Traffic Analyser</div>'
+                f'<span class="pulse {"stale" if stale else ""}"></span> <span class="mono">{"stale" if stale else "streaming"} · {window}s window · {alert_count} alerts</span></div>'
+                f'<div class="radar {"stale" if stale else ""}" aria-hidden="true"></div></div>', unsafe_allow_html=True)
+    h = s["history"]; items = [("Packets / sec", human(s["pps"]), spark(h.pps, "#22e6ff"), "#22e6ff"), ("Bytes / sec", human(s["bps"]) + "B", spark(h.bps, "#ff2e88"), "#ff2e88"),
+                               ("Hosts", str(s["hosts"]), "", "#b6ff3c"), ("Conversations", str(s["flows"]), "", "#ffb020")]
+    for col, (a, b, c, d) in zip(st.columns(4), items): col.markdown(card(a, b, c, d), unsafe_allow_html=True)
