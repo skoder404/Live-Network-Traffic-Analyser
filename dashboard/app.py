@@ -18,28 +18,39 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Sidebar Navigation & Controls ──
 with st.sidebar:
+    st.markdown("## 📡 LNTA Navigation")
+    names = ["Live", "Stream concepts", "Link analysis", "Alerts", "History", "Pipeline"]
+    selected_page = st.radio(
+        "Select Page",
+        names,
+        index=0,
+        key="sidebar_nav",
+        label_visibility="collapsed",
+    )
+
+    st.divider()
+
     st.markdown("### ⚙️ Controls")
-    window_choice = st.radio("Window", ["10s", "30s", "60s"], index=1, horizontal=True)
-    window = int(window_choice[:-1])
-    auto = st.toggle("Auto-refresh (5s)", True)
     theme_name = st.selectbox(
         "🎨 Theme",
         list(THEME_TOKENS.keys()),
         index=0,
         key="theme_select",
     )
-    st.divider()
-    st.markdown("### 📡 LNTA Navigation")
-    names = ["Live", "Stream concepts", "Link analysis", "Alerts", "History", "Pipeline"]
-    selected_page = st.radio("Navigation", names, index=0, key="sidebar_nav")
-    st.caption("LNTA_MOCK=true. Set false to read SQLite store.")
+
+    window_choice = st.radio("Window", ["10s", "30s", "60s"], index=1, horizontal=True)
+    window = int(window_choice[:-1])
+    auto = st.toggle("Auto-refresh (5s)", True)
+    st.caption("Mock mode: LNTA_MOCK=true. Set false to read SQLite store.")
 
 apply_theme(theme_name)
 db = st.cache_resource(get_db)()
 
 
 def tick(s):
+    """Run AlertEngine once per new 5s bucket."""
     ss = st.session_state
     ss.setdefault(
         "engine", AlertEngine(load_alert_config(str(ROOT / "config" / "alert_rules.yaml")))
@@ -64,31 +75,29 @@ def body():
     s = db.snapshot(window)
     tick(s)
     ctx = {"db": db}
+
+    # Render top KPI header
     C.render_header(s, window, len(st.session_state.get("alert_log", [])))
     st.write("")
 
-    fns = [
-        C.render_live_overview,
-        C.render_stream_analytics,
-        C.render_link_analysis,
-        C.render_alerts,
-        C.render_history,
-        C.render_pipeline,
-    ]
+    # Map selected page to rendering function
+    fns = {
+        "Live": C.render_live_overview,
+        "Stream concepts": C.render_stream_analytics,
+        "Link analysis": C.render_link_analysis,
+        "Alerts": C.render_alerts,
+        "History": C.render_history,
+        "Pipeline": C.render_pipeline,
+    }
 
-    tabs = st.tabs(names)
-    active_idx = names.index(selected_page) if selected_page in names else 0
-
-    for i, (tab, fn) in enumerate(zip(tabs, fns, strict=False)):
-        if i == active_idx:
-            with tab:
-                try:
-                    fn(s, window, ctx)
-                except Exception as e:
-                    st.markdown(
-                        f'<div class="state error" role="alert">Could not load this view: {e}</div>',
-                        unsafe_allow_html=True,
-                    )
+    fn = fns.get(selected_page, C.render_live_overview)
+    try:
+        fn(s, window, ctx)
+    except Exception as e:
+        st.markdown(
+            f'<div class="state error" role="alert">Could not load this view: {e}</div>',
+            unsafe_allow_html=True,
+        )
 
 
 (st.fragment(run_every=5)(body) if auto else body)()

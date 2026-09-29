@@ -14,12 +14,15 @@ def test_runs_clean():
 
 
 def test_six_tabs():
-    assert len(_run().tabs) == 6
+    at = _run()
+    nav_radio = [r for r in at.sidebar.radio if r.key == "sidebar_nav"][0]
+    assert len(nav_radio.options) == 6
 
 
 def test_window_toggle():
     at = _run()
-    at.sidebar.radio[0].set_value("60s").run()
+    win_radio = [r for r in at.sidebar.radio if r.label == "Window"][0]
+    win_radio.set_value("60s").run()
     assert not at.exception
 
 
