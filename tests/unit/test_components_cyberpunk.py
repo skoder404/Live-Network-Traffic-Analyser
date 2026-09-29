@@ -110,3 +110,26 @@ def test_cyberpunk_live_overview_renders_neon_charts():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+def test_other_tabs_render():
+    from dashboard.components.node_analysis import render_node_analysis_tab
+    from dashboard.components.alerts import render_alerts_tab
+    from dashboard.components.graphs import render_graphs_tab
+    from dashboard.components.historical import render_historical_tab
+    from dashboard.components.settings import render_settings_tab
+    from dashboard.theme import register_lnta_theme
+    register_lnta_theme()
+    
+    mock_db = Mock()
+    mock_db.get_alerts.return_value = pd.DataFrame()
+    mock_db.get_recent_windows.return_value = []
+    
+    controls = {"window_len_s": 10, "protocol_filter": ["TCP", "UDP"]}
+    
+    with patch("streamlit.markdown"), patch("streamlit.columns"), patch("streamlit.plotly_chart"), patch("streamlit.dataframe"), patch("streamlit.text_input"), patch("streamlit.selectbox"):
+        render_node_analysis_tab(mock_db, controls)
+        render_alerts_tab(mock_db, controls)
+        render_graphs_tab(mock_db, controls)
+        render_historical_tab(mock_db, controls)
+        render_settings_tab(mock_db, controls)
