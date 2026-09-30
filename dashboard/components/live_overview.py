@@ -40,9 +40,9 @@ def render_live_overview_tab(db=None, controls=None):
     fig3 = px.bar(df_ports, x="port", y="total_packets", title="Top Destination Ports")
     fig3.update_layout(**layout)
 
-    st.plotly_chart(fig1, width="stretch")
-    st.plotly_chart(fig2, width="stretch")
-    st.plotly_chart(fig3, width="stretch")
+    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig3, use_container_width=True)
 
 
 def render_live_overview(s, window=30, ctx=None):
@@ -75,6 +75,6 @@ def render_live_overview(s, window=30, ctx=None):
     fig_proto.update_layout(**layout)
 
     with a:
-        st.plotly_chart(fig_pps, width="stretch")
+        st.plotly_chart(fig_pps, use_container_width=True)
     with b:
-        st.plotly_chart(fig_proto, width="stretch")
+        st.plotly_chart(fig_proto, use_container_width=True)

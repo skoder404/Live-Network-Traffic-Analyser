@@ -1,12 +1,9 @@
 import streamlit as st
 
-from dashboard.themes import get_tokens
-
 from ._ui import card, human, spark
 
 
 def render_header(s, window=30, alert_count=0):
-    t = get_tokens()
     pps = s.get("pps", 0) if isinstance(s, dict) else 0
     bps = s.get("bps", 0) if isinstance(s, dict) else 0
     hosts = s.get("hosts", 0) if isinstance(s, dict) else 0
@@ -20,19 +17,18 @@ def render_header(s, window=30, alert_count=0):
         f'<div class="radar {"stale" if stale else ""}" aria-hidden="true"></div></div>',
         unsafe_allow_html=True,
     )
-    colors = t["chart_colors"]
     pps_spark = (
-        spark(history.pps, colors[0]) if history is not None and hasattr(history, "pps") else ""
+        spark(history.pps, "#22e6ff") if history is not None and hasattr(history, "pps") else ""
     )
     bps_spark = (
-        spark(history.bps, colors[1]) if history is not None and hasattr(history, "bps") else ""
+        spark(history.bps, "#ff2e88") if history is not None and hasattr(history, "bps") else ""
     )
 
     items = [
-        ("Packets / sec", human(pps), pps_spark, colors[0]),
-        ("Bytes / sec", human(bps) + "B", bps_spark, colors[1]),
-        ("Hosts", str(hosts), "", colors[2] if len(colors) > 2 else t["accent1"]),
-        ("Conversations", str(flows), "", colors[3] if len(colors) > 3 else t["accent2"]),
+        ("Packets / sec", human(pps), pps_spark, "#22e6ff"),
+        ("Bytes / sec", human(bps) + "B", bps_spark, "#ff2e88"),
+        ("Hosts", str(hosts), "", "#b6ff3c"),
+        ("Conversations", str(flows), "", "#ffb020"),
     ]
     cols = st.columns(4)
     if not cols:

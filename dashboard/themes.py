@@ -92,43 +92,30 @@ def get_plotly_layout(name: str | None = None) -> dict:
     theme — dark *and* light.
     """
     t = get_tokens(name)
-    text_col = t["text"]
-    muted_col = t["muted"]
-    mode = t.get("mode", "dark")
-    grid_col = "rgba(255, 255, 255, 0.12)" if mode == "dark" else "rgba(0, 0, 0, 0.12)"
-
     return dict(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=text_col, family="Inter, sans-serif"),
-        title_font=dict(color=text_col, size=16, family="Inter, sans-serif"),
+        font=dict(color=t["text"]),
+        title_font=dict(color=t["text"]),
         xaxis=dict(
-            color=text_col,
-            tickfont=dict(color=text_col, size=11),
-            title_font=dict(color=text_col, size=12),
-            gridcolor=grid_col,
-            zerolinecolor=grid_col,
+            color=t["text"],
+            tickfont=dict(color=t["text"]),
+            title_font=dict(color=t["text"]),
+            gridcolor=t["muted"] + "33",
         ),
         yaxis=dict(
-            color=text_col,
-            tickfont=dict(color=text_col, size=11),
-            title_font=dict(color=text_col, size=12),
-            gridcolor=grid_col,
-            zerolinecolor=grid_col,
+            color=t["text"],
+            tickfont=dict(color=t["text"]),
+            title_font=dict(color=t["text"]),
+            gridcolor=t["muted"] + "33",
         ),
-        margin=dict(l=30, r=20, t=40, b=30),
-        legend=dict(font=dict(color=text_col)),
-        hoverlabel=dict(
-            bgcolor=t["panel"] if mode == "light" else "#120f24",
-            font_color=text_col,
-            bordercolor=t["primary"],
-        ),
+        margin=dict(l=20, r=20, t=40, b=20),
+        legend=dict(font=dict(color=t["text"])),
     )
 
 
 def apply_theme(name: str = "Cyberpunk Neon"):
     """Inject selected theme CSS into Streamlit."""
-    st.session_state["_lnta_theme"] = name
     css_map = {
         "Cyberpunk Neon": "cyberpunk.css",
         "Warm Amber": "warm_amber.css",
