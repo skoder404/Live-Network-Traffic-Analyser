@@ -16,6 +16,7 @@ st.set_page_config(
     page_title="LNTA · Live Network Traffic Analyser",
     page_icon="📡",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # ── Sidebar Navigation & Controls ──
@@ -23,7 +24,7 @@ with st.sidebar:
     st.markdown("## 📡 LNTA Navigation")
     names = ["Live", "Stream concepts", "Link analysis", "Alerts", "History", "Pipeline"]
     selected_page = st.radio(
-        "Select Page",
+        "Navigation",
         names,
         index=0,
         key="sidebar_nav",
@@ -43,8 +44,9 @@ with st.sidebar:
     window_choice = st.radio("Window", ["10s", "30s", "60s"], index=1, horizontal=True)
     window = int(window_choice[:-1])
     auto = st.toggle("Auto-refresh (5s)", True)
-    st.caption("Mock mode: LNTA_MOCK=true. Set false to read SQLite store.")
+    st.caption("Mock mode: LNTA_MOCK=true")
 
+st.session_state["_lnta_theme"] = theme_name
 apply_theme(theme_name)
 db = st.cache_resource(get_db)()
 
@@ -80,7 +82,7 @@ def body():
     C.render_header(s, window, len(st.session_state.get("alert_log", [])))
     st.write("")
 
-    # Map selected page to rendering function
+    # Map selected page directly to rendering function (NO st.tabs)
     fns = {
         "Live": C.render_live_overview,
         "Stream concepts": C.render_stream_analytics,
