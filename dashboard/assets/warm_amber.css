@@ -240,3 +240,10 @@ section[data-testid="stSidebar"] hr {
 [data-testid="stSlider"] label {
   color: #3D2B1F !important;
 }
+
+/* Hide horizontal tabs entirely since we have sidebar navigation */
+div[data-baseweb="tab-list"],
+.stTabs {
+  display: none !important;
+}
+
