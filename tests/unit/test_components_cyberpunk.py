@@ -137,12 +137,11 @@ if __name__ == "__main__":
 
 
 def test_other_tabs_render():
+    from dashboard.components.alerts import render_alerts_tab
     from dashboard.components.graphs import render_graphs_tab
     from dashboard.components.historical import render_historical_tab
     from dashboard.components.node_analysis import render_node_analysis_tab
     from dashboard.components.settings import render_settings_tab
-
-    from dashboard.components.alerts import render_alerts_tab
     from dashboard.theme import register_lnta_theme
 
     register_lnta_theme()
