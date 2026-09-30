@@ -92,5 +92,9 @@ echo "----------------------------------------------------------------"
 echo "Dashboard is ready. Press Ctrl+C to terminate all pipeline jobs."
 echo "----------------------------------------------------------------"
 
+# Ensure port 8501 is free
+fuser -k 8501/tcp 2>/dev/null || true
+sleep 1
+
 export LNTA_MOCK="false"
 python3 -m streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0
