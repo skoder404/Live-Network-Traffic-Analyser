@@ -1,10 +1,7 @@
 """Rotating 3D IP graph: drag to rotate, hover for details, click a node to isolate its links. Pure canvas, no CDN."""
-
 import json
-
-from dashboard.analytics import kind
 from dashboard.theme import html_embed
-
+from dashboard.analytics import kind
 JS = r"""<style>body{margin:0;background:transparent;font:13px 'Rajdhani',sans-serif;color:#e8e6ff}#w{position:relative;height:100vh;border:1px solid rgba(34,230,255,.3);border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#160f30,#07060f)}
 canvas{width:100%;height:100%;display:block;cursor:grab}#t{position:absolute;pointer-events:none;padding:6px 10px;border-radius:8px;background:rgba(7,6,15,.92);border:1px solid #ff2e88;display:none;font:12px monospace}
 #l{position:absolute;left:12px;bottom:10px;color:#9d98c9}#l b{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 10px}</style>
@@ -26,19 +23,9 @@ x.globalAlpha=lit?1:.18;x.fillStyle=col;x.shadowColor=col;x.shadowBlur=n.id===se
 if(n.pr/mx_>.45||n.id===sel||n.id===hov){x.globalAlpha=lit?.95:.3;x.fillStyle='#e8e6ff';x.font='11px monospace';x.fillText(n.id,p[0]+r+4,p[1]+3)}x.globalAlpha=1});
 if(hov){const n=ix[hov],p=P[hov];T.style.display='block';T.style.left=Math.min(p[0]+14,W-190)+'px';T.style.top=p[1]+14+'px';T.innerHTML=n.id+'<br>PageRank '+n.pr.toFixed(4)+'<br>degree '+n.dg.toFixed(3)+' · '+n.k}else T.style.display='none';requestAnimationFrame(frame)}
 requestAnimationFrame(frame)</script>"""
-
-
 def graph_html(G, pr, deg):
     mw = max((d.get("packets", 0) for *_, d in G.edges(data=True)), default=1) or 1
-    nodes = sorted(
-        ({"id": n, "pr": pr[n], "dg": deg.get(n, 0.0), "k": kind(n)} for n in G.nodes()),
-        key=lambda d: -d["pr"],
-    )
-    edges = [
-        {"s": a, "t": b, "w": round(d.get("packets", 0) / mw, 3)} for a, b, d in G.edges(data=True)
-    ]
+    nodes = sorted(({"id": n, "pr": pr[n], "dg": deg.get(n, 0.0), "k": kind(n)} for n in G.nodes()), key=lambda d: -d["pr"])
+    edges = [{"s": a, "t": b, "w": round(d.get("packets", 0) / mw, 3)} for a, b, d in G.edges(data=True)]
     return JS.replace("__DATA__", json.dumps({"nodes": nodes, "edges": edges}))
-
-
-def render_graph3d(G, pr, deg, height=520):
-    html_embed(graph_html(G, pr, deg), height)
+def render_graph3d(G, pr, deg, height=520): html_embed(graph_html(G, pr, deg), height)

@@ -27,20 +27,18 @@ h1,h2,h3,h4{font-family:'Rajdhani',sans-serif;letter-spacing:.02em}code,.mono{fo
 .badge{padding:2px 10px;border-radius:999px;border:1px solid;font-size:.8rem}.sev-WARN{color:var(--amber)}.sev-CRITICAL{color:var(--red)}
 .alert{border-left:4px solid;margin-bottom:10px;animation:drop .5s cubic-bezier(.2,.8,.2,1) both}.alert.WARN{border-left-color:var(--amber)}.alert.CRITICAL{border-left-color:var(--red)}
 @keyframes drop{from{opacity:0;transform:translateY(-14px) rotateX(-25deg)}to{opacity:1;transform:none}}
-.state{text-align:center;color:var(--muted);padding:28px;border:1px dashed rgba(157,152,201,.4);border-radius:12px}
-.state.error{color:var(--red);border-color:var(--red)}
+.state{text-align:center;color:var(--muted);padding:28px;border:1px dashed rgba(157,152,201,.4);border-radius:12px}.state.error{color:var(--red);border-color:var(--red)}
 .state.loading::after{content:"";display:inline-block;width:14px;height:14px;margin-left:10px;border:2px solid var(--cyan);border-top-color:transparent;border-radius:50%;animation:sweep .8s linear infinite;vertical-align:middle}
-.heat{border-collapse:separate;border-spacing:3px;font:12px 'JetBrains Mono',monospace;color:#e8e6ff}
-.heat td,.heat th{padding:5px 7px;border-radius:5px;text-align:center}
-.heat th{color:var(--muted);font-weight:400}
-.bar{height:10px;border-radius:6px;background:linear-gradient(90deg,var(--pink),var(--cyan));box-shadow:0 0 10px rgba(255,46,136,.5);transform-origin:left;animation:grow .8s ease-out both}
-@keyframes grow{from{transform:scaleX(0)}}
-/* buttons, inputs */
+.heat{border-collapse:separate;border-spacing:3px;font:12px 'JetBrains Mono',monospace;color:#e8e6ff}.heat td,.heat th{padding:5px 7px;border-radius:5px;text-align:center}.heat th{color:var(--muted);font-weight:400}
+.bar{height:10px;border-radius:6px;background:linear-gradient(90deg,var(--pink),var(--cyan));box-shadow:0 0 10px rgba(255,46,136,.5);transform-origin:left;animation:grow .8s ease-out both}@keyframes grow{from{transform:scaleX(0)}}
+/* buttons, tabs, inputs */
 .stButton>button,.stDownloadButton>button{position:relative;overflow:hidden;color:#e8e6ff;background:linear-gradient(135deg,rgba(255,46,136,.22),rgba(34,230,255,.16));border:1px solid var(--pink);border-radius:12px;transition:transform .25s,box-shadow .25s}
 .stButton>button::after,.stDownloadButton>button::after{content:"";position:absolute;top:0;left:-70%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .6s}
 .stButton>button:hover,.stDownloadButton>button:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 0 22px rgba(255,46,136,.65),0 0 44px rgba(34,230,255,.3);color:#fff;border-color:var(--cyan)}
-.stButton>button:hover::after,.stDownloadButton>button:hover::after{left:130%}
-.stButton>button:active{transform:scale(.97)}
+.stButton>button:hover::after,.stDownloadButton>button:hover::after{left:130%}.stButton>button:active{transform:scale(.97)}
+button[data-baseweb=tab]{transition:color .2s,text-shadow .2s,transform .2s}button[data-baseweb=tab]:hover{transform:translateY(-2px);color:var(--cyan)}
+button[data-baseweb=tab][aria-selected=true]{color:var(--pink);text-shadow:0 0 14px rgba(255,46,136,.8)}
+[data-baseweb=tab-panel]{animation:panel .5s cubic-bezier(.2,.8,.2,1) both}@keyframes panel{from{opacity:0;transform:translateY(12px) perspective(600px) rotateX(4deg)}to{opacity:1;transform:none}}
 iframe{border-radius:14px}
 :focus-visible{outline:3px solid var(--cyan)!important;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,.stApp::before{animation:none!important;transition:none!important}}
